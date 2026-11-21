@@ -257,6 +257,15 @@ Hecha el 2026-11-21 en Fedora 44 (Python 3.14, Tk 9.0, Wayland): pruebas de prot
 
 ## 12. Guion para la web
 
+**Estado (2026-11-21): publicada en https://www.jasodev.es** (código en `web/` de este repositorio):
+- `web/index.html` (una sola página con las secciones de §12.2), `web/estilo.css` (colores de §7.5, fuentes del sistema, sin recursos de terceros), `web/web.js` (menú móvil, selector KKL/OBD2 de capturas, visor ampliado y enlaces de descarga).
+- Descargas: `web.js` consulta `api.github.com/repos/jaso69/obd2/releases` (incluye pre-releases, que `releases/latest` ignora) y apunta los botones al `.exe` y al `*linux*.tar.gz` de la última release; sin JS o sin paquete, llevan a la página de releases.
+- Capturas: `xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py` → `web/img/*.webp` + `og.jpg` (1200×630 para redes). Usa los simuladores en una pantalla virtual; en la conversación de IA solo se sustituye la llamada al modelo por un guion (herramientas reales, texto de ejemplo coherente con los datos del simulador; la web lo aclara). Regenerar si cambia la interfaz.
+- Ver en local: `python3 -m http.server -d web 8000` → http://127.0.0.1:8000
+- Publicación: `./web/publicar.sh ["mensaje"]` sustituye el contenido del repositorio https://github.com/jaso69/jasodev (enlazado con Vercel, dominio `www.jasodev.es`; `jasodev.es` redirige con 301) por `web/` (sin `capturas.py` ni `publicar.sh`) y lo sube con un commit normal; Vercel la publica en segundos. La web anterior de ese repositorio (jaso-panel) quedó en su historial (commit `5d19498`).
+- `web/vercel.json`: cabeceras de seguridad (CSP sin scripts ni estilos en línea; `connect-src` permite `https://api.github.com` para los botones de descarga) y caché de `img/`. Si se añade un script o estilo en línea al HTML, la CSP lo bloqueará. `robots.txt` y `sitemap.xml` apuntan a `www.jasodev.es`.
+
+
 ### 12.1 Público y tono
 Aficionados a la mecánica y dueños de coches VAG antiguos (y de cualquier coche con
 OBD2) que quieren diagnosticar en casa. Español de España, cercano y claro, técnico

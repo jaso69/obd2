@@ -693,12 +693,20 @@ class App:
         root.title("Toledo Diagnosis · VAG KW1281 / OBD2")
         root.configure(bg=BG)
         _poner_icono(root, defecto=True)
-        root.geometry(f"{int(1240 * self.s)}x{int(800 * self.s)}")
-        root.minsize(int(1080 * self.s), int(680 * self.s))
         self._style()
         self._build()
         self._apply_mode()
+        # la cabecera manda en el ancho: con fuentes anchas (Noto Sans en Linux) no cabe en 1240;
+        # se mide con los textos de estado más largos que pueden salir al conectar
+        ancho = 0
+        for texto in ("Conectado · Cuadro de instrumentos · 10400 bd",
+                      "Conectado · OBD2 · ISO 15765-4 (CAN 29/500)"):
+            self.status_lbl.configure(text=texto)
+            root.update_idletasks()
+            ancho = max(ancho, root.winfo_reqwidth())
         self._set_connected(False)
+        root.geometry(f"{max(int(1240 * self.s), ancho)}x{int(800 * self.s)}")
+        root.minsize(max(int(1080 * self.s), ancho), int(680 * self.s))
         root.protocol("WM_DELETE_WINDOW", self.on_close)
         root.after(50, self.poll)
         root.after(100, lambda: _barra_oscura(root))
@@ -767,7 +775,6 @@ class App:
         head = ttk.Frame(self.root, style="Panel.TFrame", padding=(18, 12))
         head.pack(fill="x")
         left = ttk.Frame(head, style="Panel.TFrame")
-        left.pack(side="left")
         ttk.Label(left, text="Toledo Diagnosis", style="Title.TLabel").pack(anchor="w")
         st_row = ttk.Frame(left, style="Panel.TFrame")
         st_row.pack(anchor="w")
@@ -777,7 +784,8 @@ class App:
         self.status_lbl.pack(side="left")
 
         right = ttk.Frame(head, style="Panel.TFrame")
-        right.pack(side="right")
+        right.pack(side="right")                    # antes que left: si falta sitio se recorta el estado
+        left.pack(side="left", padx=(0, 24))
         ttk.Label(right, text="Conexión", style="PanelMuted.TLabel").grid(row=0, column=0, padx=(0, 6))
         self.mode_var = tk.StringVar(value=MODOS[KKL])
         self.mode_cb = ttk.Combobox(right, textvariable=self.mode_var, values=list(MODOS.values()),
@@ -799,7 +807,7 @@ class App:
         self.mod_cb = ttk.Combobox(right, textvariable=self.mod_var, values=mods, state="readonly", width=22)
         self.mod_cb.current(0)
         self.mod_cb.grid(row=0, column=6, padx=(0, 14))
-        self.conn_btn = ttk.Button(right, text="Conectar", style="Accent.TButton", width=12,
+        self.conn_btn = ttk.Button(right, text="Conectar", style="Accent.TButton", width=14,
                                    command=self.toggle_connect)
         self.conn_btn.grid(row=0, column=7)
 

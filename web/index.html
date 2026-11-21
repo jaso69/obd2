@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toledo Diagnosis · Diagnóstico de tu coche desde el portátil</title>
+<meta name="description" content="Programa gratuito para Windows y Linux: lee averías y valores en directo de coches VAG antiguos con cable KKL (KW1281) y de cualquier coche OBD2 con ELM327, con un asistente de IA que hace las comprobaciones por ti.">
+<meta name="keywords" content="diagnosis OBD2 portátil, KW1281, cable KKL 409.1, VAG-COM, EDC15, SEAT Toledo TDI, 1.9 TDI averías, ELM327 Bluetooth, lector OBD2 gratis, diagnóstico con IA, Linux OBD2">
+<meta name="theme-color" content="#111418">
+<link rel="icon" type="image/png" href="img/icono.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Toledo Diagnosis · Diagnóstico de tu coche desde el portátil">
+<meta property="og:description" content="Averías, valores en directo y un asistente de IA que hace las comprobaciones por ti. Para VAG antiguos con cable KKL y cualquier coche con OBD2.">
+<meta property="og:image" content="https://www.jasodev.es/img/og.jpg">
+<meta property="og:url" content="https://www.jasodev.es/">
+<link rel="canonical" href="https://www.jasodev.es/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="#inicio"><img src="img/icono.png" alt="" width="32" height="32"> Toledo Diagnosis</a>
+    <button class="menu-boton" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">☰</button>
+    <nav id="menu" class="menu">
+      <a href="#funciones">Funciones</a>
+      <a href="#ia">Asistente IA</a>
+      <a href="#hardware">Qué cable</a>
+      <a href="#descargar">Descargar</a>
+      <a href="#guia">Guía</a>
+      <a href="#faq">Problemas</a>
+      <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ INICIO ============ -->
+<section id="inicio" class="portada">
+  <div class="contenedor">
+    <p class="etiqueta">Gratis · Código abierto (MIT) · Windows y Linux</p>
+    <h1>Diagnóstico de tu coche<br><span class="acento">desde el portátil</span></h1>
+    <p class="entradilla">Averías, valores en directo y un asistente de IA que hace las comprobaciones por ti.
+      Para VAG antiguos con cable KKL y para cualquier coche con OBD2.</p>
+    <div class="botones">
+      <a class="boton boton-principal" data-descarga="windows" href="https://github.com/jaso69/obd2/releases">⬇ Descargar para Windows</a>
+      <a class="boton boton-principal" data-descarga="linux" href="https://github.com/jaso69/obd2/releases">⬇ Descargar para Linux</a>
+      <a class="boton boton-secundario" href="https://github.com/jaso69/obd2">Ver en GitHub</a>
+    </div>
+    <p class="nota-version" id="nota-version">Versión preliminar: probada a fondo con simuladores, todavía no con un coche real. <a href="#estado">Más detalles</a>.</p>
+    <figure class="captura captura-portada">
+      <a href="img/panel-kkl.webp" class="ampliar"><img src="img/panel-kkl.webp" width="1995" height="1200"
+        alt="Panel del programa conectado a una centralita VAG: relojes de régimen, caudal, turbo y refrigerante, y gráficas de presión de turbo y masa de aire"></a>
+    </figure>
+    <div class="tres">
+      <div class="tarjeta">
+        <h3>VAG antiguos por KKL</h3>
+        <p>Habla <strong>KW1281</strong>, el protocolo de SEAT, VW, Audi y Skoda hasta ~2004, que un lector OBD2 normal no entiende. Pensado para el 1.9 TDI con EDC15.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Cualquier OBD2 con ELM327</h3>
+        <p>Con un ELM327 USB o Bluetooth lee averías P0xxx, el testigo MIL, el VIN y decenas de valores de cualquier coche con OBD2/EOBD.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Un asistente que comprueba</h3>
+        <p>Cuéntale el síntoma: la IA <strong>lee ella misma</strong> las averías y los valores, te pide que arranques o aceleres y te da un diagnóstico razonado.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FUNCIONES ============ -->
+<section id="funciones" class="seccion">
+  <div class="contenedor">
+    <h2>Todo lo que hace</h2>
+    <p class="intro">Una interfaz oscura y clara, con las mismas pestañas para los dos tipos de conexión. Todas las capturas son del programa real conectado a su simulador.</p>
+
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Panel en directo</h3>
+        <p>Relojes y gráficas de los últimos 60 segundos. Con el cable KKL ves régimen, caudal inyectado, presión de turbo frente a la teórica, masa de aire, ciclo de la N75 y de la EGR. Con un ELM327, régimen, velocidad, temperaturas, carga, caudalímetro, mariposa y tensión.</p>
+        <div class="selector" role="tablist" data-grupo="panel">
+          <button role="tab" aria-selected="true" data-img="img/panel-kkl.webp" data-alt="Panel en modo KKL con turbo y masa de aire">KKL · VAG</button>
+          <button role="tab" aria-selected="false" data-img="img/panel-obd.webp" data-alt="Panel en modo OBD2 con régimen, velocidad, refrigerante y carga">ELM327 · OBD2</button>
+        </div>
+      </div>
+      <figure class="captura"><a href="img/panel-kkl.webp" class="ampliar" data-grupo="panel"><img src="img/panel-kkl.webp" width="1995" height="1200" loading="lazy" alt="Panel en modo KKL con turbo y masa de aire"></a></figure>
+    </div>
+
+    <div class="fila-funcion invertida">
+      <div class="texto-funcion">
+        <h3>Valores medidos y grabación</h3>
+        <p>Elige los grupos de valores medidos VAG (001 inyección, 003 caudalímetro y EGR, 011 turbo…) o los PIDs OBD2 que tu coche soporta, y míralos en una tabla en directo.</p>
+        <p><strong>Grabar CSV</strong> guarda cada lectura con su tiempo para analizarla después en Excel o LibreOffice.</p>
+      </div>
+      <figure class="captura"><a href="img/valores-kkl.webp" class="ampliar"><img src="img/valores-kkl.webp" width="1995" height="1200" loading="lazy" alt="Tabla de valores medidos de los grupos 001, 003 y 011 mientras se graba un CSV"></a></figure>
+    </div>
+
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Averías</h3>
+        <p>Códigos VAG de 5 cifras con el componente, el tipo de fallo y si es intermitente. En OBD2, averías memorizadas y pendientes con su descripción y el estado del testigo MIL.</p>
+        <p>Puedes borrarlas (siempre pide confirmación). Recuerda: borrar un código no repara la avería.</p>
+        <div class="selector" role="tablist" data-grupo="averias">
+          <button role="tab" aria-selected="true" data-img="img/averias-kkl.webp" data-alt="Averías VAG 00553 y 01262 intermitente">KKL · VAG</button>
+          <button role="tab" aria-selected="false" data-img="img/averias-obd.webp" data-alt="Averías OBD2 P0171, P0420 y P0301 pendiente con el testigo MIL encendido">ELM327 · OBD2</button>
+        </div>
+      </div>
+      <figure class="captura"><a href="img/averias-kkl.webp" class="ampliar" data-grupo="averias"><img src="img/averias-kkl.webp" width="1995" height="1200" loading="lazy" alt="Averías VAG 00553 y 01262 intermitente"></a></figure>
+    </div>
+
+    <div class="fila-funcion invertida">
+      <div class="texto-funcion">
+        <h3>Vehículo y otros módulos</h3>
+        <p>Identificación de la centralita (referencia, software, codificación) o, en OBD2, el VIN, el protocolo, la tensión de batería y el estándar.</p>
+        <p>Con el cable KKL también puedes entrar en otras centralitas: cambio automático, ABS, Climatronic, airbag, cuadro de instrumentos, cierre centralizado y radio.</p>
+      </div>
+      <figure class="captura"><a href="img/vehiculo-kkl.webp" class="ampliar"><img src="img/vehiculo-kkl.webp" width="1995" height="1200" loading="lazy" alt="Identificación de la centralita del motor"></a></figure>
+    </div>
+
+    <ul class="extras">
+      <li><strong>Simulador incluido</strong>: prueba todo sin coche eligiendo el puerto «Simulador (sin coche)».</li>
+      <li><strong>Un solo archivo</strong>: no hay que instalar Python ni nada más.</li>
+      <li><strong>Registro</strong> de toda la comunicación, con modo de depuración, por si algo falla.</li>
+      <li><strong>Sesión estable</strong>: mantiene viva la conexión KW1281 y avisa si se pierde.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ IA ============ -->
+<section id="ia" class="seccion seccion-alterna">
+  <div class="contenedor">
+    <h2>✦ Asistente IA: diagnóstico guiado</h2>
+    <p class="intro">No es un chat que adivina: el asistente usa el programa para comprobar sus hipótesis con datos de tu coche.</p>
+
+    <ol class="pasos">
+      <li><span>1</span><div><h3>Cuéntale qué le pasa</h3><p>«Le falta potencia al acelerar y echa humo negro». O pulsa <em>Analizar averías del vehículo</em>.</p></div></li>
+      <li><span>2</span><div><h3>Comprueba por su cuenta</h3><p>Lee las averías y los grupos o PIDs que importan, con series de lecturas durante un acelerón o un calentamiento.</p></div></li>
+      <li><span>3</span><div><h3>Te pide ayuda cuando hace falta</h3><p>«Arranca el motor y da un acelerón en vacío». Pulsas <em>Hecho</em> o <em>No puedo</em> y sigue.</p></div></li>
+      <li><span>4</span><div><h3>Diagnóstico razonado</h3><p>Causas por orden de probabilidad con la evidencia, qué hacer de lo más barato a lo más caro y si puedes circular.</p></div></li>
+    </ol>
+
+    <div class="dos-capturas">
+      <figure class="captura"><a href="img/ia-accion.webp" class="ampliar"><img src="img/ia-accion.webp" width="1995" height="1200" loading="lazy" alt="El asistente pide al usuario que arranque el motor y dé un acelerón"></a>
+        <figcaption>El asistente pide una acción y espera a que la hagas.</figcaption></figure>
+      <figure class="captura"><a href="img/ia-diagnostico.webp" class="ampliar"><img src="img/ia-diagnostico.webp" width="1995" height="1200" loading="lazy" alt="Diagnóstico final del asistente con conclusión, causas probables y qué hacer"></a>
+        <figcaption>Cada comprobación queda a la vista (⚙) antes del diagnóstico.</figcaption></figure>
+    </div>
+    <p class="aclaracion">Capturas con el simulador. Las lecturas y la ventana de acción son reales; el texto del diagnóstico es un ejemplo de cómo responde.</p>
+
+    <div class="tres">
+      <div class="tarjeta">
+        <h3>Proveedores</h3>
+        <p><strong>Claude</strong> de Anthropic (por defecto), <strong>OpenAI</strong> o <strong>DeepSeek</strong>. El modelo se puede cambiar.</p>
+        <p>Necesitas tu propia clave de API: <a href="https://platform.claude.com/settings/keys">Anthropic</a> · <a href="https://platform.openai.com/api-keys">OpenAI</a> · <a href="https://platform.deepseek.com/api_keys">DeepSeek</a>.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Coste</h3>
+        <p>Pagas el consumo directamente al proveedor; el programa es gratis. Con Claude, una consulta cuesta céntimos y un diagnóstico guiado de unas 10 comprobaciones, del orden de <strong>0,05 a 0,20 €</strong>.</p>
+      </div>
+      <div class="tarjeta">
+        <h3>Privacidad</h3>
+        <p>Al analizar se envían al proveedor que elijas los datos del vehículo (incluido el VIN), las averías, los valores medidos y, si lo pides, el registro del programa. La clave se guarda solo en tu equipo.</p>
+      </div>
+    </div>
+
+    <div class="aviso">
+      <strong>Seguridad ante todo.</strong> El asistente prefiere las pruebas en parado, nunca te pide mirar la pantalla conduciendo, solo propone pruebas en marcha con un acompañante que maneje el portátil y avisa de correas, ventilador y piezas calientes. Para borrar averías siempre pide tu permiso.
+    </div>
+  </div>
+</section>
+
+<!-- ============ HARDWARE ============ -->
+<section id="hardware" class="seccion">
+  <div class="contenedor">
+    <h2>Qué cable necesitas</h2>
+    <p class="intro">Depende del coche. Si es un VAG anterior a 2004 (sobre todo diésel), casi seguro necesitas el cable KKL: muchos no responden a OBD2 genérico aunque tengan el conector.</p>
+
+    <div class="dos">
+      <div class="tarjeta tarjeta-grande">
+        <p class="etiqueta">VAG hasta ~2004 · KW1281</p>
+        <h3>Cable KKL VAG-COM 409.1 con chip FTDI</h3>
+        <p>USB, unos 10-20 €. Conecta a la línea K (pin 7) del conector de diagnóstico.</p>
+        <ul class="lista-ok">
+          <li>Chip <strong>FTDI FT232RL/FT232RQ</strong>. En Windows, el Id. de hardware debe ser <code>VID_0403&amp;PID_6001</code>.</li>
+          <li>Los cables con interruptor de 4 posiciones (Fiat ECU Scan) valen: usa la <strong>posición 1</strong> para VAG.</li>
+        </ul>
+        <ul class="lista-no">
+          <li>Evita los chips <strong>CH340/CH341</strong> (<code>VID_1A86</code>) y <strong>PL2303</strong>: no hacen bien el arranque a 5 baudios.</li>
+          <li>No sirven los ELM327 con interruptor HS-CAN/MS-CAN (son para Ford) ni se recomienda el «K+CAN Commander».</li>
+          <li>Hay FTDI falsos: si el puerto aparece pero no comunica, prueba un driver anterior.</li>
+        </ul>
+      </div>
+      <div class="tarjeta tarjeta-grande">
+        <p class="etiqueta">Cualquier coche con OBD2/EOBD</p>
+        <h3>Adaptador ELM327 (USB o Bluetooth)</h3>
+        <p>Gasolina desde 2001 y diésel desde 2003-2004 en Europa. Los hay por menos de 15 €.</p>
+        <ul class="lista-ok">
+          <li><strong>USB</strong> o <strong>Bluetooth clásico</strong>: se empareja en el sistema y aparece como puerto COM (Windows) o <code>/dev/rfcomm0</code> (Linux).</li>
+          <li>Muchos clones dicen «v2.1» y son v1.0 incompletos; el programa tolera lo que puede.</li>
+        </ul>
+        <ul class="lista-no">
+          <li>Los ELM327 <strong>solo BLE</strong> (algunos para iPhone) no funcionan: no crean puerto serie.</li>
+          <li>El ELM327 no sirve para KW1281: para un VAG antiguo necesitas el cable KKL.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="aclaracion">El conector de diagnóstico suele estar bajo el salpicadero, en el lado del conductor. Una radio no original puede bloquear la línea K: si no conecta, desconéctala para probar.</p>
+  </div>
+</section>
+
+<!-- ============ DESCARGAR ============ -->
+<section id="descargar" class="seccion seccion-alterna">
+  <div class="contenedor">
+    <h2>Descargar e instalar</h2>
+    <p class="intro" id="version-actual">Gratis y de código abierto. Cada versión está en <a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.</p>
+
+    <div class="dos">
+      <div class="tarjeta tarjeta-grande">
+        <h3>Windows 10 y 11 (64 bits)</h3>
+        <a class="boton boton-principal" data-descarga="windows" href="https://github.com/jaso69/obd2/releases">⬇ ToledoDiagnosis.exe</a>
+        <ol class="lista-pasos">
+          <li>Descárgalo y ábrelo; no hace falta instalar nada.</li>
+          <li>Windows SmartScreen avisará la primera vez porque no está firmado: <em>Más información → Ejecutar de todas formas</em>.</li>
+          <li><strong>Cable FTDI:</strong> pon la latencia a 1 ms en <em>Administrador de dispositivos → Puertos → USB Serial Port → Propiedades → Configuración de puerto → Opciones avanzadas → Temporizador de latencia</em>. Evita cortes de comunicación.</li>
+        </ol>
+      </div>
+      <div class="tarjeta tarjeta-grande">
+        <h3>Linux (64 bits)</h3>
+        <a class="boton boton-principal" data-descarga="linux" href="https://github.com/jaso69/obd2/releases">⬇ Paquete .tar.gz</a>
+        <p class="pequeno">Ubuntu 20.04+, Debian 11+, Linux Mint 20+, Fedora, openSUSE, Arch…</p>
+<pre><code>tar xzf ToledoDiagnosis-*-linux-x86_64.tar.gz
+cd ToledoDiagnosis
+./instalar.sh
+sudo usermod -aG dialout $USER</code></pre>
+        <ol class="lista-pasos">
+          <li>El instalador lo añade al menú de aplicaciones, sin sudo. <code>./instalar.sh --desinstalar</code> lo quita.</li>
+          <li>Con el último comando das permiso para usar el cable (en Arch el grupo es <code>uucp</code>). Cierra sesión y vuelve a entrar.</li>
+          <li>ELM327 Bluetooth: emparéjalo y enlázalo con <code>sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF</code>.</li>
+        </ol>
+      </div>
+    </div>
+    <p class="aclaracion">¿Prefieres el código? Con Python 3.10+ y tkinter: <code>pip install -r requirements.txt</code> y <code>python gui.py</code>. Instrucciones en el <a href="https://github.com/jaso69/obd2#readme">README</a>.</p>
+  </div>
+</section>
+
+<!-- ============ GUÍA ============ -->
+<section id="guia" class="seccion">
+  <div class="contenedor">
+    <h2>Primeros pasos</h2>
+    <div class="dos">
+      <ol class="pasos pasos-guia">
+        <li><span>1</span><div><h3>Pruébalo sin coche</h3><p>Elige el puerto «Simulador (sin coche)», pulsa <em>Conectar</em> y, en la pestaña Panel, <em>Iniciar lectura</em>.</p></div></li>
+        <li><span>2</span><div><h3>Conecta al coche</h3><p>Contacto puesto (para leer averías basta con el motor parado). Enchufa el cable al conector OBD y al portátil, elige <em>Conexión</em> y <em>Puerto</em> y pulsa <em>Conectar</em>. Con KKL tarda de 2 a 6 s; con ELM327, hasta 25 s.</p></div></li>
+        <li><span>3</span><div><h3>Lee las averías</h3><p>Pestaña <em>Averías → Leer averías</em>. Apúntalas antes de borrar nada.</p></div></li>
+        <li><span>4</span><div><h3>Mira los valores</h3><p><em>Panel</em> para el vistazo rápido; <em>Valores medidos</em> para elegir grupos o PIDs y grabar un CSV.</p></div></li>
+        <li><span>5</span><div><h3>Pide ayuda a la IA</h3><p>En <em>✦ Asistente IA</em>, guarda tu clave, describe el problema y deja que haga las comprobaciones.</p></div></li>
+      </ol>
+      <div>
+        <h3>Grupos útiles en el 1.9 TDI (EDC15)</h3>
+        <table class="tabla">
+          <thead><tr><th>Grupo</th><th>Qué muestra</th></tr></thead>
+          <tbody>
+            <tr><td>001</td><td>Régimen, caudal inyectado (mg/H), tensión del dosificador, temperatura del refrigerante</td></tr>
+            <tr><td>003</td><td>Régimen, masa de aire teórica y real, ciclo de la válvula EGR → caudalímetro y EGR</td></tr>
+            <tr><td>004</td><td>Comienzo de inyección teórico y real (bomba rotativa)</td></tr>
+            <tr><td>008</td><td>Caudal solicitado y limitaciones por régimen y por masa de aire</td></tr>
+            <tr><td>010</td><td>Masa de aire, presión atmosférica, presión del colector, pedal</td></tr>
+            <tr><td>011</td><td>Régimen, presión de turbo teórica y real (mbar), ciclo de la N75 → turbo</td></tr>
+            <tr><td>013</td><td>Marcha suave por cilindro (si lo soporta)</td></tr>
+          </tbody>
+        </table>
+        <p class="aclaracion">Orientativo: los nombres pueden variar según el motor. Las unidades las calcula el programa con la fórmula que envía la propia centralita.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq" class="seccion seccion-alterna">
+  <div class="contenedor contenedor-estrecho">
+    <h2>Problemas frecuentes</h2>
+    <details><summary>No conecta con el cable KKL («Sin byte de sincronismo 0x55»)</summary>
+      <p>Revisa que el contacto esté puesto y el puerto sea el correcto. Comprueba que el cable lleve chip FTDI y no CH340, que no sea un FTDI falso y, si tiene interruptor, que esté en la posición 1. Una radio no original puede bloquear la línea K: desconéctala para probar.</p></details>
+    <details><summary>Dice «Keywords KWP2000»</summary>
+      <p>La centralita no habla KW1281 sino KWP2000. Prueba con un ELM327 en modo OBD2.</p></details>
+    <details><summary>La sesión KKL se corta</summary>
+      <p>En Windows, pon la latencia del puerto FTDI a 1 ms (ver Descargar). En Linux el programa la ajusta solo.</p></details>
+    <details><summary>ELM327: «el vehículo no responde a OBD2»</summary>
+      <p>Pon el contacto. Si es un VAG anterior a 2004, probablemente no tenga OBD2 genérico: necesitas el cable KKL.</p></details>
+    <details><summary>No encuentro el puerto del ELM327 Bluetooth</summary>
+      <p>En Windows se crean dos puertos COM al emparejarlo: si uno no funciona, prueba el otro. En Linux hay que enlazarlo con <code>sudo rfcomm bind 0 &lt;MAC&gt;</code> y elegir <code>/dev/rfcomm0</code>.</p></details>
+    <details><summary>Linux: «Permission denied» al conectar</summary>
+      <p>Tu usuario debe estar en el grupo del puerto serie: <code>sudo usermod -aG dialout $USER</code> (en Arch, <code>uucp</code>) y volver a iniciar sesión. El propio programa te dice el comando exacto.</p></details>
+    <details><summary>Linux (Ubuntu/Mint): el cable no aparece como /dev/ttyUSB0</summary>
+      <p>El servicio brltty (para líneas braille) se apodera de muchos adaptadores USB-serie. Si no lo usas: <code>sudo apt remove brltty</code>.</p></details>
+    <details><summary>El asistente dice «API key no válida», «sin saldo» o «modelo no encontrado»</summary>
+      <p>Revisa la clave y la facturación en la web del proveedor. Si el modelo no existe, cambia su nombre en la configuración de la IA.</p></details>
+    <details><summary>Windows avisa de que el programa no es seguro</summary>
+      <p>Es SmartScreen: el ejecutable no está firmado digitalmente. Pulsa <em>Más información → Ejecutar de todas formas</em>. El código es público en GitHub.</p></details>
+  </div>
+</section>
+
+<!-- ============ ESTADO ============ -->
+<section id="estado" class="seccion">
+  <div class="contenedor contenedor-estrecho">
+    <h2>Estado del proyecto</h2>
+    <p>Es una <strong>versión preliminar</strong> hecha por un aficionado, y prefiero decirte claramente en qué punto está:</p>
+    <ul class="lista-ok">
+      <li>Probado a fondo con los simuladores que incluye: cable KKL con centralita EDC15, y ELM327 con un coche OBD2 simulado.</li>
+      <li>El asistente probado con la API real de Claude.</li>
+      <li>Probado en Windows y en Linux (Ubuntu, Debian, Fedora, Arch y openSUSE).</li>
+    </ul>
+    <ul class="lista-no">
+      <li><strong>Todavía no se ha probado con un coche real.</strong> Puede que haya que ajustar tiempos, alguna fórmula o algún texto.</li>
+      <li>La tabla de averías VAG es pequeña: los códigos que no conoce salen con su número.</li>
+      <li>Solo lee y borra averías: no hay adaptaciones, ajustes básicos, codificación ni test de actuadores.</li>
+    </ul>
+    <p>Si lo pruebas en tu coche, cuéntame cómo ha ido en <a href="https://github.com/jaso69/obd2/issues">GitHub Issues</a>.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p><strong>Toledo Diagnosis</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p class="legal">Proyecto independiente, sin relación con SEAT, Volkswagen Group, Bosch, FTDI, Elm Electronics, Anthropic, OpenAI ni DeepSeek. Las marcas pertenecen a sus propietarios. El programa se ofrece tal cual, sin garantía; úsalo bajo tu responsabilidad. No realices pruebas que distraigan de la conducción. Las sugerencias del asistente de IA son orientativas y no sustituyen a un taller.</p>
+  </div>
+</footer>
+
+<dialog id="visor" aria-label="Captura ampliada">
+  <button class="visor-cerrar" aria-label="Cerrar">✕</button>
+  <img src="" alt="">
+</dialog>
+
+<script src="web.js"></script>
+</body>
+</html>
