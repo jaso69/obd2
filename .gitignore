@@ -1,0 +1,21 @@
+# Compilación (PyInstaller)
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Datos generados por la aplicación
+log_*.csv
+sonda_log.txt
+
+# Documentación de terceros
+elm327.pdf
+
+# Configuración local / secretos (la app guarda las API keys en %APPDATA%, no aquí)
+.env
+config.json
