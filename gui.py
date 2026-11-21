@@ -43,8 +43,10 @@ OK = "#3ccf7a"
 WARN = "#f5b83d"
 ERR = "#ef5350"
 
-FONT = "Segoe UI"
-MONO = "Consolas"
+WINDOWS = sys.platform == "win32"
+# Fuentes: en Linux se eligen al arrancar entre las instaladas (ver _elegir_fuentes)
+FONT = "Segoe UI" if WINDOWS else "DejaVu Sans"
+MONO = "Consolas" if WINDOWS else "DejaVu Sans Mono"
 SIM = "Simulador (sin coche)"
 
 KKL, ELM = "kkl", "elm"
@@ -75,6 +77,38 @@ def _dpi_aware():
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("toledo.kw1281.diagnosis")
         except Exception:
             pass
+
+
+def _elegir_fuentes(root):
+    """En Linux usa la primera fuente disponible de cada lista (Fedora: Noto/Cantarell...)."""
+    global FONT, MONO
+    if WINDOWS:
+        return
+    from tkinter import font as tkfont
+    disponibles = set(tkfont.families(root))
+    for f in ("Noto Sans", "Cantarell", "Ubuntu", "DejaVu Sans", "Liberation Sans"):
+        if f in disponibles:
+            FONT = f
+            break
+    for f in ("Noto Sans Mono", "DejaVu Sans Mono", "Liberation Mono", "Ubuntu Mono"):
+        if f in disponibles:
+            MONO = f
+            break
+
+
+def _poner_icono(win, defecto=False):
+    try:
+        if WINDOWS:
+            if defecto:
+                win.iconbitmap(default=recurso("icono.ico"))
+            else:
+                win.iconbitmap(recurso("icono.ico"))
+        else:
+            img = tk.PhotoImage(file=recurso("icono.png"))
+            win.iconphoto(defecto, img)
+            win._icono = img                   # evita que el recolector borre la imagen
+    except tk.TclError:
+        pass
 
 
 def _barra_oscura(root):
@@ -324,6 +358,11 @@ class Worker(threading.Thread):
         if mode == KKL:
             ser = serial.Serial(port, 9600, timeout=0.05)
             ser.dtr, ser.rts = True, False
+            if not WINDOWS:
+                try:
+                    ser.set_low_latency_mode(True)   # FTDI: latencia de 16 ms a 1 ms
+                except Exception as e:
+                    self.log(f"Aviso: no se pudo activar baja latencia en {port} ({e})")
         else:
             ser = serial.Serial(port, 38400, timeout=0.05)
         return ser
@@ -621,10 +660,7 @@ class App:
 
         root.title("Toledo Diagnosis · VAG KW1281 / OBD2")
         root.configure(bg=BG)
-        try:
-            root.iconbitmap(default=recurso("icono.ico"))
-        except tk.TclError:
-            pass
+        _poner_icono(root, defecto=True)
         root.geometry(f"{int(1240 * self.s)}x{int(800 * self.s)}")
         root.minsize(int(1080 * self.s), int(680 * self.s))
         self._style()
@@ -991,8 +1027,10 @@ class App:
         ttk.Button(side, text="Guardar", style="Accent.TButton", command=self._ai_save).pack(fill="x")
         self.ai_cfg_lbl = ttk.Label(side, text="", style="Muted.TLabel", wraplength=int(230 * s))
         self.ai_cfg_lbl.pack(anchor="w", pady=(8, 0))
-        ttk.Label(side, text="La clave se guarda cifrada y solo funciona con tu usuario de Windows "
-                             "en este equipo.\n\nAl analizar se envían al proveedor elegido los datos "
+        ttk.Label(side, text=("La clave se guarda cifrada y solo funciona con tu usuario de Windows "
+                              "en este equipo." if WINDOWS else
+                              "La clave se guarda en ~/.config/ToledoDiagnosis, legible solo por tu usuario.")
+                             + "\n\nAl analizar se envían al proveedor elegido los datos "
                              "del vehículo (incluido el VIN), las averías, los valores medidos y, si lo "
                              "pides, el registro del programa.",
                   style="Muted.TLabel", wraplength=int(230 * s), font=(FONT, 8)).pack(side="bottom", anchor="w")
@@ -1236,10 +1274,7 @@ class App:
         w.title("El asistente necesita tu ayuda")
         w.attributes("-topmost", True)
         w.resizable(False, False)
-        try:
-            w.iconbitmap(recurso("icono.ico"))
-        except tk.TclError:
-            pass
+        _poner_icono(w)
         f = ttk.Frame(w, style="Card.TFrame", padding=20)
         f.pack(fill="both", expand=True)
         ttk.Label(f, text="✦ Acción solicitada por la IA", style="Card.TLabel",
@@ -1422,7 +1457,8 @@ class App:
                 items.append(label)
                 if ftdi is None and p.vid == 0x0403:
                     ftdi = label
-                if bt is None and "bluetooth" in (p.description or "").lower():
+                if bt is None and ("bluetooth" in (p.description or "").lower()
+                                   or p.device.startswith("/dev/rfcomm")):
                     bt = label
         except Exception:
             pass
@@ -1763,11 +1799,17 @@ class App:
                 self._set_connected(False)
                 self.status("Error de conexión", ERR)
                 if self.mode == KKL:
-                    ayuda = ("Revisa: contacto puesto, puerto COM, cable FTDI "
-                             "y que la radio no bloquee la línea K.")
-                else:
+                    ayuda = ("Revisa: contacto puesto, puerto " + ("COM" if WINDOWS else "(/dev/ttyUSB0)")
+                             + ", cable FTDI y que la radio no bloquee la línea K.")
+                elif WINDOWS:
                     ayuda = ("Revisa: contacto puesto y puerto COM. Si el ELM327 es Bluetooth, "
                              "Windows crea dos puertos COM: prueba el otro.")
+                else:
+                    ayuda = ("Revisa: contacto puesto y puerto. Un ELM327 Bluetooth debe estar enlazado "
+                             "como /dev/rfcomm0 (sudo rfcomm bind 0 <MAC>).")
+                if not WINDOWS and "ermission" in str(payload):
+                    ayuda += ("\n\nSin permiso para el puerto: añade tu usuario al grupo dialout "
+                              "(sudo usermod -aG dialout $USER) y vuelve a iniciar sesión.")
                 messagebox.showerror("No se pudo conectar", f"{payload}\n\n{ayuda}")
             else:
                 self.dtc_lbl.configure(text="", foreground=FG)
@@ -1832,7 +1874,8 @@ def main():
         _autotest_ia(sys.argv[2])
         return
     _dpi_aware()
-    root = tk.Tk()
+    root = tk.Tk(className="ToledoDiagnosis")   # en Linux: WM_CLASS para el lanzador .desktop
+    _elegir_fuentes(root)
     App(root)
     root.mainloop()
 

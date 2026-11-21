@@ -14,7 +14,10 @@ Dos modos de conexión, elegibles en la parte superior de la ventana:
 
 | Archivo | Qué es |
 |---|---|
-| `Toledo Diagnosis.pyw` | **Doble clic**: abre la interfaz gráfica |
+| `docs/PROYECTO.md` | **Documentación completa** (uso, hardware, IA, arquitectura, guion de la web) |
+| `Toledo Diagnosis.pyw` | **Doble clic** (Windows): abre la interfaz gráfica |
+| `build.sh`, `linux/` | Ejecutable e instalación en Linux (`./build.sh`, `./linux/instalar.sh`) |
+| `tests/prueba_simuladores.py` | Pruebas de protocolo contra los simuladores |
 | `gui.py` | Interfaz gráfica (panel con relojes y gráficas, valores, averías, CSV) |
 | `toledo.py` | Versión de consola (menú de texto) |
 | `kw1281.py` | Protocolo KW1281: init 5 baudios, bloques, complementos, keep-alive |

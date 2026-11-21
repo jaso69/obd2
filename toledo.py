@@ -31,6 +31,11 @@ def abrir_puerto(args):
     ser = serial.Serial(args.puerto, 9600, timeout=0.05)
     ser.dtr = True      # alimenta la logica de algunos cables KKL
     ser.rts = False     # linea L en reposo
+    if sys.platform != "win32":
+        try:
+            ser.set_low_latency_mode(True)   # Linux + FTDI: latencia de 16 ms a 1 ms
+        except Exception:
+            pass
     return ser
 
 

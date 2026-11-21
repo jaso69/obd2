@@ -11,15 +11,17 @@ Proveedores: Anthropic (Claude, por defecto), OpenAI y DeepSeek.
 El bucle de herramientas se ejecuta en local porque las herramientas hablan con
 el adaptador conectado al coche.
 
-Las API keys se guardan cifradas con DPAPI de Windows (solo las puede descifrar
-el mismo usuario de Windows en el mismo equipo).
+API keys:
+- Windows: cifradas con DPAPI en %APPDATA%\\ToledoDiagnosis\\config.json (solo las
+  puede descifrar el mismo usuario de Windows en el mismo equipo).
+- Linux: en ~/.config/ToledoDiagnosis/config.json con permisos 600 (solo legible
+  por el usuario), codificadas pero no cifradas.
 """
 import base64
 import ctypes
 import json
 import os
 import sys
-from ctypes import wintypes
 
 PROVEEDORES = {
     "anthropic": {
@@ -148,7 +150,7 @@ class IAError(Exception):
 # Configuracion (con API keys cifradas por DPAPI)
 # ---------------------------------------------------------------------------
 class _BLOB(ctypes.Structure):
-    _fields_ = [("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_char))]
+    _fields_ = [("cbData", ctypes.c_uint32), ("pbData", ctypes.POINTER(ctypes.c_char))]
 
 
 def _dpapi(data, cifrar):
@@ -167,7 +169,10 @@ def _dpapi(data, cifrar):
 
 
 def _ruta_config():
-    base = os.environ.get("APPDATA") or os.path.expanduser("~")
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA") or os.path.expanduser("~")
+    else:
+        base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
     carpeta = os.path.join(base, "ToledoDiagnosis")
     os.makedirs(carpeta, exist_ok=True)
     return os.path.join(carpeta, "config.json")
@@ -186,7 +191,15 @@ def cargar_config():
 
 
 def guardar_config(cfg):
-    with open(_ruta_config(), "w", encoding="utf-8") as f:
+    ruta = _ruta_config()
+    if sys.platform != "win32":
+        # crea el fichero solo legible por el usuario antes de escribir la clave
+        fd = os.open(ruta, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.chmod(ruta, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2)
+        return
+    with open(ruta, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2)
 
 

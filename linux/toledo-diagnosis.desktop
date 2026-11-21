@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Toledo Diagnosis
+GenericName=Diagnóstico del automóvil
+Comment=Diagnóstico VAG KW1281 y OBD2 con asistente IA
+Exec=ToledoDiagnosis
+Icon=toledo-diagnosis
+Terminal=false
+Categories=Utility;Development;
+Keywords=OBD2;ELM327;VAG;KW1281;diagnosis;coche;
+StartupWMClass=ToledoDiagnosis

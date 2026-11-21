@@ -1,0 +1,8 @@
+# Scripts y lanzadores de Linux siempre con finales de línea LF
+*.sh       text eol=lf
+*.desktop  text eol=lf
+# Scripts de Windows con CRLF
+*.bat      text eol=crlf
+# Binarios
+*.ico      binary
+*.png      binary
