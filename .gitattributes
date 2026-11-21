@@ -6,3 +6,4 @@
 # Binarios
 *.ico      binary
 *.png      binary
+linux/*.txt text eol=lf

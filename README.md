@@ -16,8 +16,9 @@ Dos modos de conexión, elegibles en la parte superior de la ventana:
 |---|---|
 | `docs/PROYECTO.md` | **Documentación completa** (uso, hardware, IA, arquitectura, guion de la web) |
 | `Toledo Diagnosis.pyw` | **Doble clic** (Windows): abre la interfaz gráfica |
-| `build.sh`, `linux/` | Ejecutable e instalación en Linux (`./build.sh`, `./linux/instalar.sh`) |
+| `build.sh`, `linux/` | Ejecutable, paquete para distribuir e instalación en Linux |
 | `tests/prueba_simuladores.py` | Pruebas de protocolo contra los simuladores |
+| `tests/prueba_gui.py` | Prueba de la interfaz con los dos simuladores |
 | `gui.py` | Interfaz gráfica (panel con relojes y gráficas, valores, averías, CSV) |
 | `toledo.py` | Versión de consola (menú de texto) |
 | `kw1281.py` | Protocolo KW1281: init 5 baudios, bloques, complementos, keep-alive |
@@ -55,7 +56,21 @@ preguntas de seguimiento.
 - Con Claude Opus 5.5 / Sonnet 5.5 se activa el reintento automático en otro modelo
   si el modelo declina responder (`fallbacks: "default"`).
 
-## Instalación
+## Instalación en Linux (paquete)
+
+Descarga `ToledoDiagnosis-<versión>-linux-x86_64.tar.gz` de
+[Releases](https://github.com/jaso69/obd2/releases/latest) (Ubuntu 20.04+, Debian 11+,
+Mint 20+, Fedora, openSUSE, Arch... 64 bits):
+
+```
+tar xzf ToledoDiagnosis-*-linux-x86_64.tar.gz
+cd ToledoDiagnosis && ./instalar.sh        # sin sudo; --desinstalar para quitarlo
+sudo usermod -aG dialout $USER             # permiso para el cable (Arch: uucp); cerrar sesión
+```
+
+Las grabaciones CSV van a `Documentos/ToledoDiagnosis`. Más detalles en el `LEEME.txt` del paquete.
+
+## Instalación desde el código
 
 ```
 pip install -r requirements.txt

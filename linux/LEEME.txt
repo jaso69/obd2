@@ -1,0 +1,51 @@
+TOLEDO DIAGNOSIS PARA LINUX
+===========================
+
+Diagnóstico de coches: VAG KW1281 con cable KKL 409.1 (SEAT/VW/Audi/Skoda
+hasta ~2004) y OBD2 genérico con ELM327 (USB o Bluetooth), con asistente IA.
+
+Funciona en distribuciones de 64 bits (x86_64) con glibc 2.31 o posterior:
+Ubuntu 20.04+, Debian 11+, Linux Mint 20+, Fedora, openSUSE, Arch...
+
+
+INSTALAR (sin sudo)
+-------------------
+    ./instalar.sh
+
+Copia el programa a ~/.local/bin y lo añade al menú de aplicaciones como
+«Toledo Diagnosis». También se puede ejecutar directamente: ./ToledoDiagnosis
+
+Desinstalar: ./instalar.sh --desinstalar
+
+
+PERMISO PARA EL CABLE (una sola vez)
+------------------------------------
+Para abrir el cable KKL o el ELM327 tu usuario debe estar en el grupo del
+puerto serie (el instalador te dice cuál):
+
+    sudo usermod -aG dialout $USER        (Ubuntu, Debian, Mint, Fedora...)
+    sudo usermod -aG uucp $USER           (Arch, Manjaro)
+
+y después cerrar sesión y volver a entrar.
+
+Ubuntu/Mint: si al enchufar el cable no aparece /dev/ttyUSB0, el culpable
+suele ser brltty (lector braille). Si no lo usas: sudo apt remove brltty
+
+
+PUERTOS
+-------
+- Cable KKL (FTDI) y ELM327 USB: /dev/ttyUSB0 (o /dev/ttyACM0).
+- ELM327 Bluetooth: emparejarlo (bluetoothctl: pair, trust) y enlazarlo:
+      sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF
+  Aparece como /dev/rfcomm0.
+- «Simulador (sin coche)» para probar el programa sin nada conectado.
+
+
+DATOS
+-----
+- Configuración y API key de la IA: ~/.config/ToledoDiagnosis/config.json
+  (solo legible por tu usuario).
+- Grabaciones CSV: carpeta Documentos/ToledoDiagnosis.
+
+Código, ayuda y nuevas versiones: https://github.com/jaso69/obd2
+Licencia MIT (ver LICENSE).

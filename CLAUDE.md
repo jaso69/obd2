@@ -19,7 +19,9 @@ Programa de escritorio (Python + tkinter) para diagnosticar coches:
 ## Comandos
 - Ejecutar: `python gui.py` (Linux: `python3 gui.py`, requiere `python3-tkinter`).
 - Pruebas de protocolo: `python tests/prueba_simuladores.py` (≈10 s, debe decir «TODO CORRECTO»).
-- Ejecutable: Windows `build.bat` → `dist\ToledoDiagnosis.exe`; Linux `./build.sh` → `dist/ToledoDiagnosis`. Recompilar tras cambiar código.
+- Prueba de la GUI: `python tests/prueba_gui.py` (Linux: `xvfb-run -a python3 tests/prueba_gui.py`, ≈40 s).
+- Ejecutable: Windows `build.bat` → `dist\ToledoDiagnosis.exe`; Linux `./build.sh` → `dist/ToledoDiagnosis` (solo uso local). Recompilar tras cambiar código.
+- Paquete Linux para publicar: `./linux/build-portable.sh vX.Y.Z` (contenedor Debian 11 con podman/docker) → `dist/ToledoDiagnosis-vX.Y.Z-linux-x86_64.tar.gz`.
 - Autoprueba IA del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt`.
 - Instalar en Linux: `./linux/instalar.sh`.
 
@@ -32,4 +34,4 @@ Programa de escritorio (Python + tkinter) para diagnosticar coches:
 - Commits con la línea `Co-Authored-By` que indique el sistema; en Windows el push lo suele lanzar el usuario (login interactivo de GitHub).
 
 ## Estado (2026-11-21)
-v0.1.0 + soporte Linux. Todo probado con simuladores y la IA con la API real; **sin probar aún con coche real ni en un Linux real**. Licencia MIT (`LICENSE`). Release v0.1.0 publicada en GitHub (solo el .exe de Windows, sin Linux). Pendiente: release con binario Linux, web.
+v0.1.0 + soporte Linux. Todo probado con simuladores y la IA con la API real; Linux comprobado en Fedora 44 y el paquete portable en contenedores de 7 distros; **sin probar aún con coche real**. Licencia MIT (`LICENSE`). Release v0.1.0 publicada en GitHub (solo el .exe de Windows, sin Linux). Pendiente: release con el paquete Linux (y .exe recompilado en Windows), web.

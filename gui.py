@@ -55,9 +55,28 @@ MODOS = {KKL: "KKL · VAG KW1281 (hasta 2004)", ELM: "ELM327 · OBD2 genérico"}
 PANEL_GROUPS = [1, 3, 11]
 PANEL_PIDS = [0x0C, 0x0D, 0x05, 0x04, 0x0F, 0x10, 0x11, 0x42]
 
-# Carpeta donde se guardan los CSV: junto al .exe si esta empaquetado
+
+def _carpeta_documentos():
+    """Carpeta de documentos del usuario en Linux (~/Documentos, ~/Documents...)."""
+    try:
+        import subprocess
+        d = subprocess.run(["xdg-user-dir", "DOCUMENTS"], capture_output=True, text=True,
+                           timeout=2).stdout.strip()
+        if d and os.path.isdir(d) and d != os.path.expanduser("~"):
+            return d
+    except Exception:
+        pass
+    for d in ("Documentos", "Documents"):
+        if os.path.isdir(os.path.expanduser(f"~/{d}")):
+            return os.path.expanduser(f"~/{d}")
+    return os.path.expanduser("~")
+
+
+# Carpeta donde se guardan los CSV: junto al .exe si esta empaquetado en Windows;
+# en Linux el binario suele estar en ~/.local/bin, asi que van a Documentos/ToledoDiagnosis
 if getattr(sys, "frozen", False):
-    CARPETA = os.path.dirname(sys.executable)
+    CARPETA = (os.path.dirname(sys.executable) if WINDOWS
+               else os.path.join(_carpeta_documentos(), "ToledoDiagnosis"))
 else:
     CARPETA = os.path.dirname(os.path.abspath(__file__))
 
@@ -94,6 +113,19 @@ def _elegir_fuentes(root):
         if f in disponibles:
             MONO = f
             break
+
+
+def _grupo_puerto(puerto):
+    """Grupo con acceso al puerto serie en Linux (dialout; uucp en Arch)."""
+    import grp
+    for ruta in (puerto, "/dev/ttyUSB0", "/dev/ttyS0"):
+        try:
+            nombre = grp.getgrgid(os.stat(ruta).st_gid).gr_name
+            if nombre != "root":
+                return nombre
+        except (OSError, KeyError):
+            pass
+    return "dialout"
 
 
 def _poner_icono(win, defecto=False):
@@ -1576,7 +1608,12 @@ class App:
             if self.live_source != "vals":
                 return
         name = os.path.join(CARPETA, f"log_{datetime.datetime.now():%Y%m%d_%H%M%S}.csv")
-        self.csv_file = open(name, "w", newline="", encoding="utf-8-sig")
+        try:
+            os.makedirs(CARPETA, exist_ok=True)
+            self.csv_file = open(name, "w", newline="", encoding="utf-8-sig")
+        except OSError as e:
+            messagebox.showerror("Grabar CSV", f"No se pudo crear el archivo:\n{e}")
+            return
         self.csv_writer = csv.writer(self.csv_file, delimiter=";")
         self.csv_header = None
         self.csv_n = 0
@@ -1808,8 +1845,9 @@ class App:
                     ayuda = ("Revisa: contacto puesto y puerto. Un ELM327 Bluetooth debe estar enlazado "
                              "como /dev/rfcomm0 (sudo rfcomm bind 0 <MAC>).")
                 if not WINDOWS and "ermission" in str(payload):
-                    ayuda += ("\n\nSin permiso para el puerto: añade tu usuario al grupo dialout "
-                              "(sudo usermod -aG dialout $USER) y vuelve a iniciar sesión.")
+                    g = _grupo_puerto(self.port_var.get().split(" · ")[0])
+                    ayuda += (f"\n\nSin permiso para el puerto: añade tu usuario al grupo {g} "
+                              f"(sudo usermod -aG {g} $USER) y vuelve a iniciar sesión.")
                 messagebox.showerror("No se pudo conectar", f"{payload}\n\n{ayuda}")
             else:
                 self.dtc_lbl.configure(text="", foreground=FG)
@@ -1874,7 +1912,7 @@ def main():
         _autotest_ia(sys.argv[2])
         return
     _dpi_aware()
-    root = tk.Tk(className="ToledoDiagnosis")   # en Linux: WM_CLASS para el lanzador .desktop
+    root = tk.Tk(className="ToledoDiagnosis")   # WM_CLASS en Linux: «Toledodiagnosis» (ver .desktop)
     _elegir_fuentes(root)
     App(root)
     root.mainloop()

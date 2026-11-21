@@ -2,7 +2,7 @@
 
 Documento de referencia para (1) crear la web del programa y (2) retomar el
 desarrollo en cualquier equipo sin tener que volver a explicar el proyecto.
-Última actualización: 2026-11-21 (versión del código: v0.1.0 + soporte Linux).
+Última actualización: 2026-11-21 (versión del código: v0.1.0 + soporte Linux y paquete portable).
 
 - Repositorio: https://github.com/jaso69/obd2 (rama `main`)
 - Autor: jaso69
@@ -92,14 +92,18 @@ Otros detalles:
 - Cable FTDI: el driver lo instala Windows Update (si no, driver VCP de FTDI). **Poner la latencia a 1 ms**: Administrador de dispositivos → Puertos → USB Serial Port → Propiedades → Configuración de puerto → Opciones avanzadas → Temporizador de latencia = 1. Es por equipo: repetir en cada PC.
 - Desde código: `pip install -r requirements.txt` y `python gui.py` (o doble clic en `Toledo Diagnosis.pyw`).
 
-### 4.2 Linux (probado el código en Windows; ver §11 para la comprobación en Fedora)
+### 4.2 Linux (comprobado en Fedora 44 y en contenedores de 7 distros, ver §11)
 - Requisitos para ejecutar desde código: Python 3.10+ y tkinter.
   - Fedora: `sudo dnf install python3 python3-tkinter`
   - Debian/Ubuntu: `sudo apt install python3 python3-venv python3-tk`
   - Luego: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python gui.py`
-- **Ejecutable**: `./build.sh` genera `dist/ToledoDiagnosis` (binario único con PyInstaller, usa un venv `.venv`). Hay que compilar en Linux (PyInstaller no compila de Windows a Linux). Para máxima compatibilidad, compilar en la distro más antigua que se quiera soportar (glibc).
-- **Instalar en el menú**: `./linux/instalar.sh [ejecutable]` → copia a `~/.local/bin`, icono y lanzador `.desktop` (sin sudo).
-- **Permisos del puerto serie**: `sudo usermod -aG dialout $USER` y cerrar sesión. Sin esto sale «Permission denied» (el programa lo explica).
+- **Ejecutable local**: `./build.sh` genera `dist/ToledoDiagnosis` (binario único con PyInstaller, usa un venv `.venv`). Solo vale para distros con una glibc igual o más nueva que la del equipo donde se compila (compilado en Fedora 44 no arranca en Ubuntu 22.04).
+- **Para distribuir**: `./linux/build-portable.sh [versión]` compila dentro de un contenedor Debian 11 (podman o docker, imagen `python:3.13-bullseye`, glibc 2.31), pasa la autoprueba de IA y genera `dist/ToledoDiagnosis-<versión>-linux-x86_64.tar.gz` con: `ToledoDiagnosis`, `instalar.sh`, `toledo-diagnosis.desktop`, `icono.png`, `LEEME.txt` (`linux/LEEME.txt`) y `LICENSE`. Funciona en Ubuntu 20.04+, Debian 11+, Mint 20+, Fedora, openSUSE, Arch.
+- **Instalar en el menú**: `./instalar.sh [ejecutable]` (desde el paquete) o `./linux/instalar.sh` (desde el repositorio) → copia a `~/.local/bin`, icono y lanzador `.desktop` (sin sudo). `--desinstalar` lo quita (deja la configuración).
+- **Permisos del puerto serie**: `sudo usermod -aG dialout $USER` (en Arch el grupo es `uucp`) y cerrar sesión. Sin esto sale «Permission denied»; el programa y el instalador detectan el grupo del puerto y dicen el comando exacto.
+- **brltty** (Ubuntu/Mint): el lector braille captura adaptadores USB-serie (CH340, a veces FTDI) y `/dev/ttyUSB0` desaparece. Solución: `sudo apt remove brltty`. El instalador avisa si está.
+- **Lanzador**: Tk pone la clase de ventana `Toledodiagnosis` (capitaliza `className`), por eso `StartupWMClass=Toledodiagnosis` en el `.desktop`; si no coincide, el dock muestra un icono genérico duplicado.
+- **CSV**: con el binario van a `Documentos/ToledoDiagnosis` (`xdg-user-dir DOCUMENTS`); desde el código, junto a `gui.py`. En Windows, junto al `.exe`.
 - Puertos: cable FTDI = `/dev/ttyUSB0`; ELM327 USB = `/dev/ttyUSB0` o `/dev/ttyACM0`; ELM327 Bluetooth: `bluetoothctl` (pair, trust) y `sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF` → `/dev/rfcomm0`.
 - Latencia FTDI: en Linux el programa activa el modo de baja latencia automáticamente (`set_low_latency_mode`), equivalente a poner 1 ms.
 - Clave de IA en `~/.config/ToledoDiagnosis/config.json` con permisos 600 (no cifrada; en Windows va cifrada con DPAPI).
@@ -178,8 +182,10 @@ fórmula que envía la propia centralita.
 | `toledo.py` | Versión consola KKL (y utilidades reutilizadas por la GUI: `leer_grupo_formateado`, `texto_id`). |
 | `sonda_toledo.py` | Sonda de protocolos con ELM327 para el Toledo. |
 | `tests/prueba_simuladores.py` | 17 comprobaciones de protocolo contra los simuladores (`python tests/prueba_simuladores.py`). |
+| `tests/prueba_gui.py` | Maneja la ventana real con los dos simuladores: conectar, averías, panel, valores + CSV, configuración IA (`xvfb-run -a python3 tests/prueba_gui.py` en Linux). |
 | `build.bat` / `build.sh` | Ejecutable único con PyInstaller (Windows / Linux). |
-| `linux/instalar.sh`, `linux/toledo-diagnosis.desktop` | Instalación de usuario en Linux. |
+| `linux/build-portable.sh` | Binario Linux portable (contenedor Debian 11) y paquete `.tar.gz` para distribuir. |
+| `linux/instalar.sh`, `linux/toledo-diagnosis.desktop`, `linux/LEEME.txt` | Instalación de usuario en Linux y LÉEME del paquete. |
 | `crear_icono.py` | Genera `icono.ico`/`icono.png` con Pillow (solo desarrollo). |
 | `Toledo Diagnosis.pyw` | Lanzador sin consola en Windows. |
 
@@ -210,19 +216,19 @@ fórmula que envía la propia centralita.
 ---
 
 ## 8. Compilar, versionar y publicar
-- Windows: `build.bat` → `dist\ToledoDiagnosis.exe`. Linux: `./build.sh` → `dist/ToledoDiagnosis`.
+- Windows: `build.bat` → `dist\ToledoDiagnosis.exe`. Linux: `./build.sh` → `dist/ToledoDiagnosis` (uso local); para publicar, `./linux/build-portable.sh vX.Y.Z` → `dist/ToledoDiagnosis-vX.Y.Z-linux-x86_64.tar.gz`.
 - Tras cambiar código, recompilar y copiar el ejecutable nuevo.
 - Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
 - Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (pre-release) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
-- La v0.1.0 **no incluye** el soporte Linux (llegó después). La próxima release (p. ej. v0.2.0) debería llevar `ToledoDiagnosis.exe` y el binario `ToledoDiagnosis` de Linux compilado en Fedora. En la web, enlazar a `https://github.com/jaso69/obd2/releases/latest`.
+- La v0.1.0 **no incluye** el soporte Linux (llegó después). La próxima release (p. ej. v0.2.0) debería llevar `ToledoDiagnosis.exe` y el paquete `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz` de `build-portable.sh`. En la web, enlazar a `https://github.com/jaso69/obd2/releases/latest`.
 - Crear releases: con `gh release create vX.Y.Z <archivos> --prerelease --notes-file notas.md` (en Fedora, tras `gh auth login`) o desde la web de GitHub.
 - En Windows el push lo hace el usuario (`! git -C C:/Users/jose/Desktop/obd2 push`, barras normales porque `!` usa bash) porque el login de GitHub es interactivo.
 
 ---
 
 ## 9. Estado actual y limitaciones (ser honesto en la web)
-- **Probado**: todo contra los simuladores; IA contra la API real (Claude) con el simulador; ejecutable de Windows.
-- **No probado todavía**: con un coche real (el cable KKL FTDI estaba pedido; el ELM327 Bluetooth se puede probar en cualquier coche OBD2); la versión Linux en un Linux real.
+- **Probado**: todo contra los simuladores; IA contra la API real (Claude) con el simulador; ejecutable de Windows; en Linux, el código y la GUI en Fedora 44 y el paquete portable en contenedores de Ubuntu 20.04/24.04, Debian 12, Fedora 40/44, Arch y openSUSE Leap 15.6 (instala, autoprueba IA y abre la ventana).
+- **No probado todavía**: con un coche real (el cable KKL FTDI estaba pedido; el ELM327 Bluetooth se puede probar en cualquier coche OBD2); en Linux, los adaptadores físicos (FTDI, `rfcomm`) y el lanzador en un escritorio GNOME/KDE real.
 - Ajustes probables al probar con coche: tiempos entre bytes (`--retardo` en consola), alguna fórmula VAG, textos de averías.
 - Tabla de averías VAG pequeña (14 códigos); los demás salen con número y «no incluido en la tabla».
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
@@ -230,20 +236,22 @@ fórmula que envía la propia centralita.
 
 ## 10. Ideas pendientes / hoja de ruta
 - Probar con el coche real y ajustar.
-- Releases en GitHub con ejecutables de Windows y Linux.
+- Release en GitHub con el `.exe` y el paquete Linux.
 - Ampliar averías VAG y descripciones; más grupos documentados.
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
 - Firma del ejecutable de Windows (evitar SmartScreen).
 
-## 11. Comprobación en Fedora (primera vez)
+## 11. Comprobación en Linux
+Hecha el 2026-11-21 en Fedora 44 (Python 3.14, Tk 9.0, Wayland): pruebas de protocolo y de GUI, `build.sh`, `build-portable.sh` y el paquete en contenedores (§9). Para repetirla en un equipo nuevo:
+
 1. `sudo dnf install python3 python3-tkinter git`
 2. `git clone https://github.com/jaso69/obd2.git && cd obd2`
 3. `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
 4. `.venv/bin/python tests/prueba_simuladores.py` → debe decir «TODO CORRECTO».
 5. `.venv/bin/python gui.py` → revisar fuentes, icono, colores, simulador en ambos modos, pestaña IA (introducir la clave: en Linux hay que volver a ponerla).
-6. `./build.sh` → `dist/ToledoDiagnosis --autotest-ia /tmp/t.txt; cat /tmp/t.txt`.
-7. `./linux/instalar.sh` y abrir desde el menú.
+6. `xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO».
+7. `./linux/build-portable.sh` (hace la autoprueba de IA) y probar el `.tar.gz`: `./instalar.sh` y abrir desde el menú.
 
 ---
 
@@ -279,7 +287,8 @@ pero sin jerga innecesaria. Honesto sobre el estado (versión preliminar).
 - *Se corta la sesión*: latencia FTDI a 1 ms (Windows), retardo entre bytes.
 - *ELM327: «el vehículo no responde a OBD2»*: contacto, coche sin OBD2 (VAG antes de 2004 → KKL).
 - *Bluetooth*: Windows crea dos COM (probar el otro); Linux `rfcomm bind`.
-- *Linux «Permission denied»*: grupo dialout.
+- *Linux «Permission denied»*: grupo dialout (Arch: uucp).
+- *Linux: el cable no aparece como /dev/ttyUSB0 (Ubuntu/Mint)*: quitar brltty.
 - *IA «API key no válida» / «sin saldo»*: revisar clave y facturación del proveedor; *«modelo no encontrado»*: cambiar el nombre del modelo.
 - *SmartScreen*: ejecutable no firmado.
 
