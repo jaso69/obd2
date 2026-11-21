@@ -104,3 +104,7 @@ la fórmula que envía la propia ECU. Si una fórmula no está en la tabla se mu
   o radio no original bloqueando la línea K (desconéctala para probar).
 - **Keywords KWP2000**: la ECU no habla KW1281; habría que usar el ELM327.
 - **Se corta la conexión**: latencia FTDI a 1 ms, prueba `--retardo 3`.
+
+## Licencia
+
+MIT. Ver [LICENSE](LICENSE). Proyecto independiente, sin relación con SEAT, Volkswagen Group ni los fabricantes de los adaptadores; se ofrece sin garantía.

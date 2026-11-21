@@ -32,4 +32,4 @@ Programa de escritorio (Python + tkinter) para diagnosticar coches:
 - Commits con la línea `Co-Authored-By` que indique el sistema; en Windows el push lo suele lanzar el usuario (login interactivo de GitHub).
 
 ## Estado (2026-11-21)
-v0.1.0 + soporte Linux. Todo probado con simuladores y la IA con la API real; **sin probar aún con coche real ni en un Linux real**. Pendiente: Releases en GitHub con ejecutables, licencia, web.
+v0.1.0 + soporte Linux. Todo probado con simuladores y la IA con la API real; **sin probar aún con coche real ni en un Linux real**. Licencia MIT (`LICENSE`). Pendiente: Releases en GitHub con ejecutables, web.

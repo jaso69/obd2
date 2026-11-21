@@ -6,7 +6,7 @@ desarrollo en cualquier equipo sin tener que volver a explicar el proyecto.
 
 - Repositorio: https://github.com/jaso69/obd2 (rama `main`)
 - Autor: jaso69
-- Licencia: **sin definir todavía** (decidir antes de publicar la web; ver §12).
+- Licencia: **MIT** (archivo `LICENSE`, © 2026 jaso69). Permite usar, copiar, modificar y redistribuir, también comercialmente, manteniendo el aviso de copyright; sin garantía.
 
 ---
 
@@ -233,7 +233,6 @@ fórmula que envía la propia centralita.
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
 - Firma del ejecutable de Windows (evitar SmartScreen).
-- Licencia del proyecto.
 
 ## 11. Comprobación en Fedora (primera vez)
 1. `sudo dnf install python3 python3-tkinter git`
@@ -283,7 +282,7 @@ pero sin jerga innecesaria. Honesto sobre el estado (versión preliminar).
 - *SmartScreen*: ejecutable no firmado.
 
 ### 12.5 Aviso legal (texto base)
-«Toledo Diagnosis es un proyecto independiente, sin relación con SEAT, Volkswagen
+«Toledo Diagnosis es software libre bajo licencia MIT y un proyecto independiente, sin relación con SEAT, Volkswagen
 Group, Bosch, FTDI, Elm Electronics, Anthropic, OpenAI ni DeepSeek. Las marcas
 pertenecen a sus propietarios. El programa se ofrece tal cual, sin garantía; úsalo
 bajo tu responsabilidad. No realices pruebas que distraigan de la conducción. Las
