@@ -213,7 +213,9 @@ fórmula que envía la propia centralita.
 - Windows: `build.bat` → `dist\ToledoDiagnosis.exe`. Linux: `./build.sh` → `dist/ToledoDiagnosis`.
 - Tras cambiar código, recompilar y copiar el ejecutable nuevo.
 - Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
-- Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Aún no hay Release en GitHub con los ejecutables** (se intentó y quedó pendiente). Para la web, crear Releases con `ToledoDiagnosis.exe` (Windows) y `ToledoDiagnosis` (Linux) y enlazar a `https://github.com/jaso69/obd2/releases/latest`.
+- Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (pre-release) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
+- La v0.1.0 **no incluye** el soporte Linux (llegó después). La próxima release (p. ej. v0.2.0) debería llevar `ToledoDiagnosis.exe` y el binario `ToledoDiagnosis` de Linux compilado en Fedora. En la web, enlazar a `https://github.com/jaso69/obd2/releases/latest`.
+- Crear releases: con `gh release create vX.Y.Z <archivos> --prerelease --notes-file notas.md` (en Fedora, tras `gh auth login`) o desde la web de GitHub.
 - En Windows el push lo hace el usuario (`! git -C C:/Users/jose/Desktop/obd2 push`, barras normales porque `!` usa bash) porque el login de GitHub es interactivo.
 
 ---
