@@ -295,7 +295,7 @@ pero sin jerga innecesaria. Honesto sobre el estado (versión preliminar).
 - *Keywords KWP2000*: la centralita no habla KW1281 → usar ELM327.
 - *Se corta la sesión*: latencia FTDI a 1 ms (Windows), retardo entre bytes.
 - *ELM327: «el vehículo no responde a OBD2»*: contacto, coche sin OBD2 (VAG antes de 2004 → KKL).
-- *Bluetooth*: Windows crea dos COM (probar el otro); Linux `rfcomm bind`.
+- *Bluetooth*: Windows crea dos COM (probar el otro); Linux `rfcomm bind`. La web tiene un bloque «Conectar un ELM327 Bluetooth» (`#bluetooth`, en «Qué cable necesitas») que explica que al emparejar se crea un puerto serie y se elige ese puerto, paso a paso en Windows y Linux.
 - *Linux «Permission denied»*: grupo dialout (Arch: uucp).
 - *Linux: el cable no aparece como /dev/ttyUSB0 (Ubuntu/Mint)*: quitar brltty.
 - *IA «API key no válida» / «sin saldo»*: revisar clave y facturación del proveedor; *«modelo no encontrado»*: cambiar el nombre del modelo.
