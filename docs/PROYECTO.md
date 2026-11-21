@@ -249,14 +249,14 @@ Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-po
 
 ## 9. Estado actual y limitaciones (ser honesto en la web)
 - **Probado**: todo contra los simuladores; IA contra la API real (Claude) con el simulador; ejecutable de Windows; en Linux, el código y la GUI en Fedora 44 y el paquete portable en contenedores de Ubuntu 20.04/24.04, Debian 12, Fedora 40/44, Arch y openSUSE Leap 15.6 (instala, autoprueba IA y abre la ventana).
-- **No probado todavía**: con un coche real (el cable KKL FTDI estaba pedido; el ELM327 Bluetooth se puede probar en cualquier coche OBD2); en Linux, los adaptadores físicos (FTDI, `rfcomm`) y el lanzador en un escritorio GNOME/KDE real.
+- **Probado en coches reales** (un par de coches, noviembre 2026): funciona bien. La web ya no dice que esté sin probar con coche.
+- **No probado todavía**: en Linux, los adaptadores físicos (FTDI, `rfcomm`) y el lanzador en un escritorio GNOME/KDE real.
 - Ajustes probables al probar con coche: tiempos entre bytes (`--retardo` en consola), alguna fórmula VAG, textos de averías.
 - Tabla de averías VAG pequeña (14 códigos); los demás salen con número y «no incluido en la tabla».
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
 - No hay funciones de adaptación, ajustes básicos, codificación ni test de actuadores (solo lectura y borrado de averías).
 
 ## 10. Ideas pendientes / hoja de ruta
-- Probar con el coche real y ajustar.
 - Terminar la release v0.2.0: borrador creado con el paquete Linux; falta subir el `.exe` compilado en Windows y publicarla (§8.1).
 - Ampliar averías VAG y descripciones; más grupos documentados.
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
