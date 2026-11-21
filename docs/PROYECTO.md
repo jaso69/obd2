@@ -220,7 +220,28 @@ fórmula que envía la propia centralita.
 - Tras cambiar código, recompilar y copiar el ejecutable nuevo.
 - Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
 - Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (pre-release) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
-- La v0.1.0 **no incluye** el soporte Linux (llegó después). La próxima release (p. ej. v0.2.0) debería llevar `ToledoDiagnosis.exe` y el paquete `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz` de `build-portable.sh`. En la web, enlazar a `https://github.com/jaso69/obd2/releases/latest`.
+- La v0.1.0 **no incluye** el soporte Linux (llegó después).
+- **v0.2.0 a medias (2026-11-21): BORRADOR de release en GitHub, falta el `.exe` de Windows.** Ver §8.1.
+
+### 8.1 Terminar la release v0.2.0 desde Windows (pendiente)
+Hecho en Fedora el 2026-11-21:
+- Etiqueta anotada `v0.2.0` en el commit `5579713` (subida a GitHub). Los commits posteriores solo tocan documentación.
+- Paquete Linux `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz` (40 147 632 bytes) generado con `./linux/build-portable.sh v0.2.0` desde ese commit; pasó la autoprueba IA, `tests/prueba_simuladores.py` y `tests/prueba_gui.py`. Ya trae el apartado Bluetooth en `LEEME.txt`.
+- Release **en borrador** (`--draft --prerelease`, título «v0.2.0 — Linux») con ese `.tar.gz` y las notas ya escritas (mencionan los dos archivos). Un borrador no es público: la web (`web.js`, API sin autenticar) sigue ofreciendo la v0.1.0 hasta publicarla. En la web de GitHub el borrador aparece en *Releases* solo para el dueño (su URL es `.../releases/tag/untagged-…` hasta que se publica).
+
+Pasos en Windows (`C:\Users\jose\Desktop\obd2`):
+1. `git pull` y `git fetch --tags`.
+2. Compilar desde la etiqueta: `git checkout v0.2.0`, `build.bat` → `dist\ToledoDiagnosis.exe`, y volver con `git checkout main`.
+3. Probar:
+   - `python tests\prueba_simuladores.py` → «TODO CORRECTO».
+   - `dist\ToledoDiagnosis.exe --autotest-ia salida.txt` → los 3 proveedores con «API key … no válida» y ningún «FALLO».
+   - Abrir el `.exe`, puerto «Simulador (sin coche)», *Conectar* e *Iniciar lectura* en KKL y en ELM327. Si hay cable FTDI o ELM327 Bluetooth a mano, comprobar que sale su puerto COM.
+4. Subir el `.exe` al borrador: `gh release upload v0.2.0 dist\ToledoDiagnosis.exe` (si `gh` no está instalado o autenticado en Windows: web de GitHub → *Releases* → borrador v0.2.0 → *Edit* → arrastrar el `.exe` → *Update release*).
+5. Publicar: `gh release edit v0.2.0 --draft=false` (sigue como pre-release), o en la web *Edit* → *Publish release*.
+6. Comprobar que los botones «Descargar» de https://www.jasodev.es apuntan a los archivos de la v0.2.0 (los coge solos de la API de GitHub; no hace falta volver a publicar la web).
+7. Actualizar esta sección, §10 y el «Estado» de `CLAUDE.md` (release v0.2.0 publicada con `.exe` y paquete Linux), y hacer commit.
+
+Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-portable.sh v0.2.0` y `gh release upload v0.2.0 <tar.gz> --clobber`.
 - Crear releases: con `gh release create vX.Y.Z <archivos> --prerelease --notes-file notas.md` (en Fedora, tras `gh auth login`) o desde la web de GitHub.
 - En Windows el push lo hace el usuario (`! git -C C:/Users/jose/Desktop/obd2 push`, barras normales porque `!` usa bash) porque el login de GitHub es interactivo.
 
@@ -236,7 +257,7 @@ fórmula que envía la propia centralita.
 
 ## 10. Ideas pendientes / hoja de ruta
 - Probar con el coche real y ajustar.
-- Release en GitHub con el `.exe` y el paquete Linux.
+- Terminar la release v0.2.0: borrador creado con el paquete Linux; falta subir el `.exe` compilado en Windows y publicarla (§8.1).
 - Ampliar averías VAG y descripciones; más grupos documentados.
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
