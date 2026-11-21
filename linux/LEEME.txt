@@ -35,10 +35,36 @@ suele ser brltty (lector braille). Si no lo usas: sudo apt remove brltty
 PUERTOS
 -------
 - Cable KKL (FTDI) y ELM327 USB: /dev/ttyUSB0 (o /dev/ttyACM0).
-- ELM327 Bluetooth: emparejarlo (bluetoothctl: pair, trust) y enlazarlo:
-      sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF
-  Aparece como /dev/rfcomm0.
+- ELM327 Bluetooth: /dev/rfcomm0, después de emparejarlo y crear el puerto
+  (ver el apartado siguiente).
 - «Simulador (sin coche)» para probar el programa sin nada conectado.
+
+
+CONECTAR UN ELM327 BLUETOOTH
+----------------------------
+Un ELM327 Bluetooth funciona como un cable serie sin cable: el sistema le
+asigna un puerto serie virtual (/dev/rfcomm0) y el programa habla con él
+igual que con un adaptador USB. Por eso en el programa no se busca «el
+Bluetooth»: se elige ese puerto. Primero se empareja desde el sistema y
+después se conecta desde el programa.
+
+1. Enchufa el ELM327 al coche y pon el contacto (se enciende su luz).
+2. Emparéjalo desde los ajustes de Bluetooth del escritorio o con:
+       bluetoothctl
+         scan on                  (busca la MAC: suele salir como OBDII)
+         pair AA:BB:CC:DD:EE:FF   (PIN habitual: 1234, 0000 o 6789)
+         trust AA:BB:CC:DD:EE:FF
+         quit
+3. Linux no crea el puerto solo. Créalo con:
+       sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF
+   Aparece /dev/rfcomm0. Hay que repetirlo tras reiniciar el ordenador.
+4. En el programa: Conexión «ELM327», Puerto «/dev/rfcomm0» y Conectar.
+
+Si no tienes el comando rfcomm: Fedora -> sudo dnf install bluez-deprecated;
+Arch -> bluez-deprecated-tools. En Debian, Ubuntu y Mint viene con bluez.
+
+El ELM327 solo admite una conexión a la vez: cierra la app del móvil (Torque,
+Car Scanner...) o apaga su Bluetooth antes de conectar desde el ordenador.
 
 
 DATOS
