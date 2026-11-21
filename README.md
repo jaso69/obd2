@@ -7,8 +7,8 @@ Dos modos de conexión, elegibles en la parte superior de la ventana:
 - **KKL · VAG KW1281**: centralita Bosch EDC15 del SEAT Toledo II 1.9 TDI (2000) y
   otros módulos VAG hasta ~2004, por línea K con un cable **KKL 409.1 FTDI**.
 - **ELM327 · OBD2 genérico**: cualquier coche con OBD2/EOBD (gasolina desde 2001,
-  diésel desde ~2004) con un ELM327 USB o **Bluetooth** (emparejado en Windows,
-  aparece como puerto COM; si salen dos COM, uno de ellos es el bueno).
+  diésel desde ~2004) con un ELM327 USB o **Bluetooth** (al emparejarlo se crea
+  un puerto COM o `/dev/rfcomm0`; ver [Conectar un ELM327 Bluetooth](#conectar-un-elm327-bluetooth)).
   Lee PIDs estándar, averías memorizadas y pendientes (P0xxx), testigo MIL,
   VIN y tensión de batería, y permite borrar averías.
 
@@ -88,6 +88,44 @@ Administrador de dispositivos → Puertos (COM y LPT) → USB Serial Port →
 Propiedades → Configuración de puerto → Opciones avanzadas →
 **Temporizador de latencia: 1 ms**. Apunta también el número de COM.
 
+## Conectar un ELM327 Bluetooth
+
+Un ELM327 Bluetooth funciona como un **cable serie sin cable**: al emparejarlo, el
+sistema crea un **puerto serie virtual** (un COM en Windows, `/dev/rfcomm0` en Linux)
+y el programa habla con él igual que con un adaptador USB. Por eso en el programa no
+se busca «el Bluetooth»: se elige **ese puerto**. Primero se empareja desde el
+sistema y después se conecta desde el programa.
+
+**Windows 10 y 11**
+
+1. Enchufa el ELM327 al coche y pon el contacto (se enciende su luz).
+2. *Configuración → Bluetooth y dispositivos → Agregar dispositivo → Bluetooth* y
+   elige el adaptador (suele llamarse OBDII, OBD2 o V-LINK). PIN habitual: `1234`,
+   `0000` o `6789`.
+3. Mira qué puerto le ha dado: *Más opciones de Bluetooth → pestaña Puertos COM*, el
+   de dirección **Saliente** (p. ej. COM5). También sale en *Administrador de
+   dispositivos → Puertos (COM y LPT)* como «Vínculo serie estándar a través de Bluetooth».
+4. En el programa: *Conexión* ELM327, *Puerto* ese COM y *Conectar* (suele
+   preseleccionarlo).
+
+Es normal que Windows lo muestre como «Emparejado» y no «Conectado»: la conexión se
+abre al pulsar *Conectar*. Si hay dos COM y uno no responde, prueba el otro.
+
+**Linux**
+
+```
+bluetoothctl                          # dentro: scan on, pair <MAC>, trust <MAC>, quit
+sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF  # crea /dev/rfcomm0 (repetir tras reiniciar)
+```
+
+También se puede emparejar desde los ajustes de Bluetooth del escritorio; el
+`rfcomm bind` hace falta igualmente. Después, en el programa: *Conexión* ELM327,
+*Puerto* `/dev/rfcomm0` y *Conectar*. Si no tienes `rfcomm`: Fedora
+`bluez-deprecated`, Arch `bluez-deprecated-tools` (Debian/Ubuntu/Mint ya lo traen en `bluez`).
+
+El ELM327 solo admite una conexión a la vez: cierra la app del móvil (Torque, Car
+Scanner...) o apaga su Bluetooth antes de conectar desde el ordenador.
+
 ## Uso
 
 ```
@@ -122,6 +160,8 @@ la fórmula que envía la propia ECU. Si una fórmula no está en la tabla se mu
   o radio no original bloqueando la línea K (desconéctala para probar).
 - **Keywords KWP2000**: la ECU no habla KW1281; habría que usar el ELM327.
 - **Se corta la conexión**: latencia FTDI a 1 ms, prueba `--retardo 3`.
+- **No encuentro el puerto del ELM327 Bluetooth**: hay que emparejarlo y elegir el
+  puerto serie que crea el sistema (ver [Conectar un ELM327 Bluetooth](#conectar-un-elm327-bluetooth)).
 
 ## Licencia
 
