@@ -279,7 +279,7 @@ Hecho en Fedora el 2026-11-22 (cierre):
 - **Probado en coches reales** (un par de coches, noviembre 2026): funciona bien. La web ya no dice que esté sin probar con coche.
 - **No probado todavía**: en Linux, los adaptadores físicos (FTDI, `rfcomm`) y el lanzador en un escritorio GNOME/KDE real.
 - Ajustes probables al probar con coche: tiempos entre bytes (`--retardo` en consola), alguna fórmula VAG, textos de averías.
-- **Funciones de la v0.3.0 probadas solo con simuladores**: escaneo de módulos VAG, datos congelados, monitores, averías permanentes, CALID/CVN, decodificación del VIN, informe, ELM327 WiFi y aviso de versión (la consulta real a GitHub sí se probó). Falta probarlas en coche y con un ELM327 WiFi real.
+- **v0.3.0 probada en coche** (2026-11-22, el usuario: «funciona bien»); la web lo dice. Falta probar con un ELM327 WiFi real (la web lo indica como pendiente).
 - Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 21 en la tabla). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 para la v0.3.0, **aún sin publicar**: al publicarla hay que actualizar la web (ver §8.2).
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
 - No hay funciones de adaptación, ajustes básicos, codificación ni test de actuadores (solo lectura y borrado de averías).
