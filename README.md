@@ -10,7 +10,9 @@ Dos modos de conexión, elegibles en la parte superior de la ventana:
   diésel desde ~2004) con un ELM327 USB o **Bluetooth** (al emparejarlo se crea
   un puerto COM o `/dev/rfcomm0`; ver [Conectar un ELM327 Bluetooth](#conectar-un-elm327-bluetooth)).
   Lee PIDs estándar, averías memorizadas y pendientes (P0xxx), testigo MIL,
-  VIN y tensión de batería, y permite borrar averías.
+  VIN y tensión de batería, y permite borrar averías. Si la búsqueda automática
+  de protocolo falla, prueba uno a uno los de línea K (KWP2000 rápido y lento,
+  ISO 9141-2), útil en coches anteriores a CAN como Mercedes antiguos.
 
 ## Archivos
 
@@ -25,7 +27,7 @@ Dos modos de conexión, elegibles en la parte superior de la ventana:
 | `gui.py` | Interfaz gráfica (panel con relojes y gráficas, valores, averías, CSV) |
 | `toledo.py` | Versión de consola (menú de texto) |
 | `kw1281.py` | Protocolo KW1281: init 5 baudios, bloques, complementos, keep-alive |
-| `elm327.py` | OBD2 por ELM327: protocolo automático, CAN multi-trama, multi-PID, averías, VIN |
+| `elm327.py` | OBD2 por ELM327: protocolo automático (y prueba de línea K si falla), CAN multi-trama, multi-PID, averías, VIN |
 | `obd_datos.py` | PIDs OBD2 estándar y descripciones de averías P0xxx |
 | `ia.py` | Asistente IA: Anthropic / OpenAI / DeepSeek, claves cifradas, prompt de diagnosis |
 | `vag_datos.py` | Fórmulas de valores medidos, averías VAG, grupos EDC15 |

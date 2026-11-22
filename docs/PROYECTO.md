@@ -205,7 +205,8 @@ fórmula que envía la propia centralita.
 
 ### 7.4 ELM327 (resumen)
 - `ATZ, ATE0, ATL0, ATS1, ATH1, ATAT1, ATSP0`, luego `0100` (búsqueda, hasta 25 s), `ATDPN`/`ATDP`. Prueba velocidades 38400/9600/115200/57600 (en Bluetooth da igual).
-- Con cabeceras activadas: separa centralitas (prefiere 7E8 o 10/11) y reensambla ISO-TP (tramas 0x/1x/2x). Línea K: cabecera de 3 bytes + checksum.
+- Si `ATSP0` + `0100` no da respuesta, fuerza uno a uno los protocolos de línea K: `ATSP5` (KWP2000 rápido), `ATSP4` (KWP2000 lento) y `ATSP3` (ISO 9141-2), con `ATPC` entre medias y dos `0100` por protocolo (12 s cada uno). Si ninguno responde, vuelve a `ATSP0` y da un error que explica las causas (coche sin OBD2 real, clon malo). Pensado para Mercedes y otros coches anteriores a CAN. El simulador lo reproduce con `FakeELMSerial(protocolo, auto_falla=True)`.
+- Con cabeceras activadas: separa centralitas (prefiere 7E8 o 10/11) y reensambla ISO-TP (tramas 0x/1x/2x). Línea K: cabecera de 3 bytes + checksum (KWP2000 también con cabecera de 4 bytes, longitud aparte).
 - Multi-PID (hasta 6 por petición) solo en CAN; si falla, pasa a PID a PID.
 
 ### 7.5 Estilo visual (para la web)
