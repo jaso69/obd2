@@ -14,10 +14,11 @@ ECU_BAUD = 9600
 
 
 class FakeECU:
-    def __init__(self, address=0x01):
+    def __init__(self, address=0x01, ident=None, dtcs=None):
         self.address = address
-        self.dtcs = [(553, 0x1B), (1262, 0x08 | 0x80)]   # G70 no plausible, N75 intermitente
-        self.ident = [b"038906018FQ ", b"1,9l R4 EDC  ", b"   SG  1234", bytes([0x00, 0x00, 0x04, 0x22, 0x00, 0x00])]
+        self.dtcs = [(553, 0x1B), (1262, 0x08 | 0x80)] if dtcs is None else dtcs   # G70 no plausible, N75 intermitente
+        self.ident = ident or [b"038906018FQ ", b"1,9l R4 EDC  ", b"   SG  1234",
+                               bytes([0x00, 0x00, 0x04, 0x22, 0x00, 0x00])]
         self.t0 = time.monotonic()
         self.reset()
 
@@ -35,6 +36,8 @@ class FakeECU:
         return 880 + 600 * max(0.0, math.sin(t / 3)) + random.uniform(-20, 20)
 
     def _group(self, g):
+        if self.address != 0x01:
+            return None
         rpm = self._rpm()
         coolant = min(90.0, 20 + (time.monotonic() - self.t0) * 2)
         load = (rpm - 880) / 600
@@ -135,11 +138,20 @@ class FakeECU:
         return []
 
 
-class FakeSerial:
-    """Sustituto de serial.Serial con cable KKL + ECU simulada."""
+def coche_simulado():
+    """Centralitas del coche simulado en la línea K: motor, ABS, airbag y cuadro."""
+    return [FakeECU(),
+            FakeECU(0x03, [b"1J0907379G  ", b"ABS ITT AE 20 GI", b"   0001"], [(287, 0x03 | 0x80)]),
+            FakeECU(0x15, [b"1C0909601   ", b"AIRBAG VW61 ", b"   0003"], []),
+            FakeECU(0x17, [b"1M0920821C  ", b"KOMBI+WEGFAHRSP", b"   0002"], [(779, 0x05)])]
 
-    def __init__(self, ecu=None):
-        self.ecu = ecu or FakeECU()
+
+class FakeSerial:
+    """Sustituto de serial.Serial con cable KKL y las centralitas simuladas."""
+
+    def __init__(self, ecu=None, ecus=None):
+        self.ecus = {e.address: e for e in (ecus or ([ecu] if ecu else coche_simulado()))}
+        self.ecu = self.ecus.get(0x01) or next(iter(self.ecus.values()))
         self.baudrate = 9600
         self.timeout = 0.05
         self.dtr = True
@@ -182,8 +194,11 @@ class FakeSerial:
         bits = [0 if level_low(t_start + 0.1 + 0.2 * i) else 1 for i in range(1, 9)]
         self._edges = []
         addr = sum(bit << i for i, bit in enumerate(bits)) & 0x7F
-        if addr != self.ecu.address:
+        if addr not in self.ecus:
             return
+        if self.ecu is not self.ecus[addr]:
+            self.ecu.reset()
+            self.ecu = self.ecus[addr]
         if self.baudrate != ECU_BAUD:
             self.rx.extend([0xF8, 0x00])          # basura: velocidad incorrecta
             return
@@ -248,6 +263,10 @@ class FakeELMSerial:
         self.t0 = time.monotonic()
         self.stored = ["P0171", "P0420"]
         self.pending = ["P0301"]
+        self.permanent = ["P0420"]            # el borrado no las quita (hasta que el monitor pase)
+        # Datos congelados de la P0171: {pid: bytes}
+        self.ff = {0x04: [0x5C], 0x05: [0x7B], 0x06: [0x9E], 0x07: [0x96], 0x0B: [0x40],
+                   0x0C: [0x0F, 0xA0], 0x0D: [0x46], 0x0F: [0x3E], 0x10: [0x05, 0xDC], 0x11: [0x30]}
         self.is_open = True
 
     @property
@@ -327,12 +346,15 @@ class FakeELMSerial:
     def _frames_k(self, payload):
         """Línea K: sin ISO-TP; las respuestas largas van en varios mensajes."""
         modo = payload[0]
-        if modo in (0x43, 0x47):                       # 3 códigos por mensaje, sin contador
+        if modo in (0x43, 0x47, 0x4A):                       # 3 códigos por mensaje, sin contador
             codes = payload[2:] or [0, 0]
             msgs = [[modo] + (codes[i:i + 6] + [0] * 6)[:6] for i in range(0, len(codes), 6)]
         elif modo == 0x49 and payload[1] == 0x02:      # VIN: 5 mensajes de 4 bytes
             vin = [0, 0, 0] + payload[3:]
             msgs = [[0x49, 0x02, n + 1] + vin[n * 4:n * 4 + 4] for n in range(5)]
+        elif modo == 0x49:                             # CALID, CVN, nombre: mensajes de 4 bytes
+            d = payload[3:]
+            msgs = [[0x49, payload[1], n // 4 + 1] + d[n:n + 4] for n in range(0, len(d), 4)]
         else:
             msgs = [payload]
         out = []
@@ -364,17 +386,33 @@ class FakeELMSerial:
                     if d is not None:
                         payload += [p] + d
                 return self._frames(payload) if len(payload) > 1 else ["NO DATA"]
-            if mode in ("03", "07"):
-                codes = self.stored if mode == "03" else self.pending
-                payload = [0x43 if mode == "03" else 0x47, len(codes)]
+            if mode in ("03", "07", "0A"):
+                codes = {"03": self.stored, "07": self.pending, "0A": self.permanent}[mode]
+                payload = [0x40 + int(mode, 16), len(codes)]
                 for code in codes:
                     payload += self._enc(code)
                 return self._frames(payload)
             if mode == "04":
-                self.stored, self.pending = [], []
+                self.stored, self.pending, self.ff = [], [], {}
                 return self._frames([0x44])
+            if mode == "02" and len(c) == 6:
+                p = int(c[2:4], 16)
+                if p == 0x02:
+                    return self._frames([0x42, 0x02, 0x00] + (self._enc("P0171") if self.ff else [0, 0]))
+                if p == 0x00:
+                    bits = sum(1 << (31 - (q - 1)) for q in list(self.ff) + [0x02] if q <= 0x20)
+                    return self._frames([0x42, 0x00, 0x00] + list(bits.to_bytes(4, "big")))
+                if p in self.ff:
+                    return self._frames([0x42, p, 0x00] + self.ff[p])
+                return ["NO DATA"]
             if c == "0902":
                 return self._frames([0x49, 0x02, 0x01] + [ord(x) for x in self.VIN])
+            if c == "0904":
+                return self._frames([0x49, 0x04, 0x01] + [ord(x) for x in "SIM-CAL-0471".ljust(16, "\0")])
+            if c == "0906":
+                return self._frames([0x49, 0x06, 0x01, 0x1A, 0x2B, 0x3C, 0x4D])
+            if c == "090A":
+                return self._frames([0x49, 0x0A, 0x01] + [ord(x) for x in "ECM\0-EngineControl".ljust(20, "\0")])
         except ValueError:
             return ["?"]
         return ["NO DATA"]
@@ -394,7 +432,7 @@ class FakeELMSerial:
         clamp = lambda v: max(0, min(255, int(v)))
         u16 = lambda v: [(int(v) >> 8) & 0xFF, int(v) & 0xFF]
         valores = {
-            0x01: [0x80 | len(self.stored) if self.stored else 0, 0x07, 0xE5, 0x00],
+            0x01: [0x80 | len(self.stored) if self.stored else 0, 0x07, 0xE5, 0x04],   # EVAP sin completar
             0x03: [0x02, 0x00],
             0x04: [clamp(255 * (0.18 + 0.6 * f))],
             0x05: [clamp(min(90, 20 + t * 2) + 40)],

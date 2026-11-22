@@ -203,14 +203,18 @@ DTCS = {
     "P0562": "Tensión del sistema baja",
     "P0563": "Tensión del sistema alta",
     "P0571": "Interruptor de freno A: circuito",
+    "P0480": "Control del ventilador de refrigeración 1: circuito",
     "P0600": "Enlace de comunicación serie",
     "P0601": "Módulo de control: error de suma de memoria",
     "P0603": "Módulo de control: error de memoria KAM",
     "P0604": "Módulo de control: error de memoria RAM",
     "P0605": "Módulo de control: error de memoria ROM",
     "P0606": "Módulo de control: procesador",
+    "P0627": "Control de la bomba de combustible: circuito abierto",
     "P0641": "Tensión de referencia de sensores A: circuito abierto",
+    "P0650": "Control del testigo de averías (MIL): circuito",
     "P0670": "Módulo de precalentamiento: circuito",
+    "P0685": "Control del relé principal del módulo de control: circuito abierto",
     "P0700": "Sistema de control de la transmisión (ver TCM)",
 }
 
@@ -221,3 +225,31 @@ def describe_dtc(code):
     if len(code) == 5 and code[1] in "13":
         return "Código específico del fabricante"
     return "Código no incluido en la tabla"
+
+
+# ---------------------------------------------------------------------------
+# Monitores de preparación (readiness): PID 01 01, bytes B, C y D (SAE J1979)
+# ---------------------------------------------------------------------------
+MONITORES_COMUNES = ("Fallos de encendido", "Sistema de combustible", "Componentes")
+MONITORES_GASOLINA = ("Catalizador", "Catalizador calefactado", "Sistema de evaporación (EVAP)",
+                      "Aire secundario", "Aire acondicionado", "Sondas lambda",
+                      "Calefacción de las sondas lambda", "Recirculación de gases (EGR) / VVT")
+MONITORES_DIESEL = ("Catalizador NMHC", "Reducción de NOx (SCR / catalizador NOx)", None,
+                    "Presión de sobrealimentación", None, "Sensores de gases de escape",
+                    "Filtro de partículas (DPF)", "Recirculación de gases (EGR) / VVT")
+
+
+def monitores(b, c, d):
+    """Estado de los monitores a partir de los bytes B, C y D del PID 01.
+
+    Devuelve (diesel, [(nombre, completo), ...]) solo con los monitores que el
+    coche soporta."""
+    diesel = bool(b & 0x08)
+    out = []
+    for i, nombre in enumerate(MONITORES_COMUNES):
+        if b & (1 << i):
+            out.append((nombre, not b & (1 << (i + 4))))
+    for i, nombre in enumerate(MONITORES_DIESEL if diesel else MONITORES_GASOLINA):
+        if nombre and c & (1 << i):
+            out.append((nombre, not d & (1 << i)))
+    return diesel, out

@@ -233,7 +233,9 @@ class KW1281:
             self._pending = first
         self.baud = baud
 
-    def connect(self):
+    def connect(self, rapido=False):
+        """rapido: si el módulo no contesta nada a la primera velocidad, se da por
+        ausente sin probar las demás (para escanear todos los módulos)."""
         with self._lock:
             last = None
             for i, baud in enumerate(self.bauds):
@@ -246,6 +248,8 @@ class KW1281:
                     last = e
                     if "KWP2000" in str(e):
                         raise
+                    if rapido and "leido nada" in str(e):
+                        raise KW1281Error(f"El módulo {self.address:02X} no responde")
                     self._dbg(str(e))
             else:
                 raise KW1281Error(f"No se pudo iniciar la comunicacion: {last}")

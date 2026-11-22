@@ -6,13 +6,25 @@ Dos modos de conexión, elegibles en la parte superior de la ventana:
 
 - **KKL · VAG KW1281**: centralita Bosch EDC15 del SEAT Toledo II 1.9 TDI (2000) y
   otros módulos VAG hasta ~2004, por línea K con un cable **KKL 409.1 FTDI**.
+  Averías VAG de 5 cifras con descripción (~90 códigos clásicos y los 16xxx-18xxx
+  traducidos a P0/P1) y **escaneo de todos los módulos** (motor, ABS, airbag,
+  cuadro…) de una vez.
 - **ELM327 · OBD2 genérico**: cualquier coche con OBD2/EOBD (gasolina desde 2001,
-  diésel desde ~2004) con un ELM327 USB o **Bluetooth** (al emparejarlo se crea
-  un puerto COM o `/dev/rfcomm0`; ver [Conectar un ELM327 Bluetooth](#conectar-un-elm327-bluetooth)).
-  Lee PIDs estándar, averías memorizadas y pendientes (P0xxx), testigo MIL,
-  VIN y tensión de batería, y permite borrar averías. Si la búsqueda automática
+  diésel desde ~2004) con un ELM327 USB, **Bluetooth** (al emparejarlo se crea
+  un puerto COM o `/dev/rfcomm0`; ver [Conectar un ELM327 Bluetooth](#conectar-un-elm327-bluetooth))
+  o **WiFi** (conecta el ordenador a la red del adaptador y elige
+  «WiFi · 192.168.0.10:35000», o escribe otra dirección `ip:puerto`).
+  Lee PIDs estándar, averías memorizadas, pendientes y permanentes (P0xxx),
+  **datos congelados**, **monitores de preparación** (ITV), testigo MIL, VIN
+  (decodificado: fabricante, país, año), calibración (CALID/CVN) y tensión de
+  batería, y permite borrar averías. Si la búsqueda automática
   de protocolo falla, prueba uno a uno los de línea K (KWP2000 rápido y lento,
   ISO 9141-2), útil en coches anteriores a CAN como Mercedes antiguos.
+
+En ambos modos, **Generar informe** (pestaña Averías) crea un informe HTML con
+el vehículo, las averías y, en OBD2, los datos congelados y los monitores; se
+abre en el navegador y desde ahí se imprime o se guarda como PDF. Al arrancar,
+el programa consulta en GitHub si hay una versión nueva y lo avisa junto al título.
 
 ## Archivos
 
@@ -27,11 +39,13 @@ Dos modos de conexión, elegibles en la parte superior de la ventana:
 | `gui.py` | Interfaz gráfica (panel con relojes y gráficas, valores, averías, CSV) |
 | `toledo.py` | Versión de consola (menú de texto) |
 | `kw1281.py` | Protocolo KW1281: init 5 baudios, bloques, complementos, keep-alive |
-| `elm327.py` | OBD2 por ELM327: protocolo automático (y prueba de línea K si falla), CAN multi-trama, multi-PID, averías, VIN |
-| `obd_datos.py` | PIDs OBD2 estándar y descripciones de averías P0xxx |
+| `elm327.py` | OBD2 por ELM327: protocolo automático (y prueba de línea K si falla), CAN multi-trama, multi-PID, averías (también permanentes), datos congelados, monitores, VIN, CALID/CVN |
+| `obd_datos.py` | PIDs OBD2 estándar, descripciones de averías P0xxx y monitores de preparación |
+| `vin_datos.py` | Decodificación del VIN (fabricante, país, año modelo, modelo VAG) |
+| `informe.py` | Informe de diagnóstico en HTML (imprimible / PDF) |
 | `ia.py` | Asistente IA: Anthropic / OpenAI / DeepSeek, claves cifradas, prompt de diagnosis |
-| `vag_datos.py` | Fórmulas de valores medidos, averías VAG, grupos EDC15 |
-| `simulador.py` | Cable KKL + EDC15 y ELM327 + coche OBD2 simulados para probar sin coche |
+| `vag_datos.py` | Fórmulas de valores medidos, averías VAG (clásicas y 16xxx-18xxx), grupos EDC15, módulos |
+| `simulador.py` | Cable KKL + centralitas VAG (motor, ABS, airbag, cuadro) y ELM327 + coche OBD2 simulados para probar sin coche |
 | `sonda_toledo.py` | Sonda para adaptador ELM327 (solo si quieres comprobar qué responde con él) |
 
 ## Asistente IA (pestaña «✦ Asistente IA»)

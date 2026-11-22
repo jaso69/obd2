@@ -18,8 +18,8 @@ Programa de escritorio (Python + tkinter) para diagnosticar coches:
 
 ## Comandos
 - Ejecutar: `python gui.py` (Linux: `python3 gui.py`, requiere `python3-tkinter`).
-- Pruebas de protocolo: `python tests/prueba_simuladores.py` (≈10 s, debe decir «TODO CORRECTO»).
-- Prueba de la GUI: `python tests/prueba_gui.py` (Linux: `xvfb-run -a python3 tests/prueba_gui.py`, ≈40 s).
+- Pruebas de protocolo: `python tests/prueba_simuladores.py` (≈20 s, debe decir «TODO CORRECTO»).
+- Prueba de la GUI: `python tests/prueba_gui.py` (Linux: `xvfb-run -a .venv/bin/python tests/prueba_gui.py`, ≈55 s; el Python del sistema en Fedora no trae `pyserial`).
 - Ejecutable: Windows `build.bat` → `dist\ToledoDiagnosis.exe`; Linux `./build.sh` → `dist/ToledoDiagnosis` (solo uso local). Recompilar tras cambiar código.
 - Paquete Linux para publicar: `./linux/build-portable.sh vX.Y.Z` (contenedor Debian 11 con podman/docker) → `dist/ToledoDiagnosis-vX.Y.Z-linux-x86_64.tar.gz`.
 - Autoprueba IA del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt`.
@@ -35,4 +35,4 @@ Programa de escritorio (Python + tkinter) para diagnosticar coches:
 - Commits con la línea `Co-Authored-By` que indique el sistema; en Windows el push lo suele lanzar el usuario (login interactivo de GitHub).
 
 ## Estado (2026-11-22)
-v0.2.0 publicada. Todo probado con simuladores y la IA con la API real; Linux comprobado en Fedora 44 y el paquete portable en contenedores de 7 distros; probado ya en un par de coches reales (funciona bien). Licencia MIT (`LICENSE`). **Release v0.2.0 publicada** en GitHub (versión estable «Latest», sin marca de pre-release, 2026-11-22; etiqueta `v0.2.0` → `c7a3c77`, incluye la prueba de protocolos de línea K del ELM327) con `ToledoDiagnosis.exe` de Windows y el paquete Linux `.tar.gz`; la v0.1.0 sigue publicada (solo `.exe`). Web publicada en https://www.jasodev.es (código en `web/`), cuyos botones de descarga ya apuntan a la v0.2.0. Detalles en `docs/PROYECTO.md` §8.1.
+v0.2.0 publicada; **v0.3.0 en desarrollo** (funciones nuevas hechas y probadas con simuladores, sin publicar: ver `docs/PROYECTO.md` §8.2). Todo probado con simuladores y la IA con la API real; Linux comprobado en Fedora 44 y el paquete portable en contenedores de 7 distros; probado ya en un par de coches reales (funciona bien). Licencia MIT (`LICENSE`). **Release v0.2.0 publicada** en GitHub (versión estable «Latest», sin marca de pre-release, 2026-11-22; etiqueta `v0.2.0` → `c7a3c77`, incluye la prueba de protocolos de línea K del ELM327) con `ToledoDiagnosis.exe` de Windows y el paquete Linux `.tar.gz`; la v0.1.0 sigue publicada (solo `.exe`). Web publicada en https://www.jasodev.es (código en `web/`), cuyos botones de descarga ya apuntan a la v0.2.0. Detalles en `docs/PROYECTO.md` §8.1.

@@ -19,13 +19,15 @@ from collections import deque
 from tkinter import messagebox, ttk
 
 import ia
+import informe
 from elm327 import ELM327, ELM327Error
 from kw1281 import KW1281, KW1281Error
 from obd_datos import OBD_STANDARDS, PIDS, decode_pid
 from obd_datos import describe_dtc as describe_obd_dtc
 from toledo import leer_grupo_formateado, texto_id
-from vag_datos import DTCS, FAULT_TYPES, GRUPOS_EDC15, MODULOS
+from vag_datos import FAULT_TYPES, GRUPOS_EDC15, MODULOS, componente as vag_componente
 from vag_datos import describe_dtc as vag_describe_dtc
+from vin_datos import decodificar_vin
 
 # ---------------------------------------------------------------------------
 # Estilo
@@ -48,6 +50,9 @@ WINDOWS = sys.platform == "win32"
 FONT = "Segoe UI" if WINDOWS else "DejaVu Sans"
 MONO = "Consolas" if WINDOWS else "DejaVu Sans Mono"
 SIM = "Simulador (sin coche)"
+WIFI = "WiFi · 192.168.0.10:35000"      # dirección habitual de los ELM327 WiFi
+VERSION = "0.3.0"
+URL_RELEASES = "https://github.com/jaso69/obd2/releases"
 
 KKL, ELM = "kkl", "elm"
 MODOS = {KKL: "KKL · VAG KW1281 (hasta 2004)", ELM: "ELM327 · OBD2 genérico"}
@@ -298,6 +303,62 @@ class Chart(tk.Canvas):
                 self.create_line(*pts, fill=color, width=2 * s)
 
 
+def texto_ff(ff):
+    """Datos congelados en texto (para el asistente IA)."""
+    if not ff:
+        return "Datos congelados: no hay ninguno guardado."
+    vals = "\n".join(f"- {n}: {v} {u}".rstrip() for _, n, v, u in ff["values"]) or "- (sin valores)"
+    return f"Datos congelados (avería {ff['dtc']}: {describe_obd_dtc(ff['dtc'])}):\n{vals}"
+
+
+def texto_readiness(r):
+    if not r:
+        return "Monitores de preparación: no disponibles."
+    diesel, mons = r
+    sin = [n for n, ok in mons if not ok]
+    return (f"Monitores de preparación (motor {'diésel' if diesel else 'gasolina'}): "
+            f"{len(mons) - len(sin)} de {len(mons)} completos"
+            + (f"; sin completar: {', '.join(sin)}." if sin else "."))
+
+
+def wifi_destino(puerto):
+    """(host, puerto) si el texto es una dirección WiFi («WiFi · 192.168.0.10:35000» o «ip:puerto»)."""
+    txt = puerto.split(" · ")[-1].strip()
+    host, _, num = txt.rpartition(":")
+    if host and num.isdigit() and " " not in host and not host.startswith("/"):
+        return host, int(num)
+    return None
+
+
+def version_mayor(a, b):
+    """True si la versión a («v0.3.1») es mayor que b («0.3.0»)."""
+    def t(v):
+        try:
+            return tuple(int(x) for x in v.strip().lstrip("vV").split("-")[0].split("."))
+        except ValueError:
+            return ()
+    return t(a) > t(b)
+
+
+def comprobar_version(avisar):
+    """Consulta la última versión publicada en GitHub (en segundo plano, 5 s como mucho)."""
+    def run():
+        try:
+            import json
+            import urllib.request
+            req = urllib.request.Request("https://api.github.com/repos/jaso69/obd2/releases/latest",
+                                         headers={"Accept": "application/vnd.github+json",
+                                                  "User-Agent": "ToledoDiagnosis"})
+            with urllib.request.urlopen(req, timeout=5) as r:
+                datos = json.load(r)
+            tag = datos.get("tag_name", "")
+            if version_mayor(tag, VERSION):
+                avisar(tag, datos.get("html_url") or URL_RELEASES)
+        except Exception:
+            pass                                # sin conexión o API caída: no se avisa
+    threading.Thread(target=run, daemon=True).start()
+
+
 # ---------------------------------------------------------------------------
 # Hilo de comunicacion
 # ---------------------------------------------------------------------------
@@ -315,6 +376,7 @@ class Worker(threading.Thread):
         self.debug = False
         self.online = False
         self.elm_errors = 0
+        self.scan_stop = threading.Event()
 
     def post(self, kind, payload=None):
         self.out.put((kind, payload))
@@ -387,6 +449,15 @@ class Worker(threading.Thread):
             import simulador
             return simulador.FakeSerial() if mode == KKL else simulador.FakeELMSerial()
         import serial
+        destino = wifi_destino(port) if mode == ELM else None
+        if destino:
+            self.log(f"Conectando por WiFi a {destino[0]}:{destino[1]}...")
+            try:
+                return serial.serial_for_url(f"socket://{destino[0]}:{destino[1]}", timeout=0.05)
+            except Exception as e:
+                raise ELM327Error(f"No se pudo conectar al ELM327 WiFi en {destino[0]}:{destino[1]} ({e}). "
+                                  "Conecta el ordenador a la red WiFi del adaptador (suele llamarse "
+                                  "«WiFi_OBDII» o «V-LINK») y comprueba la dirección.")
         if mode == KKL:
             ser = serial.Serial(port, 9600, timeout=0.05)
             ser.dtr, ser.rts = True, False
@@ -419,13 +490,28 @@ class Worker(threading.Thread):
             self.log("Desconectado.")
             self.post("disconnected")
         elif kind == "dtcs":
-            self.post("dtcs", self.ecu.read_dtcs() if self.mode == KKL else self.elm.read_dtcs())
+            self.post("dtcs", self.ecu.read_dtcs() if self.mode == KKL else self._elm_dtcs())
         elif kind == "clear":
             if self.mode == KKL:
                 self.post("cleared", self.ecu.clear_dtcs())
             else:
                 self.elm.clear_dtcs()
-                self.post("cleared", self.elm.read_dtcs())
+                self.post("cleared", self._elm_dtcs())
+        elif kind == "scan":
+            try:
+                self._scan(args[0])
+            except Exception as e:              # p. ej. se desenchufa el cable a mitad
+                self.log(f"Error: {e}")
+                self._lost(f"error durante el escaneo: {e}")
+        elif kind == "report":
+            if self.mode == KKL:
+                d = self.ecu.read_dtcs()
+                self.post("dtcs", d)
+                self.post("report", {"dtcs": d, "modulo": self.ecu.address})
+            else:
+                d = self._elm_dtcs()
+                self.post("dtcs", d)
+                self.post("report", {"dtcs": d})
         elif kind == "live":
             self.live_items = args[0] or None
             self.live_gen = args[1]
@@ -449,7 +535,67 @@ class Worker(threading.Thread):
         def lista(codes):
             return "\n".join(f"- {c}: {describe_obd_dtc(c)}" for c in codes) or "- ninguna"
         return (f"Memorizadas:\n{lista(d['stored'])}\nPendientes:\n{lista(d['pending'])}\n"
-                f"Testigo MIL: {'encendido' if d['mil'] else 'apagado'}")
+                f"Permanentes (no se borran hasta que el monitor correspondiente pasa):\n"
+                f"{lista(d.get('permanent') or [])}\n"
+                f"Testigo MIL: {'encendido' if d['mil'] else 'apagado'}\n"
+                f"{texto_ff(d.get('ff'))}\n{texto_readiness(d.get('readiness'))}")
+
+    def _elm_dtcs(self):
+        """Averías OBD2 con datos congelados y monitores de preparación."""
+        d = self.elm.read_dtcs()
+        for clave, fn in (("ff", self.elm.freeze_frame), ("readiness", self.elm.readiness)):
+            try:
+                d[clave] = fn()
+            except ELM327Error as e:
+                self.log(f"Aviso: no se pudo leer {'los datos congelados' if clave == 'ff' else 'los monitores'} ({e})")
+                d[clave] = None
+        return d
+
+    def _scan(self, direcciones):
+        """Escanea los módulos VAG: identificación y averías de cada uno que responda."""
+        orig = self.ecu.address
+        self.scan_stop.clear()
+        self.online = False                      # que no salte «conexión perdida» al cambiar de módulo
+        self.live_items = None
+        try:
+            self.ecu.disconnect()
+        except Exception:
+            pass
+        res = []
+        for i, a in enumerate(direcciones):
+            if self.scan_stop.is_set():
+                self.log("Escaneo detenido por el usuario.")
+                break
+            self.post("scan_progress", (i, len(direcciones), a))
+            time.sleep(0.3)
+            ecu = KW1281(self.ser, address=a, debug=self.debug, logger=self.log)
+            try:
+                ecu.connect(rapido=True)
+            except KW1281Error as e:
+                self.log(f"Módulo {a:02X}: {e}")
+                res.append({"addr": a, "ok": False, "error": str(e)})
+                continue
+            ident = [texto_id(d) for d in ecu.ident]
+            try:
+                dtcs, err = ecu.read_dtcs(), None
+            except KW1281Error as e:
+                dtcs, err = None, str(e)
+            try:
+                ecu.disconnect()
+            except Exception:
+                pass
+            self.log(f"Módulo {a:02X} ({MODULOS.get(a, '?')}): " +
+                     (f"{len(dtcs)} avería(s)" if dtcs is not None else f"error al leer averías: {err}"))
+            res.append({"addr": a, "ok": True, "ident": ident, "dtcs": dtcs, "error": err})
+        self.post("scan_done", res)
+        self.log(f"Volviendo al módulo {orig:02X}...")
+        try:
+            info = self._connect_kkl(orig)
+        except Exception as e:
+            self._lost(f"no se pudo volver al módulo {orig:02X}: {e}")
+            return
+        self.online = True
+        self.post("connected", info)
 
     def _tool(self, nombre, e):
         if not self.online:
@@ -460,7 +606,7 @@ class Worker(threading.Thread):
                 d = self.ecu.read_dtcs()
                 self.post("dtcs", d)
                 return ("\n".join("- " + vag_describe_dtc(*x) for x in d) or "Sin averías memorizadas.", False)
-            d = self.elm.read_dtcs()
+            d = self._elm_dtcs()
             self.post("dtcs", d)
             return self._fmt_obd_dtcs(d), False
         if nombre == "borrar_averias":
@@ -470,7 +616,7 @@ class Worker(threading.Thread):
                 return ("Averías borradas. " + ("Siguen presentes (avería activa):\n" +
                         "\n".join("- " + vag_describe_dtc(*x) for x in rest) if rest else "No queda ninguna."), False)
             self.elm.clear_dtcs()
-            d = self.elm.read_dtcs()
+            d = self._elm_dtcs()
             self.post("cleared", d)
             return "Averías borradas. Estado después de borrar:\n" + self._fmt_obd_dtcs(d), False
         if nombre == "leer_valores":
@@ -618,21 +764,36 @@ class Worker(threading.Thread):
         vin, volt = e.vin(), e.voltage()
         mil, ndtc = e.mil()
         std = e.obd_standard()
+        ident = e.identificacion()
+        try:
+            ready = e.readiness()
+        except ELM327Error:
+            ready = None
         self.log(f"Conectado: {e.version} · {e.proto_name}")
         medibles = sorted(p for p in e.supported if p in PIDS)
+        campos = [("Adaptador", e.version),
+                  ("Protocolo", e.proto_name),
+                  ("Bastidor (VIN)", vin or "No disponible")]
+        if vin:
+            campos += [(f"  {k}", v) for k, v in decodificar_vin(vin)]
+        campos += [("Tensión batería", volt or "—"),
+                   ("Estándar OBD", OBD_STANDARDS.get(std, "—") if std else "—"),
+                   ("Testigo de avería (MIL)", "—" if mil is None else
+                    (f"ENCENDIDO · {ndtc} avería(s)" if mil else f"Apagado · {ndtc} avería(s)"))]
+        if ident["nombre"]:
+            campos.append(("Centralita", ident["nombre"]))
+        if ident["calid"]:
+            campos.append(("Calibración (CALID)", "  ".join(ident["calid"])))
+        if ident["cvn"]:
+            campos.append(("Verificación (CVN)", "  ".join(ident["cvn"])))
+        campos.append(("PIDs soportados", f"{len(e.supported)} ({len(medibles)} con valor legible)"))
         return {
             "mode": ELM,
             "status": f"Conectado · OBD2 · {e.proto_name.replace('AUTO, ', '')}",
             "title": vin or e.proto_name,
             "supported": medibles,
-            "fields": [("Adaptador", e.version),
-                       ("Protocolo", e.proto_name),
-                       ("Bastidor (VIN)", vin or "No disponible"),
-                       ("Tensión batería", volt or "—"),
-                       ("Estándar OBD", OBD_STANDARDS.get(std, "—") if std else "—"),
-                       ("Testigo de avería (MIL)", "—" if mil is None else
-                        (f"ENCENDIDO · {ndtc} avería(s)" if mil else f"Apagado · {ndtc} avería(s)")),
-                       ("PIDs soportados", f"{len(e.supported)} ({len(medibles)} con valor legible)")],
+            "readiness": ready,
+            "fields": campos,
         }
 
     def _read_live(self):
@@ -689,8 +850,11 @@ class App:
         self.vehicle_fields = []
         self.last_dtc_text = None
         self.last_live_text = None
+        self.last_dtcs = None        # última lectura de averías (para el informe)
+        self.scan_result = None      # último escaneo de módulos VAG
+        self.scanning = False
 
-        root.title("Toledo Diagnosis · VAG KW1281 / OBD2")
+        root.title(f"Toledo Diagnosis {VERSION} · VAG KW1281 / OBD2")
         root.configure(bg=BG)
         _poner_icono(root, defecto=True)
         self._style()
@@ -699,7 +863,8 @@ class App:
         # la cabecera manda en el ancho: con fuentes anchas (Noto Sans en Linux) no cabe en 1240;
         # se mide con los textos de estado más largos que pueden salir al conectar
         ancho = 0
-        for texto in ("Conectado · Cuadro de instrumentos · 10400 bd",
+        largo = max(MODULOS.values(), key=len)
+        for texto in (f"Conectado · {largo} · 10400 bd",
                       "Conectado · OBD2 · ISO 15765-4 (CAN 29/500)"):
             self.status_lbl.configure(text=texto)
             root.update_idletasks()
@@ -710,6 +875,8 @@ class App:
         root.protocol("WM_DELETE_WINDOW", self.on_close)
         root.after(50, self.poll)
         root.after(100, lambda: _barra_oscura(root))
+        if not os.environ.get("TOLEDO_SIN_COMPROBAR_VERSION"):
+            comprobar_version(lambda tag, url: self.q.put(("update", (tag, url))))
 
     # ---------------- estilo ----------------
     def _style(self):
@@ -775,7 +942,11 @@ class App:
         head = ttk.Frame(self.root, style="Panel.TFrame", padding=(18, 12))
         head.pack(fill="x")
         left = ttk.Frame(head, style="Panel.TFrame")
-        ttk.Label(left, text="Toledo Diagnosis", style="Title.TLabel").pack(anchor="w")
+        tit = ttk.Frame(left, style="Panel.TFrame")
+        tit.pack(anchor="w")
+        ttk.Label(tit, text="Toledo Diagnosis", style="Title.TLabel").pack(side="left")
+        self.upd_lbl = ttk.Label(tit, text="", style="PanelMuted.TLabel", foreground=ACCENT, cursor="hand2")
+        self.upd_lbl.pack(side="left", padx=(10, 0))
         st_row = ttk.Frame(left, style="Panel.TFrame")
         st_row.pack(anchor="w")
         self.status_dot = tk.Canvas(st_row, width=int(12 * s), height=int(12 * s), bg=PANEL, highlightthickness=0)
@@ -980,11 +1151,17 @@ class App:
         self.dtc_read_btn.pack(side="left")
         self.dtc_clear_btn = ttk.Button(top, text="Borrar averías", style="Danger.TButton", command=self.clear_dtcs)
         self.dtc_clear_btn.pack(side="left", padx=10)
+        self.scan_btn = ttk.Button(top, text="Escanear todos los módulos", command=self.scan_modules)
+        self.scan_btn.pack(side="left")
+        self.report_btn = ttk.Button(top, text="Generar informe", command=self.make_report)
+        self.report_btn.pack(side="right")
         self.dtc_lbl = ttk.Label(top, text="", style="Panel.TLabel", font=(FONT, 11, "bold"))
         self.dtc_lbl.pack(side="left", padx=10)
 
-        card = self._card(p, padding=0)
-        card.pack(fill="both", expand=True)
+        body = ttk.Frame(p, style="Panel.TFrame")
+        body.pack(fill="both", expand=True)
+        card = self._card(body, padding=0)
+        card.pack(side="left", fill="both", expand=True)
         cols = ("codigo", "comp", "tipo", "estado")
         self.dtc_tree = ttk.Treeview(card, columns=cols, show="headings")
         for c, t, w, st in (("codigo", "CÓDIGO", 100, False), ("comp", "COMPONENTE", 430, True),
@@ -993,14 +1170,61 @@ class App:
             self.dtc_tree.column(c, width=int(w * self.s), stretch=st)
         self.dtc_tree.tag_configure("inter", foreground=WARN)
         self.dtc_tree.tag_configure("fixed", foreground=ERR)
+        self.dtc_tree.tag_configure("perm", foreground=BLUE)
+        self.dtc_tree.tag_configure("mod", foreground=ACCENT, font=(FONT, 10, "bold"))
         self.dtc_tree.pack(fill="both", expand=True)
         self.dtc_help = ttk.Label(p, text="", style="PanelMuted.TLabel")
         self.dtc_help.pack(anchor="w", pady=(10, 0))
+        # Datos congelados (solo OBD2), a la derecha de la lista de averías
+        self.ff_frame = self._card(body, padding=(14, 10, 14, 0))
+        self.ff_lbl = ttk.Label(self.ff_frame, text="Datos congelados", style="Card.TLabel",
+                                font=(FONT, 11, "bold"), wraplength=int(330 * self.s))
+        self.ff_lbl.pack(anchor="w", pady=(0, 2))
+        ttk.Label(self.ff_frame, text="Valores del motor cuando se registró la avería", style="Muted.TLabel",
+                  ).pack(anchor="w", pady=(0, 8))
+        self.ff_tree = ttk.Treeview(self.ff_frame, columns=("dato", "valor"), show="headings")
+        for c, t, w, st in (("dato", "DATO", 210, True), ("valor", "VALOR", 110, False)):
+            self.ff_tree.heading(c, text=t, anchor="w")
+            self.ff_tree.column(c, width=int(w * self.s), stretch=st)
+        self.ff_tree.pack(fill="both", expand=True)
 
     def _build_ecu(self):
         self.ecu_card = self._card(self.tab_ecu, padding=22)
-        self.ecu_card.pack(fill="x", anchor="n")
+        self.ecu_card.pack(side="left", fill="both", expand=True, anchor="n")
+        self.ready_card = self._card(self.tab_ecu, padding=22)
         self._fill_ecu([])
+        self._fill_readiness(None)
+
+    def _fill_readiness(self, r):
+        c = self.ready_card
+        for w in c.winfo_children():
+            w.destroy()
+        if self.mode != ELM:
+            c.pack_forget()
+            return
+        c.pack(side="left", fill="y", anchor="n", padx=(14, 0))
+        ttk.Label(c, text="Monitores de preparación (ITV)", style="Card.TLabel",
+                  font=(FONT, 13, "bold")).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
+        ancho = int(400 * self.s)
+        if not r:
+            ttk.Label(c, text="Conecta para ver qué autodiagnósticos de emisiones están completos.",
+                      style="Muted.TLabel", wraplength=ancho).grid(row=1, column=0, columnspan=2, sticky="w")
+            return
+        diesel, mons = r
+        sin = sum(1 for _, ok in mons if not ok)
+        ttk.Label(c, text=(f"Motor {'diésel' if diesel else 'de gasolina'} · " +
+                           (f"{sin} de {len(mons)} sin completar" if sin else f"los {len(mons)} completos")),
+                  style="Card.TLabel", foreground=WARN if sin else OK).grid(row=1, column=0, columnspan=2,
+                                                                          sticky="w", pady=(0, 8))
+        for i, (nombre, ok) in enumerate(mons):
+            ttk.Label(c, text="✓" if ok else "✗", style="Card.TLabel", foreground=OK if ok else WARN,
+                      font=(FONT, 11, "bold")).grid(row=2 + i, column=0, sticky="w", padx=(0, 10), pady=3)
+            ttk.Label(c, text=nombre + ("" if ok else "  (sin completar)"), style="Card.TLabel",
+                      foreground=FG if ok else WARN).grid(row=2 + i, column=1, sticky="w")
+        ttk.Label(c, text="Tras borrar averías o desconectar la batería vuelven a «sin completar»: hacen falta "
+                          "varios ciclos de conducción. En la ITV pueden rechazar el coche si falta alguno.",
+                  style="Muted.TLabel", wraplength=ancho).grid(row=99, column=0, columnspan=2,
+                                                              sticky="w", pady=(12, 0))
 
     def _fill_ecu(self, fields):
         for w in self.ecu_card.winfo_children():
@@ -1483,8 +1707,17 @@ class App:
                  "y se reinician los monitores de emisiones (la ITV puede rechazarlo hasta completar ciclos).")
         self.dtc_tree.delete(*self.dtc_tree.get_children())
         self.dtc_lbl.configure(text="")
+        if kkl:
+            self.scan_btn.pack(side="left", after=self.dtc_clear_btn)
+            self.ff_frame.pack_forget()
+        else:
+            self.scan_btn.pack_forget()
+            self.ff_frame.pack(side="right", fill="y", padx=(14, 0))
+        self._fill_ff(None)
         self._fill_ecu([])
+        self._fill_readiness(None)
         self.vehicle_fields, self.last_dtc_text, self.last_live_text = [], None, None
+        self.last_dtcs = self.scan_result = None
         self.refresh_ports()
 
     # ---------------- utilidades ----------------
@@ -1502,11 +1735,19 @@ class App:
                     bt = label
         except Exception:
             pass
+        if self.mode == ELM:
+            items.append(WIFI)
         items.append(SIM)
         self.port_cb["values"] = items
+        self.port_cb.configure(state=self._port_state())
         cur = self.port_var.get()
         prefer = ftdi if self.mode == KKL else (bt or ftdi)
-        self.port_var.set(cur if cur in items and cur != SIM else (prefer or items[0]))
+        escrito = self.mode == ELM and wifi_destino(cur)      # dirección WiFi escrita a mano
+        self.port_var.set(cur if (cur in items and cur != SIM) or escrito else (prefer or items[0]))
+
+    def _port_state(self):
+        """En OBD2 el puerto se puede escribir (dirección de un ELM327 WiFi)."""
+        return "normal" if self.mode == ELM else "readonly"
 
     def log(self, msg):
         tag = "err" if msg.startswith("Error") else ("dbg" if msg.startswith("[") else None)
@@ -1524,12 +1765,16 @@ class App:
     def _set_connected(self, on, info=None):
         self.connected = on
         state = "normal" if on else "disabled"
-        for b in (self.panel_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn):
+        for b in (self.panel_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
+                  self.scan_btn, self.report_btn):
             b.configure(state=state)
-        self.port_cb.configure(state="disabled" if on else "readonly")
+        self.port_cb.configure(state="disabled" if on else self._port_state())
         self.mode_cb.configure(state="disabled" if on else "readonly")
         self.mod_cb.configure(state="disabled" if on or self.mode != KKL else "readonly")
         self.refresh_btn.configure(state="disabled" if on else "normal")
+        if not on:
+            self.scanning = False
+            self.scan_btn.configure(text="Escanear todos los módulos", style="TButton")
         self.conn_btn.configure(text="Desconectar" if on else "Conectar",
                                 style="TButton" if on else "Accent.TButton", state="normal")
         if on:
@@ -1549,8 +1794,10 @@ class App:
         if self.connected:
             self.worker.submit("disconnect")
             return
-        port = self.port_var.get()
-        if port != SIM:
+        port = self.port_var.get().strip()
+        if self.mode == ELM and wifi_destino(port):
+            port = "{}:{}".format(*wifi_destino(port))
+        elif port != SIM:
             port = port.split(" · ")[0]
         addr = int(self.mod_var.get().split(" · ")[0], 16)
         self.conn_btn.configure(state="disabled")
@@ -1651,12 +1898,96 @@ class App:
             self.dtc_lbl.configure(text="Borrando...", foreground=FG)
             self.worker.submit("clear")
 
+    def scan_modules(self, direcciones=None, confirmar=True):
+        if self.scanning:
+            self.worker.scan_stop.set()
+            self.scan_btn.configure(state="disabled", text="Deteniendo...")
+            return
+        direcciones = direcciones or list(MODULOS)
+        if confirmar and not messagebox.askyesno(
+                "Escanear todos los módulos",
+                f"Se prueban {len(direcciones)} módulos uno a uno y se leen sus averías (no se borra nada).\n\n"
+                "Tarda de 1 a 4 minutos según cuántos tenga el coche. Pon el contacto con el motor parado. "
+                "Puedes detenerlo en cualquier momento."):
+            return
+        self._stop_live()
+        self.scanning = True
+        for b in (self.panel_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
+                  self.report_btn, self.conn_btn):
+            b.configure(state="disabled")
+        self.scan_btn.configure(text="■  Detener escaneo", style="Danger.TButton")
+        self.dtc_tree.delete(*self.dtc_tree.get_children())
+        self.dtc_lbl.configure(text="Escaneando...", foreground=FG)
+        self.worker.submit("scan", direcciones)
+
+    def _show_scan(self, res):
+        t = self.dtc_tree
+        t.delete(*t.get_children())
+        resp = [m for m in res if m["ok"]]
+        total = 0
+        for m in resp:
+            ident = "  ·  ".join(x.strip() for x in m["ident"][:2] if x.strip())
+            n = len(m["dtcs"]) if m["dtcs"] is not None else None
+            total += n or 0
+            t.insert("", "end", values=(f"[{m['addr']:02X}]", f"{MODULOS.get(m['addr'], 'Módulo')}  —  {ident}",
+                                        "", "Error al leer" if n is None else
+                                        ("Sin averías" if not n else f"{n} avería(s)")), tags=("mod",))
+            for code, ftype, inter in m["dtcs"] or []:
+                tipo = f"{ftype:02d} · {FAULT_TYPES.get(ftype, 'Desconocido') or '—'}"
+                t.insert("", "end", values=(f"   {code:05d}", vag_componente(code), tipo,
+                                            "Intermitente" if inter else "Presente"),
+                         tags=("inter",) if inter else ())
+        txt = f"Responden {len(resp)} de {len(res)} módulos · {total} avería(s)"
+        self.dtc_lbl.configure(text=txt, foreground=WARN if total else OK)
+        filas = [" — ".join(str(v).strip() for v in t.item(i, "values") if str(v).strip()) for i in t.get_children()]
+        sin = ", ".join(f"{m['addr']:02X}" for m in res if not m["ok"])
+        self.last_dtc_text = (f"Escaneo de módulos VAG a las {datetime.datetime.now():%H:%M:%S}. {txt}\n"
+                              + "\n".join(f"- {f}" for f in filas)
+                              + (f"\nSin respuesta: {sin}" if sin else ""))
+        self.scan_result = res
+
+    def make_report(self):
+        self.report_btn.configure(state="disabled")
+        self.bar.configure(text="Leyendo averías para el informe...")
+        self.worker.submit("report")
+
+    def _save_report(self, d):
+        self.report_btn.configure(state="normal" if self.connected else "disabled")
+        datos = {"modo": self.mode, "version": VERSION, "vehiculo": self.vehicle_fields,
+                 "dtcs": d["dtcs"], "modulo": d.get("modulo", 1), "escaneo": self.scan_result}
+        name = os.path.join(CARPETA, f"informe_{datetime.datetime.now():%Y%m%d_%H%M%S}.html")
+        try:
+            os.makedirs(CARPETA, exist_ok=True)
+            with open(name, "w", encoding="utf-8") as f:
+                f.write(informe.generar(datos))
+        except OSError as e:
+            messagebox.showerror("Generar informe", f"No se pudo crear el archivo:\n{e}")
+            return
+        self.last_report = name
+        self.log(f"Informe guardado: {name}")
+        self.bar.configure(text=f"Informe guardado en {name} (se abre en el navegador; desde ahí puedes "
+                                "imprimirlo o guardarlo como PDF).")
+        try:
+            import pathlib
+            webbrowser.open(pathlib.Path(name).resolve().as_uri())
+        except Exception as e:
+            self.log(f"Aviso: no se pudo abrir el navegador ({e})")
+
+    def _fill_ff(self, ff):
+        self.ff_tree.delete(*self.ff_tree.get_children())
+        if not ff:
+            self.ff_lbl.configure(text="Datos congelados: ninguno guardado")
+            return
+        self.ff_lbl.configure(text=f"Datos congelados · {ff['dtc']} ({describe_obd_dtc(ff['dtc'])})")
+        for _, nombre, valor, unidad in ff["values"]:
+            self.ff_tree.insert("", "end", values=(nombre, f"{valor} {unidad}".strip()))
+
     def _show_dtcs(self, payload, after_clear=False):
         t = self.dtc_tree
         t.delete(*t.get_children())
         if self.mode == KKL:
             for code, ftype, inter in payload:
-                comp = DTCS.get(code, "Código no incluido en la tabla")
+                comp = vag_componente(code)
                 tipo = f"{ftype:02d} · {FAULT_TYPES.get(ftype, 'Desconocido') or '—'}"
                 tag = "inter" if inter else ("fixed" if after_clear else "")
                 t.insert("", "end", values=(f"{code:05d}", comp, tipo,
@@ -1669,11 +2000,15 @@ class App:
             else:
                 txt, color = f"{n} avería(s) memorizada(s)", WARN
         else:
-            for estado, codes in (("Memorizada", payload["stored"]), ("Pendiente", payload["pending"])):
+            for estado, codes in (("Memorizada", payload["stored"]), ("Pendiente", payload["pending"]),
+                                  ("Permanente", payload.get("permanent") or [])):
                 for code in codes:
                     tipo = "Genérico (SAE)" if code[1] in "02" else "Específico del fabricante"
-                    tag = "inter" if estado == "Pendiente" else ("fixed" if after_clear else "")
+                    tag = {"Pendiente": "inter", "Permanente": "perm"}.get(estado, "fixed" if after_clear else "")
                     t.insert("", "end", values=(code, describe_obd_dtc(code), tipo, estado), tags=(tag,))
+            self._fill_ff(payload.get("ff"))
+            if "readiness" in payload:
+                self._fill_readiness(payload["readiness"])
             ns, npend, mil = len(payload["stored"]), len(payload["pending"]), payload["mil"]
             mil_txt = "testigo MIL ENCENDIDO" if mil else "testigo MIL apagado"
             if not ns and not npend:
@@ -1687,6 +2022,9 @@ class App:
         filas = [" — ".join(str(v) for v in t.item(i, "values")) for i in t.get_children()]
         cab = f"Leídas a las {datetime.datetime.now():%H:%M:%S}" + (" (justo después de borrar)" if after_clear else "")
         self.last_dtc_text = cab + ". " + txt + "\n" + "\n".join(f"- {f}" for f in filas)
+        if self.mode == ELM:
+            self.last_dtc_text += f"\n{texto_ff(payload.get('ff'))}\n{texto_readiness(payload.get('readiness'))}"
+        self.last_dtcs = payload
 
     def _live_to_text(self, data):
         lineas = []
@@ -1829,6 +2167,7 @@ class App:
                 self._fill_pid_list(self.supported)
             self._set_connected(True, payload)
             self._fill_ecu(payload["fields"])
+            self._fill_readiness(payload.get("readiness"))
             self.vehicle_fields = payload["fields"]
             self.bar.configure(text=f"Conectado: {payload.get('title', '')}")
         elif kind == "disconnected":
@@ -1865,6 +2204,23 @@ class App:
             self._show_dtcs(payload)
         elif kind == "cleared":
             self._show_dtcs(payload, after_clear=True)
+        elif kind == "scan_progress":
+            i, n, a = payload
+            self.dtc_lbl.configure(text=f"Escaneando {a:02X} · {MODULOS.get(a, '?')} ({i + 1}/{n})...", foreground=FG)
+            self.bar.configure(text="Escaneando módulos: los que no están instalados tardan unos segundos en descartarse.")
+        elif kind == "scan_done":
+            self.scanning = False
+            self.scan_btn.configure(text="Escanear todos los módulos", style="TButton", state="disabled")
+            self._show_scan(payload)
+            self.status(f"Volviendo al módulo {self.mod_var.get().split(' · ')[0]}...", WARN)
+            self.bar.configure(text="Escaneo terminado. Volviendo a conectar con el módulo elegido...")
+        elif kind == "report":
+            self._save_report(payload)
+        elif kind == "update":
+            tag, url = payload
+            self.upd_lbl.configure(text=f"↑ Nueva {tag}")
+            self.upd_lbl.bind("<Button-1>", lambda e: webbrowser.open(url))
+            self.log(f"Hay una versión nueva: {tag} ({url})")
         elif kind == "tool_live":
             self.last_live_text = self._live_to_text(payload)
         elif kind == "ai_main":

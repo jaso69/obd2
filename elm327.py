@@ -7,7 +7,7 @@ centralitas y reconstruir los mensajes multi-trama de CAN (ISO-TP).
 import re
 import time
 
-from obd_datos import decode_dtc, pid_len
+from obd_datos import PIDS, decode_dtc, decode_pid, monitores, pid_len
 
 HEX_LINE = re.compile(r"^[0-9A-F ]+$")
 ERRORES = ("UNABLE TO CONNECT", "BUS INIT", "BUS ERROR", "CAN ERROR", "ERROR",
@@ -273,7 +273,12 @@ class ELM327:
         return codes
 
     def read_dtcs(self):
-        return {"stored": self._dtcs("03", 0x43), "pending": self._dtcs("07", 0x47), "mil": self.mil()[0]}
+        try:
+            permanentes = self._dtcs("0A", 0x4A)   # modo 0A: solo coches de ~2010 en adelante
+        except ELM327Error:
+            permanentes = []
+        return {"stored": self._dtcs("03", 0x43), "pending": self._dtcs("07", 0x47),
+                "permanent": permanentes, "mil": self.mil()[0]}
 
     def clear_dtcs(self):
         resp = self.query("04", timeout=5)
@@ -285,6 +290,80 @@ class ELM327:
         if not msg:
             return None, None
         return bool(msg[2] & 0x80), msg[2] & 0x7F
+
+    def readiness(self):
+        """Monitores de preparación: (diesel, [(nombre, completo)]) o None."""
+        msg = next((m for m in self._engine(self.query("0101")) if len(m) >= 6 and m[0] == 0x41), None)
+        if not msg:
+            return None
+        return monitores(msg[3], msg[4], msg[5])
+
+    def _soportados_ff(self):
+        """PIDs disponibles en los datos congelados (modo 02, trama 0)."""
+        sup, base = set(), 0x00
+        while base <= 0xC0:
+            msg = next((m for m in self._engine(self.query(f"02{base:02X}00"))
+                        if len(m) >= 7 and m[0] == 0x42 and m[1] == base), None)
+            if not msg:
+                break
+            bits = int.from_bytes(msg[3:7], "big")
+            for i in range(32):
+                if bits & (1 << (31 - i)):
+                    sup.add(base + i + 1)
+            if base + 0x20 not in sup:
+                break
+            base += 0x20
+        return sup
+
+    def freeze_frame(self):
+        """Datos congelados de la avería que encendió el testigo.
+
+        Devuelve {"dtc": "P0171", "values": [(pid, nombre, valor, unidad)]} o None
+        si no hay datos congelados guardados."""
+        try:
+            msg = next((m for m in self._engine(self.query("020200"))
+                        if len(m) >= 5 and m[0] == 0x42 and m[1] == 0x02), None)
+        except ELM327Error:
+            return None
+        if not msg or (msg[3] == 0 and msg[4] == 0):
+            return None
+        sup = self._soportados_ff() or (self.supported & set(PIDS))
+        valores = []
+        for p in sorted(sup):
+            if p not in PIDS:
+                continue
+            try:
+                r = next((m for m in self._engine(self.query(f"02{p:02X}00"))
+                          if len(m) >= 3 and m[0] == 0x42 and m[1] == p), None)
+            except ELM327Error:
+                continue
+            if r:
+                nombre, valor, unidad, _ = decode_pid(p, r[3:])
+                valores.append((p, nombre, valor, unidad))
+        return {"dtc": decode_dtc(msg[3], msg[4]), "values": valores}
+
+    def _info(self, tipo):
+        """Datos del modo 09 (infotipo «tipo») unidos en bytes, o b""."""
+        try:
+            msgs = self._engine(self.query(f"09{tipo:02X}", timeout=5))
+        except ELM327Error:
+            return b""
+        raw = bytearray()
+        for m in msgs:
+            if len(m) > 3 and m[0] == 0x49 and m[1] == tipo:
+                raw += m[3:]
+        return bytes(raw)
+
+    def identificacion(self):
+        """Calibración (CALID), CVN y nombre de la centralita (modo 09)."""
+        def texto(b):
+            return "".join(chr(c) for c in b if 32 <= c < 127).strip()
+        cal = self._info(0x04)
+        calids = [t for t in (texto(cal[i:i + 16]) for i in range(0, len(cal), 16)) if t]
+        cvn = self._info(0x06)
+        cvns = [cvn[i:i + 4].hex().upper() for i in range(0, len(cvn) - 3, 4)]
+        nombre = texto(self._info(0x0A).replace(b"\x00", b" "))
+        return {"calid": calids, "cvn": cvns, "nombre": nombre}
 
     def vin(self):
         try:

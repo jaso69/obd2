@@ -52,7 +52,7 @@ SYSTEM_PROMPT = """Eres un técnico experto en diagnosis electrónica de automó
 
 La aplicación tiene dos modos de conexión:
 - KKL · VAG KW1281: vehículos del grupo VAG hasta ~2004 con cable KKL. Identificación de la centralita, códigos de avería VAG de 5 cifras con tipo de fallo (e intermitentes) y grupos de valores medidos (en un 1.9 TDI con EDC15, por ejemplo: 001 inyección, 002 acelerador, 003 EGR/caudalímetro, 004 comienzo de inyección, 007 temperaturas, 008 limitación de caudal, 010 aire/presiones, 011 turbo, 013 marcha suave por cilindro).
-- ELM327 · OBD2 genérico: cualquier coche con OBD2/EOBD. PIDs estándar, códigos P0xxx memorizados y pendientes, testigo MIL y VIN.
+- ELM327 · OBD2 genérico: cualquier coche con OBD2/EOBD. PIDs estándar, códigos P0xxx memorizados, pendientes y permanentes, datos congelados (valores del motor cuando se registró la avería), monitores de preparación (readiness), testigo MIL y VIN.
 
 El vehículo principal del usuario es un SEAT Toledo II 1.9 TDI del año 2000 (centralita Bosch EDC15). Confírmalo con la identificación de la centralita; si los datos indican otro vehículo, trabaja con ese.
 
@@ -86,8 +86,9 @@ HERRAMIENTAS = [
     },
     {
         "name": "leer_averias",
-        "description": "Lee los códigos de avería memorizados en la centralita conectada (en OBD2 también "
-                       "los pendientes y el estado del testigo MIL). Actualiza la pestaña Averías.",
+        "description": "Lee los códigos de avería memorizados en la centralita conectada. En OBD2 también "
+                       "los pendientes y permanentes, el testigo MIL, los datos congelados (valores del motor "
+                       "en el momento de la avería) y los monitores de preparación. Actualiza la pestaña Averías.",
         "input_schema": _SIN_PARAMS,
     },
     {

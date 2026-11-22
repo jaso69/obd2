@@ -38,19 +38,22 @@ VAG antiguos con cable KKL y cualquier coche con OBD2.»*
 
 Cabecera: selector **Conexión** (KKL · VAG KW1281 / ELM327 · OBD2 genérico),
 **Puerto** (detecta el cable FTDI o el Bluetooth; incluye «Simulador (sin coche)»),
-**Módulo** (solo KKL: 01 motor, 02 cambio, 03 ABS, 08 clima, 15 airbag, 17 cuadro,
-35 cierre, 56 radio) y botón **Conectar/Desconectar**. Indicador de estado.
+**Módulo** (solo KKL: 21 direcciones VAG, entre ellas 01 motor, 02 cambio, 03 ABS, 08 clima,
+15 airbag, 17 cuadro, 19 gateway, 25 inmovilizador, 35 cierre, 46 confort y 56 radio) y botón **Conectar/Desconectar**. Indicador de estado.
 
 | Pestaña | Modo KKL (VAG KW1281) | Modo ELM327 (OBD2) |
 |---|---|---|
 | **Panel** | Relojes: rpm, caudal inyectado (mg/H), presión turbo (con marca de presión teórica), refrigerante. Tarjetas: ciclo N75, ciclo EGR, tensión dosificador, masa de aire. Gráficas 60 s: turbo teórico/real (G011) y masa de aire teórica/real (G003). | Relojes: rpm, velocidad, refrigerante, carga. Tarjetas: temp. admisión, MAF, mariposa, tensión. Gráficas: rpm y carga/mariposa. |
 | **Valores medidos** | Grupos de valores medidos (casillas con los típicos de EDC15 + campo para otros). Tabla en vivo. Botón **Grabar CSV**. | Lista con solo los PIDs que el coche soporta (selección múltiple). Tabla en vivo. Grabar CSV. |
-| **Averías** | Códigos VAG de 5 cifras, componente, tipo de fallo, intermitente. Leer / Borrar (con confirmación). | Códigos P0xxx memorizados y pendientes con descripción, estado del testigo MIL. Leer / Borrar. |
-| **Vehículo** | Identificación de la centralita (referencia, componente, software, codificación), velocidad, keywords, eco del cable. | Adaptador, protocolo, VIN, tensión de batería, estándar OBD, MIL, nº de PIDs. |
+| **Averías** | Códigos VAG de 5 cifras, componente, tipo de fallo, intermitente. Leer / Borrar (con confirmación). **Escanear todos los módulos**: prueba las 21 direcciones de `MODULOS` una a una (los ausentes se descartan en ~4 s), lista identificación y averías de cada módulo que responde y vuelve al módulo elegido; se puede detener. **Generar informe**. | Códigos P0xxx memorizados, pendientes y **permanentes** (modo 0A; no se borran) con descripción, estado del testigo MIL. A la derecha, **datos congelados** (modo 02) de la avería que encendió el testigo. Leer / Borrar. **Generar informe**. |
+| **Vehículo** | Identificación de la centralita (referencia, componente, software, codificación), velocidad, keywords, eco del cable. | Adaptador, protocolo, VIN **decodificado** (fabricante, país, año modelo, modelo VAG), tensión de batería, estándar OBD, MIL, nombre de la centralita, calibración (CALID) y CVN (modo 09), nº de PIDs. A la derecha, **monitores de preparación** (readiness, para la ITV). |
 | **✦ Asistente IA** | Igual en ambos modos (ver §6). | |
 | **Registro** | Historial de la comunicación; opción de depuración que muestra cada bloque/comando. | |
 
 Otros detalles:
+- **Puerto**: en OBD2 la lista incluye «WiFi · 192.168.0.10:35000» y el campo se puede escribir (otra dirección `ip:puerto` de un ELM327 WiFi). Se abre con `serial.serial_for_url("socket://ip:puerto")`.
+- **Informe** (`informe.py`): HTML de un solo archivo `informe_AAAAMMDD_HHMMSS.html` en la misma carpeta que los CSV; se abre en el navegador, con botón «Imprimir o guardar como PDF». Lleva datos del vehículo, averías (y el último escaneo de módulos en KKL) y, en OBD2, datos congelados y monitores.
+- **Aviso de versión nueva**: al arrancar, un hilo consulta `api.github.com/repos/jaso69/obd2/releases/latest` (5 s como mucho; sin datos del usuario, User-Agent `ToledoDiagnosis`) y, si la etiqueta es mayor que `VERSION` de `gui.py`, muestra «↑ Nueva vX.Y.Z» junto al título (clic → página de la release). La variable de entorno `TOLEDO_SIN_COMPROBAR_VERSION=1` lo desactiva (la usan las pruebas). **Al publicar una versión hay que subir `VERSION` en `gui.py`.**
 - Los CSV se guardan junto al ejecutable (`log_AAAAMMDD_HHMMSS.csv`, separador `;`, coma decimal: se abren directamente en Excel/LibreOffice).
 - La sesión KW1281 se mantiene viva sola mientras estás en el menú (keep-alive).
 - Si se pierde la conexión, se avisa y se puede reconectar.
@@ -174,15 +177,17 @@ fórmula que envía la propia centralita.
 |---|---|
 | `gui.py` | Interfaz tkinter/ttk (clase `App`), hilo de comunicación (`Worker`), widgets `Gauge` y `Chart`, pestaña de IA y ejecución de sus herramientas. Opción oculta `--autotest-ia <fichero>`. |
 | `kw1281.py` | Protocolo KW1281: init 5 baudios por *break*, detección de velocidad, eco, complementos, bloques, keep-alive en hilo, averías, borrado, grupos. |
-| `vag_datos.py` | Fórmulas de valores medidos VAG (≈60), tipos de fallo, averías VAG de 5 cifras (tabla pequeña), grupos EDC15, módulos. |
-| `elm327.py` | OBD2 por ELM327: inicialización, protocolo automático, parseo con cabeceras (CAN 11/29 bits y línea K), reensamblado ISO-TP, multi-PID, averías (03/07/04), VIN (09 02), MIL, tensión. |
-| `obd_datos.py` | PIDs del modo 01 (≈50) con decodificadores, estándares OBD, descripciones de averías P0xxx (≈110). |
+| `informe.py` | Informe de diagnóstico HTML (escapa todo el texto; CSS de impresión). |
+| `vin_datos.py` | Decodificación del VIN: tabla WMI de fabricantes, país, año modelo (posición 10, ciclo de 30 años), código de modelo VAG (posiciones 7-8). |
+| `vag_datos.py` | Fórmulas de valores medidos VAG (≈60), tipos de fallo, averías VAG de 5 cifras (≈90 clásicos 00xxx-01xxx, 21 P1 de VAG y traducción de 16xxx-18xxx a P0/P1), grupos EDC15, 21 módulos. |
+| `elm327.py` | OBD2 por ELM327: inicialización, protocolo automático, parseo con cabeceras (CAN 11/29 bits y línea K), reensamblado ISO-TP, multi-PID, averías (03/07/0A/04), datos congelados (02), monitores (01 01), VIN y CALID/CVN/nombre (09 02/04/06/0A), MIL, tensión. |
+| `obd_datos.py` | PIDs del modo 01 (≈50) con decodificadores, estándares OBD, descripciones de averías P0xxx (≈110), monitores de preparación (gasolina y diésel). |
 | `ia.py` | Proveedores, configuración y claves, `Conversacion` (bucle de herramientas para Anthropic y OpenAI/DeepSeek), prompt de sistema, definición de herramientas. |
-| `simulador.py` | `FakeSerial` (cable KKL + EDC15 a 9600 bd, decodifica el init de 5 baudios por tiempos reales) y `FakeELMSerial` (ELM327 + coche gasolina CAN 11/500). |
+| `simulador.py` | `FakeSerial` (cable KKL + centralitas a 9600 bd: motor EDC15 01, ABS 03, airbag 15 y cuadro 17; decodifica el init de 5 baudios por tiempos reales) y `FakeELMSerial` (ELM327 + coche gasolina CAN 11/500 o línea K, con datos congelados de la P0171, permanente P0420, EVAP sin completar y CALID/CVN). |
 | `toledo.py` | Versión consola KKL (y utilidades reutilizadas por la GUI: `leer_grupo_formateado`, `texto_id`). |
 | `sonda_toledo.py` | Sonda de protocolos con ELM327 para el Toledo. |
-| `tests/prueba_simuladores.py` | 17 comprobaciones de protocolo contra los simuladores (`python tests/prueba_simuladores.py`). |
-| `tests/prueba_gui.py` | Maneja la ventana real con los dos simuladores: conectar, averías, panel, valores + CSV, configuración IA (`xvfb-run -a python3 tests/prueba_gui.py` en Linux). |
+| `tests/prueba_simuladores.py` | ≈60 comprobaciones contra los simuladores (`python tests/prueba_simuladores.py`, ≈20 s): KW1281 (también varias centralitas), ELM327 en CAN y línea K (datos congelados, monitores, permanentes, modo 09), VIN, informe y tablas de averías. |
+| `tests/prueba_gui.py` | Maneja la ventana real con los dos simuladores: conectar, averías, escaneo de módulos, datos congelados, monitores, informe, panel, valores + CSV, ELM327 WiFi (servidor TCP local), configuración IA (`xvfb-run -a .venv/bin/python tests/prueba_gui.py` en Linux, ≈55 s). Necesita `pyserial` (el Python del sistema en Fedora no lo trae: usar `.venv`). |
 | `build.bat` / `build.sh` | Ejecutable único con PyInstaller (Windows / Linux). |
 | `linux/build-portable.sh` | Binario Linux portable (contenedor Debian 11) y paquete `.tar.gz` para distribuir. |
 | `linux/instalar.sh`, `linux/toledo-diagnosis.desktop`, `linux/LEEME.txt` | Instalación de usuario en Linux y LÉEME del paquete. |
@@ -191,7 +196,7 @@ fórmula que envía la propia centralita.
 
 ### 7.2 Hilos
 - **Hilo principal (Tk)**: interfaz. Sondea una cola cada 50 ms (`App.poll`).
-- **Worker**: único hilo que habla con el puerto serie. Recibe tareas (`connect`, `disconnect`, `dtcs`, `clear`, `live`, `debug`, `tool`) y publica eventos (`connected`, `live`, `dtcs`, `lost`, `error`, `log`…). Las lecturas en vivo llevan un número de generación para descartar datos de lecturas anteriores.
+- **Worker**: único hilo que habla con el puerto serie. Recibe tareas (`connect`, `disconnect`, `dtcs`, `clear`, `scan`, `report`, `live`, `debug`, `tool`) y publica eventos (`connected`, `live`, `dtcs`, `scan_progress`, `scan_done`, `report`, `lost`, `error`, `log`…). Durante el escaneo pone `online = False` para que el cambio de módulo no cuente como conexión perdida; `scan_stop` (Event) lo detiene desde la interfaz. Las lecturas en vivo llevan un número de generación para descartar datos de lecturas anteriores.
 - **KW1281 keep-alive**: hilo dentro de `KW1281` que intercambia bloques ACK cuando nadie usa la sesión (con `RLock`).
 - **Hilo de IA** por consulta: ejecuta `Conversacion.enviar`; las herramientas del coche van al Worker (tarea `tool` + cola de respuesta) y las de interfaz al hilo Tk (evento `ai_main`). Cada conversación tiene un número para descartar respuestas tras «Nueva conversación».
 
@@ -208,6 +213,7 @@ fórmula que envía la propia centralita.
 - Si `ATSP0` + `0100` no da respuesta, fuerza uno a uno los protocolos de línea K: `ATSP5` (KWP2000 rápido), `ATSP4` (KWP2000 lento) y `ATSP3` (ISO 9141-2), con `ATPC` entre medias y dos `0100` por protocolo (12 s cada uno). Si ninguno responde, vuelve a `ATSP0` y da un error que explica las causas (coche sin OBD2 real, clon malo). Pensado para Mercedes y otros coches anteriores a CAN. El simulador lo reproduce con `FakeELMSerial(protocolo, auto_falla=True)`.
 - Con cabeceras activadas: separa centralitas (prefiere 7E8 o 10/11) y reensambla ISO-TP (tramas 0x/1x/2x). Línea K: cabecera de 3 bytes + checksum (KWP2000 también con cabecera de 4 bytes, longitud aparte).
 - Multi-PID (hasta 6 por petición) solo en CAN; si falla, pasa a PID a PID.
+- Datos congelados: `020200` da el código que los provocó (0000 = no hay); `020000` (y 0220…) los PIDs disponibles; luego `02PP00` uno a uno. Monitores: bytes B/C/D de `0101` (bit 3 de B = diésel). Modo 09: CALID 16 bytes, CVN 4 bytes, nombre 20 bytes; en línea K llegan en mensajes de 4 bytes numerados y se concatenan.
 
 ### 7.5 Estilo visual (para la web)
 - Tema oscuro. Colores: fondo `#111418`, panel `#181c22`, tarjeta `#1f242c`, tarjeta 2 `#262c36`, pista `#2f3642`, texto `#e8ebf0`, texto secundario `#8a93a2`, **acento naranja `#ff7a29`**, azul `#4aa8ff`, ok `#3ccf7a`, aviso `#f5b83d`, error `#ef5350`.
@@ -247,17 +253,28 @@ Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-po
 
 ---
 
+### 8.2 v0.3.0 (en desarrollo, 2026-11-22)
+Hecho en el código (sin publicar): tabla de averías VAG ampliada, escaneo de módulos VAG, datos congelados, monitores de preparación, averías permanentes, CALID/CVN, decodificación del VIN, informe HTML, ELM327 WiFi y aviso de versión nueva. `VERSION = "0.3.0"` ya puesto en `gui.py`. Pruebas con simuladores en verde.
+
+Para publicarla:
+1. Probarla en coche si es posible (sobre todo el escaneo de módulos y los datos congelados).
+2. Web (`web/index.html`): añadir las funciones nuevas a «Todo lo que hace» (averías permanentes, datos congelados, monitores/ITV, escaneo de módulos, informe, WiFi); en «Qué cable necesitas» mencionar el ELM327 WiFi; quitar de las limitaciones «La tabla de averías VAG es pequeña»; regenerar capturas (`web/capturas.py`) por la pestaña Averías nueva. Publicar la web después de la release.
+3. Etiqueta `v0.3.0`, paquete Linux (`./linux/build-portable.sh v0.3.0`), `.exe` en Windows, release con notas, y comprobar el aviso de versión desde la v0.3.0 cuando salga la siguiente.
+
 ## 9. Estado actual y limitaciones (ser honesto en la web)
 - **Probado**: todo contra los simuladores; IA contra la API real (Claude) con el simulador; ejecutable de Windows; en Linux, el código y la GUI en Fedora 44 y el paquete portable en contenedores de Ubuntu 20.04/24.04, Debian 12, Fedora 40/44, Arch y openSUSE Leap 15.6 (instala, autoprueba IA y abre la ventana).
 - **Probado en coches reales** (un par de coches, noviembre 2026): funciona bien. La web ya no dice que esté sin probar con coche.
 - **No probado todavía**: en Linux, los adaptadores físicos (FTDI, `rfcomm`) y el lanzador en un escritorio GNOME/KDE real.
 - Ajustes probables al probar con coche: tiempos entre bytes (`--retardo` en consola), alguna fórmula VAG, textos de averías.
-- Tabla de averías VAG pequeña (14 códigos); los demás salen con número y «no incluido en la tabla».
+- **Funciones de la v0.3.0 (2026-11-22) probadas solo con simuladores**: escaneo de módulos VAG, datos congelados, monitores, averías permanentes, CALID/CVN, decodificación del VIN, informe, ELM327 WiFi y aviso de versión (la consulta real a GitHub sí se probó). Falta probarlas en coche y con un ELM327 WiFi real.
+- Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 21 en la tabla). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 para la v0.3.0, **aún sin publicar**: al publicarla hay que actualizar la web (ver §8.2).
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
 - No hay funciones de adaptación, ajustes básicos, codificación ni test de actuadores (solo lectura y borrado de averías).
 
 ## 10. Ideas pendientes / hoja de ruta
-- Ampliar averías VAG y descripciones; más grupos documentados.
+- Seguir ampliando averías VAG (más P1 y módulos de confort/clima); más grupos documentados (ME7 gasolina, TDI inyector-bomba).
+- Bloque 2 propuesto el 2026-11-22: consumo instantáneo/medio y 0-100 km/h; gráfica de cualquier valor y abrir un CSV grabado; historial por coche (VIN); más herramientas para la IA (que redacte el informe).
+- Programa en inglés (duplica el público; hay que pasar todos los textos).
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
 - Firma del ejecutable de Windows (evitar SmartScreen).

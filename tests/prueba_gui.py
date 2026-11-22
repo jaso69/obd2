@@ -7,7 +7,10 @@ Prueba de la interfaz con los dos simuladores (sin coche, sin pytest).
 Abre la ventana real y, en modo KKL y ELM327: conecta, lee y borra averías,
 lectura en vivo del panel, valores con grabación CSV y desconecta. Comprueba
 también la configuración de la IA (en una carpeta temporal, no toca la tuya)
-y que no salten diálogos de error ni excepciones. Tarda unos 40 segundos.
+y que no salten diálogos de error ni excepciones. Incluye el escaneo de módulos
+VAG, los datos congelados y monitores OBD2, el informe HTML (sin abrir el
+navegador) y la conexión WiFi con un ELM327 simulado en 127.0.0.1. Tarda
+unos 90 segundos.
 """
 import os
 import sys
@@ -17,8 +20,12 @@ import traceback
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 os.environ["XDG_CONFIG_HOME"] = os.environ["APPDATA"] = tempfile.mkdtemp()
+os.environ["TOLEDO_SIN_COMPROBAR_VERSION"] = "1"     # sin consultar GitHub durante la prueba
 
+import socket                       # noqa: E402
+import threading                    # noqa: E402
 import tkinter as tk                # noqa: E402
+import webbrowser                   # noqa: E402
 from tkinter import messagebox      # noqa: E402
 
 import gui                          # noqa: E402
@@ -29,6 +36,8 @@ dialogos = []
 messagebox.showerror = lambda *a, **k: dialogos.append(("error", a))
 messagebox.showinfo = lambda *a, **k: dialogos.append(("info", a))
 messagebox.askyesno = lambda *a, **k: True
+abiertos = []
+webbrowser.open = lambda url, *a, **k: abiertos.append(url)
 
 
 def ok(cond, txt):
@@ -70,6 +79,33 @@ for modo in (gui.KKL, gui.ELM):
     app.read_dtcs()
     ok(esperar(lambda: app.dtc_tree.get_children(), 15),
        f"averías en la tabla ({len(app.dtc_tree.get_children())})")
+    if modo == gui.ELM:
+        estados = [app.dtc_tree.item(i, "values")[3] for i in app.dtc_tree.get_children()]
+        ok(estados.count("Permanente") == 1, f"averías memorizadas, pendientes y permanentes {estados}")
+        ok(len(app.ff_tree.get_children()) == 10 and "P0171" in str(app.ff_lbl.cget("text")),
+           "datos congelados de la P0171 (10 valores)")
+        textos = [str(w.cget("text")) for w in app.ready_card.winfo_children()]
+        ok(any("1 de 8 sin completar" in t for t in textos), "monitores de preparación en Vehículo (1 de 8 sin completar)")
+        campos = dict(app.vehicle_fields)
+        ok(campos.get("  Fabricante") == "SEAT" and campos.get("Calibración (CALID)") == "SIM-CAL-0471",
+           "VIN decodificado y calibración en Vehículo")
+    else:
+        app.scan_modules([0x01, 0x03, 0x08, 0x17], confirmar=False)
+        ok(esperar(lambda: app.scan_result is not None and app.connected and app.worker.online
+                   and not app.scanning, 90), "escaneo de módulos y vuelta al módulo 01")
+        filas = [app.dtc_tree.item(i, "values") for i in app.dtc_tree.get_children()]
+        ok(len(filas) == 7 and "Responden 3 de 4" in str(app.dtc_lbl.cget("text")),
+           f"escaneo: 3 módulos de 4, 4 averías ({len(filas)} filas)")
+    app.make_report()
+    ok(esperar(lambda: getattr(app, "last_report", None) and abiertos, 20), "informe generado y abierto")
+    if getattr(app, "last_report", None):
+        with open(app.last_report, encoding="utf-8") as f:
+            h = f.read()
+        claves = ("P0171", "Datos congelados", "Monitores", "SEAT") if modo == gui.ELM else ("00553", "Escaneo de módulos", "00779")
+        ok(all(c in h for c in claves), f"contenido del informe ({', '.join(claves)})")
+        os.remove(app.last_report)
+        app.last_report = None
+        abiertos.clear()
     app.clear_dtcs()
     esperar(lambda: "Borrando" not in str(app.dtc_lbl.cget("text")), 15)
     ok(not dialogos, "borrado sin errores")
@@ -95,6 +131,46 @@ for modo in (gui.KKL, gui.ELM):
 
     app.toggle_connect()
     ok(esperar(lambda: not app.connected, 10), "desconecta")
+
+print("ELM327 WiFi (adaptador simulado en 127.0.0.1)")
+from simulador import FakeELMSerial  # noqa: E402
+srv = socket.socket()
+srv.bind(("127.0.0.1", 0))
+srv.listen(1)
+
+
+def servir():
+    c, _ = srv.accept()
+    elm = FakeELMSerial()
+    while True:
+        d = c.recv(256)
+        if not d:
+            break
+        elm.write(d)
+        if elm.rx:
+            c.sendall(bytes(elm.rx))
+            elm.rx.clear()
+
+
+threading.Thread(target=servir, daemon=True).start()
+app.mode_var.set(gui.MODOS[gui.ELM])
+app._apply_mode()
+ok(gui.WIFI in app.port_cb["values"] and str(app.port_cb.cget("state")) == "normal",
+   "opción WiFi en la lista y puerto editable en OBD2")
+app.port_var.set(f"127.0.0.1:{srv.getsockname()[1]}")
+app.toggle_connect()
+ok(esperar(lambda: app.connected, 40), "conecta por WiFi")
+if app.connected:
+    app.read_dtcs()
+    ok(esperar(lambda: app.dtc_tree.get_children(), 15), "lee averías por WiFi")
+    app.toggle_connect()
+    ok(esperar(lambda: not app.connected, 10), "desconecta")
+ok(gui.wifi_destino(gui.WIFI) == ("192.168.0.10", 35000) and gui.wifi_destino("COM3") is None
+   and gui.wifi_destino("/dev/ttyUSB0") is None, "reconoce direcciones WiFi y puertos serie")
+ok(gui.version_mayor("v0.3.1", "0.3.0") and not gui.version_mayor("v0.3.0", "0.3.0")
+   and not gui.version_mayor("v0.2.9", "0.3.0") and gui.version_mayor("v1.0.0", "0.10.0"), "comparación de versiones")
+
+ok(not dialogos, f"sin diálogos de error hasta aquí {dialogos}")
 
 print("Errores y carpetas")
 carpeta = gui.CARPETA

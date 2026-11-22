@@ -124,33 +124,181 @@ FAULT_TYPES = {
     17: "Desviación de regulación",
     18: "Límite superior",
     19: "Límite inferior",
+    20: "Fallo en el ajuste básico",
+    21: "Tiempo de aumento de presión delantero demasiado largo",
+    22: "Tiempo de reducción de presión delantero demasiado largo",
+    23: "Tiempo de aumento de presión trasero demasiado largo",
+    24: "Tiempo de reducción de presión trasero demasiado largo",
     27: "Señal no plausible",
 }
 
 
 # ---------------------------------------------------------------------------
-# Codigos de averia VAG (5 cifras) habituales en 1.9 TDI EDC15
+# Codigos de averia VAG de 5 cifras (formato clasico 00xxx-01xxx).
+# Los mismos numeros se usan en todas las centralitas VAG; aqui estan los mas
+# habituales de motor (gasolina y TDI), cambio, ABS, airbag, cuadro e
+# inmovilizador, confort y radio. Fuente: documentacion publica de VAG/KW1281.
 # ---------------------------------------------------------------------------
 DTCS = {
+    # Cambio automático
+    258: "Válvula magnética 1 del cambio (N88)",
+    260: "Válvula magnética 2 del cambio (N89)",
+    262: "Válvula magnética 3 del cambio (N90)",
+    264: "Válvula magnética 4 del cambio (N91)",
+    266: "Válvula magnética 5 del cambio (N92)",
+    268: "Válvula magnética 6 del cambio (N93)",
+    293: "Conmutador multifunción del cambio (F125)",
+    300: "Transmisor de temperatura del ATF (G93)",
+    652: "Supervisión de marchas",
+    # Motor y comunes
+    281: "Transmisor de velocidad del vehículo (G22)",
+    282: "Posicionador de la mariposa (V60)",
     513: "Transmisor de régimen del motor (G28)",
+    515: "Transmisor Hall / posición del árbol de levas (G40)",
+    516: "Interruptor de ralentí (F60)",
+    518: "Potenciómetro de la mariposa (G69)",
+    519: "Transmisor de presión del colector de admisión (G71)",
     522: "Transmisor de temperatura del líquido refrigerante (G62)",
     523: "Transmisor de temperatura del aire de admisión (G42)",
+    524: "Sensor de picado 1 (G61)",
+    525: "Sonda lambda (G39)",
     532: "Tensión de alimentación (B+)",
+    533: "Regulación del ralentí",
+    537: "Regulación lambda",
+    540: "Sensor de picado 2 (G66)",
+    543: "Régimen máximo del motor sobrepasado",
+    545: "Conexión eléctrica motor-cambio",
     550: "Regulación del comienzo de inyección",
     553: "Medidor de masa de aire (G70)",
+    561: "Adaptación de la mezcla",
     575: "Presión en el colector de admisión (sobrepresión/turbo)",
+    577: "Regulación de picado, cilindro 1",
+    578: "Regulación de picado, cilindro 2",
+    579: "Regulación de picado, cilindro 3",
+    580: "Regulación de picado, cilindro 4",
     625: "Señal de velocidad del vehículo",
     626: "Testigo de tiempo de precalentamiento (K29)",
+    638: "Conexión eléctrica motor-cambio 2",
     668: "Tensión de alimentación borne 30",
+    1025: "Testigo de averías del motor (K83, MIL)",
     1044: "Unidad de control mal codificada",
+    1087: "Ajuste básico no realizado",
+    1119: "Señal de reconocimiento de marcha",
+    1165: "Unidad de mando de la mariposa (J338)",
+    1235: "Válvula de aire secundario (N112)",
+    1237: "Válvula de corte de combustible (N109)",
+    1242: "Etapas finales en la unidad de control",
+    1247: "Válvula del depósito de carbón activo (N80)",
+    1249: "Inyector del cilindro 1 (N30)",
+    1250: "Inyector del cilindro 2 (N31)",
+    1251: "Inyector del cilindro 3 (N32)",
+    1252: "Inyector del cilindro 4 (N33)",
+    1259: "Relé de la bomba de combustible (J17)",
     1262: "Válvula de limitación de presión de sobrealimentación (N75)",
+    1264: "Bomba de aire secundario (V101)",
+    1265: "Válvula de recirculación de gases de escape (EGR, N18)",
     1268: "Dosificador de caudal de combustible (N146)",
+    # Bus de datos (CAN de tracción)
+    1312: "Bus de datos de tracción",
+    1314: "Unidad de control del motor (sin comunicación)",
+    1316: "Unidad de control del ABS (sin comunicación)",
+    1317: "Unidad de control en el cuadro de instrumentos (J285)",
+    1321: "Unidad de control de los airbags (J234)",
+    # ABS
+    283: "Sensor de velocidad delantero izquierdo (G47)",
+    285: "Sensor de velocidad delantero derecho (G45)",
+    287: "Sensor de velocidad trasero derecho (G44)",
+    290: "Sensor de velocidad trasero izquierdo (G46)",
+    526: "Interruptor de la luz de freno (F)",
+    1130: "Funcionamiento del ABS",
+    1276: "Bomba hidráulica del ABS (V64)",
+    # Airbag
+    588: "Detonador del airbag del conductor (N95)",
+    589: "Detonador del airbag del acompañante (N131)",
+    595: "Datos de colisión memorizados",
+    1217: "Detonador del airbag lateral del conductor (N199)",
+    1218: "Detonador del airbag lateral del acompañante (N200)",
+    1280: "Airbag del acompañante desactivado",
+    # Cuadro de instrumentos e inmovilizador
+    562: "Transmisor de nivel/temperatura del aceite (G266)",
+    771: "Transmisor de nivel de combustible (G)",
+    779: "Transmisor de temperatura exterior (G17)",
+    1039: "Transmisor de temperatura del refrigerante del cuadro (G2)",
+    1176: "Llave: señal demasiado baja (inmovilizador)",
+    1177: "Unidad de control del motor (inmovilizador)",
+    1179: "Programación de llave incorrecta (inmovilizador)",
+    # Confort / cierre centralizado
+    849: "Contacto S en el conmutador de encendido (D)",
+    955: "Llave 1 (mando a distancia)",
+    956: "Llave 2 (mando a distancia)",
+    1330: "Unidad central del sistema de confort (J393)",
+    1331: "Unidad de control de la puerta del conductor (J386)",
+    1332: "Unidad de control de la puerta del acompañante (J387)",
+    1333: "Unidad de control de la puerta trasera izquierda (J388)",
+    1334: "Unidad de control de la puerta trasera derecha (J389)",
+    # Radio
+    852: "Altavoces delanteros",
+    853: "Altavoces traseros",
+    856: "Antena de radio",
     65535: "Unidad de control averiada",
 }
 
+# Codigos OBD especificos de VAG (P1xxx) en formato de 5 cifras (17xxx-18xxx).
+DTCS_P1 = {
+    1136: "Adaptación aditiva de la mezcla (banco 1): demasiado pobre",
+    1137: "Adaptación aditiva de la mezcla (banco 1): demasiado rica",
+    1297: "Conexión turbo-mariposa: fuga en el tubo de presión",
+    1325: "Regulación de picado, cilindro 1: límite alcanzado",
+    1326: "Regulación de picado, cilindro 2: límite alcanzado",
+    1327: "Regulación de picado, cilindro 3: límite alcanzado",
+    1328: "Regulación de picado, cilindro 4: límite alcanzado",
+    1341: "Etapa final de la bobina de encendido 1: cortocircuito a masa",
+    1410: "Válvula del depósito de carbón activo: cortocircuito a positivo",
+    1505: "Interruptor de mariposa cerrada: no abre",
+    1506: "Interruptor de mariposa cerrada: no cierra",
+    1511: "Válvula de conmutación del colector de admisión: fallo eléctrico",
+    1543: "Potenciómetro de accionamiento de la mariposa: señal demasiado baja",
+    1556: "Regulación de la presión de sobrealimentación: desviación negativa (falta presión)",
+    1557: "Regulación de la presión de sobrealimentación: desviación positiva (sobrepresión)",
+    1570: "Arranque bloqueado por el inmovilizador",
+    1602: "Tensión del borne 30 demasiado baja",
+    1612: "Unidad de control del motor mal codificada",
+    1626: "Bus de datos de tracción: falta mensaje del cambio",
+    1649: "Bus de datos de tracción: falta mensaje del ABS",
+    1650: "Bus de datos de tracción: falta mensaje del cuadro de instrumentos",
+}
+
+
+def codigo_obd(code):
+    """Codigo OBD (p. ej. «P0300») equivalente a un codigo VAG 16xxx-18xxx, o None.
+
+    VAG escribe los codigos OBD con 5 cifras: P0xxx = 16384 + xxx y
+    P1xxx = 16408 + 1xxx (16684 = P0300, 17965 = P1557).
+    """
+    if 16384 <= code <= 17383:
+        return f"P{code - 16384:04d}"
+    if 17408 <= code <= 18407:
+        return f"P{code - 16408:04d}"
+    return None
+
+
+def componente(code):
+    """Descripcion del codigo de averia VAG (clasico o en formato OBD)."""
+    if code in DTCS:
+        return DTCS[code]
+    p = codigo_obd(code)
+    if p:
+        if p.startswith("P1"):
+            desc = DTCS_P1.get(int(p[1:]), "código específico de VAG no incluido en la tabla")
+        else:
+            from obd_datos import describe_dtc as obd_desc
+            desc = obd_desc(p)
+        return f"{p} · {desc}"
+    return "Código no incluido en la tabla (consultar documentación VAG)"
+
 
 def describe_dtc(code, ftype, intermittent):
-    desc = DTCS.get(code, "Código no incluido en la tabla (consultar documentación VAG)")
+    desc = componente(code)
     t = FAULT_TYPES.get(ftype, f"Tipo de fallo {ftype}")
     extra = f" - {t}" if t else ""
     inter = " - INTERMITENTE" if intermittent else ""
@@ -179,8 +327,21 @@ MODULOS = {
     0x02: "Cambio automático",
     0x03: "ABS",
     0x08: "Climatronic",
+    0x09: "Electrónica central",
     0x15: "Airbag",
+    0x16: "Columna de dirección",
     0x17: "Cuadro de instrumentos",
+    0x19: "Gateway (bus de datos)",
+    0x22: "Tracción total (Haldex)",
+    0x25: "Inmovilizador",
     0x35: "Cierre centralizado",
+    0x36: "Memoria asiento conductor",
+    0x37: "Navegación",
+    0x45: "Alarma / habitáculo",
+    0x46: "Módulo central de confort",
+    0x55: "Faros (alcance / xenón)",
     0x56: "Radio",
+    0x65: "Presión de neumáticos",
+    0x76: "Ayuda al aparcamiento",
+    0x77: "Teléfono",
 }

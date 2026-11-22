@@ -6,7 +6,8 @@ Pruebas de los protocolos contra los simuladores (sin coche, sin pytest).
 Comprueba KW1281 (init 5 baudios, velocidad automática, identificación,
 averías, borrado, grupos, keep-alive) y ELM327 (protocolo, PIDs soportados,
 VIN, MIL, averías, multi-PID, borrado) y el parseo de respuestas de línea K y
-CAN 29 bits. Tarda unos 10 segundos (el init de 5 baudios es lento por diseño).
+CAN 29 bits, datos congelados, monitores, averías permanentes, identificación
+(modo 09), VIN, varias centralitas KW1281, informe HTML y códigos de avería VAG. Tarda unos 20 segundos (el init de 5 baudios es lento por diseño).
 """
 import os
 import sys
@@ -96,6 +97,77 @@ k.proto_num, k.is_can = "7", True
 vin = k._parse(["18 DA F1 10 10 14 49 02 01 56 53 53", "18 DA F1 10 21 5A 5A 5A 36 4B 5A 59",
                 "18 DA F1 10 22 52 30 30 30 30 30 31"])
 comprobar(vin["10"][0][3:] == b"VSSZZZ6KZYR000001", "CAN 29 bits multi-trama")
+
+print("ELM327: datos congelados, preparación, permanentes e identificación")
+for proto, nombre in (("6", "CAN"), ("3", "ISO 9141"), ("5", "KWP2000")):
+    e = ELM327(FakeELMSerial(proto), logger=lambda m: None)
+    e.connect()
+    d = e.read_dtcs()
+    ff = e.freeze_frame()
+    r = e.readiness()
+    ident = e.identificacion()
+    comprobar(d["permanent"] == ["P0420"] and ff and ff["dtc"] == "P0171" and len(ff["values"]) == 10
+              and ("Temp. refrigerante", "83") in [(n, v) for _, n, v, _ in ff["values"]],
+              f"{nombre}: permanentes y datos congelados (P0171, 10 valores)")
+    comprobar(r and not r[0] and ("Sistema de evaporación (EVAP)", False) in r[1] and len(r[1]) == 8,
+              f"{nombre}: monitores (8, EVAP sin completar)")
+    comprobar(ident == {"calid": ["SIM-CAL-0471"], "cvn": ["1A2B3C4D"], "nombre": "ECM -EngineControl"},
+              f"{nombre}: calibración, CVN y nombre de la centralita")
+    e.clear_dtcs()
+    comprobar(e.freeze_frame() is None and e.read_dtcs()["permanent"] == ["P0420"],
+              f"{nombre}: tras borrar no hay datos congelados y la permanente sigue")
+
+print("Monitores y VIN")
+import obd_datos  # noqa: E402
+import vin_datos  # noqa: E402
+diesel, mons = obd_datos.monitores(0x0F, 0xE9, 0x40)
+comprobar(diesel and ("Filtro de partículas (DPF)", False) in mons and ("Catalizador NMHC", True) in mons,
+          "monitores de un diésel (DPF sin completar)")
+v = dict(vin_datos.decodificar_vin("VSSZZZ6KZYR000001"))
+comprobar(v["Fabricante"] == "SEAT" and v["País de fabricación"] == "España" and v["Año modelo"].startswith("2000")
+          and "Ibiza" in v["Modelo (código VAG)"], "VIN de SEAT: fabricante, país, año 2000, modelo 6K")
+comprobar(dict(vin_datos.decodificar_vin("WAUZZZ8P7AA000001"))["Año modelo"].startswith("2010")
+          and "no válido" in vin_datos.decodificar_vin("123")[0][1], "VIN: año 2010 y VIN no válido")
+
+print("KW1281 con varias centralitas en la línea K")
+s = FakeSerial()
+idents = {}
+t = time.time()
+for a in (0x17, 0x08):
+    m = KW1281(s, address=a, retry_wait=0.5)
+    try:
+        m.connect(rapido=True)
+        idents[a] = (m.ident[0], m.read_dtcs())
+        m.disconnect()
+    except KW1281Error as err:
+        idents[a] = str(err)
+comprobar(idents[0x17] == (b"1M0920821C  ", [(779, 5, False)]), "cuadro (17): identificación y avería 00779")
+comprobar("no responde" in idents[0x08] and time.time() - t < 12, f"módulo ausente (08) descartado rápido ({time.time() - t:.1f} s en total)")
+
+print("Informe HTML")
+import informe  # noqa: E402
+e = ELM327(FakeELMSerial("6"), logger=lambda m: None)
+e.connect()
+d = e.read_dtcs()
+d["ff"], d["readiness"] = e.freeze_frame(), e.readiness()
+h = informe.generar({"modo": "elm", "version": "x", "vehiculo": [("VIN", "VSSZZZ6KZYR000001")], "dtcs": d})
+comprobar(all(x in h for x in ("P0171", "P0420", "Permanente", "Datos congelados", "Sin completar", "VSSZZZ6KZYR000001")),
+          "informe OBD2 con averías, datos congelados y monitores")
+h = informe.generar({"modo": "kkl", "vehiculo": [], "dtcs": [(553, 27, False)], "modulo": 1,
+                     "escaneo": [{"addr": 3, "ok": True, "ident": ["1J0907379G", "ABS"], "dtcs": [(287, 3, True)],
+                                  "error": None}, {"addr": 8, "ok": False, "error": "no responde"}]})
+comprobar(all(x in h for x in ("00553", "00287", "Intermitente", "Responden 1 de 2", "Sin respuesta")),
+          "informe VAG con escaneo de módulos")
+comprobar("&lt;b&gt;" in informe.generar({"modo": "kkl", "vehiculo": [("x", "<b>")], "dtcs": []}), "el informe escapa el HTML")
+
+print("Tablas de averías VAG")
+import vag_datos  # noqa: E402
+comprobar(vag_datos.codigo_obd(16684) == "P0300" and vag_datos.codigo_obd(17965) == "P1557"
+          and vag_datos.codigo_obd(18010) == "P1602" and vag_datos.codigo_obd(1262) is None,
+          "códigos 16xxx-18xxx a P0/P1 (16684=P0300, 17965=P1557)")
+comprobar("P0300" in vag_datos.componente(16684) and "inmovilizador" in vag_datos.componente(17978)
+          and "G70" in vag_datos.componente(553), "descripciones clásicas, P0 y P1")
+comprobar("no incluido" in vag_datos.componente(18500), "código desconocido")
 
 print()
 print("TODO CORRECTO" if not fallos else f"{fallos} FALLO(S)")
