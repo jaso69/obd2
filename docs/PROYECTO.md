@@ -258,7 +258,7 @@ Hecho en el código (sin publicar): tabla de averías VAG ampliada, escaneo de m
 
 Para publicarla:
 1. Probarla en coche si es posible (sobre todo el escaneo de módulos y los datos congelados).
-2. Web (`web/index.html`): añadir las funciones nuevas a «Todo lo que hace» (averías permanentes, datos congelados, monitores/ITV, escaneo de módulos, informe, WiFi); en «Qué cable necesitas» mencionar el ELM327 WiFi; quitar de las limitaciones «La tabla de averías VAG es pequeña»; regenerar capturas (`web/capturas.py`) por la pestaña Averías nueva. Publicar la web después de la release.
+2. Web: **ya actualizada en local** (2026-11-22, sin publicar): funciones nuevas en la portada, «Todo lo que hace» (Averías con escaneo/permanentes/datos congelados/informe; «Vehículo, otros módulos e ITV» con selector KKL/OBD2 y captura nueva `vehiculo-obd.webp`), ELM327 WiFi en «Qué cable necesitas» y en las FAQ, y en «Estado» la frase de la tabla pequeña cambiada por el aviso de que lo nuevo solo está probado con simuladores (quitarlo cuando se pruebe en coche). Capturas regeneradas (`capturas.py` ahora hace el escaneo completo de módulos, ≈2 min). **Publicarla (`./web/publicar.sh`) justo después de publicar la release v0.3.0**, no antes: describiría funciones que la descarga v0.2.0 no tiene.
 3. Etiqueta `v0.3.0`, paquete Linux (`./linux/build-portable.sh v0.3.0`), `.exe` en Windows, release con notas, y comprobar el aviso de versión desde la v0.3.0 cuando salga la siguiente.
 
 ## 9. Estado actual y limitaciones (ser honesto en la web)

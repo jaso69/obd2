@@ -17,6 +17,7 @@ import time
 RAIZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 sys.path.insert(0, RAIZ)
 os.environ["XDG_CONFIG_HOME"] = os.environ["APPDATA"] = tempfile.mkdtemp()
+os.environ["TOLEDO_SIN_COMPROBAR_VERSION"] = "1"
 
 import tkinter as tk                # noqa: E402
 from tkinter import messagebox      # noqa: E402
@@ -127,8 +128,11 @@ if nombre:
     os.remove(nombre)
 
 app.nb.select(app.tab_dtc)
-app.read_dtcs()
-esperar(lambda: app.dtc_tree.get_children(), 15)
+print("Escaneo de módulos (unos 2 minutos)")
+app.scan_modules(confirmar=False)
+esperar(lambda: app.scan_result is not None and not app.scanning, 240)
+esperar(lambda: str(app.dtc_read_btn.cget("state")) == "normal", 30)   # ya ha vuelto al módulo 01
+pausa(1)
 capturar("averias-kkl")
 
 app.nb.select(app.tab_ecu)
@@ -163,8 +167,10 @@ capturar("panel-obd")
 app._stop_live()
 app.nb.select(app.tab_dtc)
 app.read_dtcs()
-esperar(lambda: app.dtc_tree.get_children(), 15)
+esperar(lambda: app.ff_tree.get_children(), 15)
 capturar("averias-obd")
+app.nb.select(app.tab_ecu)
+capturar("vehiculo-obd")
 
 app.toggle_connect()
 esperar(lambda: not app.connected, 10)
