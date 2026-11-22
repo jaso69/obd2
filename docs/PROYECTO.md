@@ -225,13 +225,13 @@ fórmula que envía la propia centralita.
 - **v0.2.0 a medias (2026-11-21): BORRADOR de release en GitHub, falta el `.exe` de Windows.** Ver §8.1.
 
 ### 8.1 Terminar la release v0.2.0 desde Windows (pendiente)
-Hecho en Fedora el 2026-11-21:
-- Etiqueta anotada `v0.2.0` en el commit `5579713` (subida a GitHub). Los commits posteriores solo tocan documentación.
-- Paquete Linux `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz` (40 147 632 bytes) generado con `./linux/build-portable.sh v0.2.0` desde ese commit; pasó la autoprueba IA, `tests/prueba_simuladores.py` y `tests/prueba_gui.py`. Ya trae el apartado Bluetooth en `LEEME.txt`.
-- Release **en borrador** (`--draft --prerelease`, título «v0.2.0 — Linux») con ese `.tar.gz` y las notas ya escritas (mencionan los dos archivos). Un borrador no es público: la web (`web.js`, API sin autenticar) sigue ofreciendo la v0.1.0 hasta publicarla. En la web de GitHub el borrador aparece en *Releases* solo para el dueño (su URL es `.../releases/tag/untagged-…` hasta que se publica).
+Hecho en Fedora el 2026-11-21 y rehecho el 2026-11-22:
+- Etiqueta anotada `v0.2.0` en el commit `c7a3c77` (subida a GitHub). El 2026-11-22 se movió desde `5579713` para incluir la prueba de protocolos de línea K del ELM327 (§7.4); el borrador nunca fue público. Los commits posteriores solo tocan documentación.
+- Paquete Linux `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz` (40 150 204 bytes) generado con `./linux/build-portable.sh v0.2.0` desde ese commit (lleva el código de línea K, comprobado dentro del binario); pasó la autoprueba IA, `tests/prueba_simuladores.py` y `tests/prueba_gui.py`. Ya trae el apartado Bluetooth en `LEEME.txt`.
+- Release **en borrador** (`--draft --prerelease`, título «v0.2.0 — Linux») con ese `.tar.gz` y las notas ya escritas (mencionan los dos archivos y la prueba de línea K). Un borrador no es público: la web (`web.js`, API sin autenticar) sigue ofreciendo la v0.1.0 hasta publicarla. En la web de GitHub el borrador aparece en *Releases* solo para el dueño (su URL es `.../releases/tag/untagged-…` hasta que se publica).
 
 Pasos en Windows (`C:\Users\jose\Desktop\obd2`):
-1. `git pull` y `git fetch --tags`.
+1. `git pull` y `git fetch --tags --force` (la etiqueta se movió: sin `--force` se queda la antigua). Comprobar con `git log --oneline -1 v0.2.0` que sale `c7a3c77`.
 2. Compilar desde la etiqueta: `git checkout v0.2.0`, `build.bat` → `dist\ToledoDiagnosis.exe`, y volver con `git checkout main`.
 3. Probar:
    - `python tests\prueba_simuladores.py` → «TODO CORRECTO».
