@@ -254,7 +254,7 @@ Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-po
 
 ---
 
-### 8.2 Release v0.3.0 (publicada el 2026-11-22, falta el `.exe`)
+### 8.2 Release v0.3.0 (publicada el 2026-11-22, `.exe` compilado y sin subir)
 Funciones: tabla de averías VAG ampliada, escaneo de módulos VAG, datos congelados, monitores de preparación, averías permanentes, CALID/CVN, decodificación del VIN, informe HTML, ELM327 WiFi y aviso de versión nueva (`VERSION = "0.3.0"` en `gui.py`).
 
 Hecho en Fedora el 2026-11-22:
@@ -263,10 +263,12 @@ Hecho en Fedora el 2026-11-22:
 - Release **publicada** (no pre-release, «Latest»), título «Toledo Diagnosis v0.3.0», solo con el paquete Linux; las notas dicen que el `.exe` llega en breve y enlazan el de la v0.2.0. La web (`web.js`) busca el `.exe` en la release más reciente que lo tenga, así que hasta entonces el botón de Windows da el de la v0.2.0.
 - Web publicada con las funciones nuevas (`./web/publicar.sh`).
 
-**Pendiente, en Windows:**
-1. `git pull` y `git fetch --tags --force`; comprobar `git rev-parse v0.3.0` → `5c83aa6`.
-2. `git checkout v0.3.0`, `build.bat`, volver con `git checkout main`.
-3. Probar: `python tests\prueba_simuladores.py` («TODO CORRECTO»), `dist\ToledoDiagnosis.exe --autotest-ia salida.txt` (3 × «API key … no válida») y abrir el `.exe` con el Simulador en KKL (escanear módulos) y ELM327 (datos congelados, Vehículo, Generar informe).
+Hecho en Windows el 2026-11-22:
+- `git pull` + `git fetch --tags --force`; `v0.3.0^{commit}` → `5c83aa6` comprobado (`git rev-parse v0.3.0` a secas da `646e4c0`, el objeto de la etiqueta anotada).
+- `.exe` compilado con `build.bat` **desde la etiqueta `v0.3.0`**: `C:\Users\jose\Desktop\obd2\dist\ToledoDiagnosis.exe`, **27 566 252 bytes**, SHA-256 `FA85A53C4E265B697BAEAAD4B1E4649987EC5048C5C346872797F9B68F983698`. (`dist/` no está en git: solo existe en el disco de Windows.)
+- Probado: `tests\prueba_simuladores.py` → «TODO CORRECTO»; `--autotest-ia` → los 3 proveedores «API key … no válida»; el usuario abrió el `.exe` y probó el Simulador en KKL (escanear módulos) y ELM327 (datos congelados, Vehículo, Generar informe): bien.
+
+**Pendiente:**
 4. Subir el `.exe` con el nombre `ToledoDiagnosis.exe`: en Windows no hay `gh`, así que o bien desde la web (GitHub → Releases → v0.3.0 → *Edit* → arrastrar el `.exe` → *Update release*) o desde Fedora montando la partición (como en §8.1). Después quitar de las notas la frase «se añadirá aquí en breve» y el enlace a la v0.2.0.
 5. El `LEEME.txt` del paquete Linux no menciona el ELM327 WiFi (la web y el README sí); añadirlo para la próxima versión.
 
