@@ -220,7 +220,7 @@ fórmula que envía la propia centralita.
 - Windows: `build.bat` → `dist\ToledoDiagnosis.exe`. Linux: `./build.sh` → `dist/ToledoDiagnosis` (uso local); para publicar, `./linux/build-portable.sh vX.Y.Z` → `dist/ToledoDiagnosis-vX.Y.Z-linux-x86_64.tar.gz`.
 - Tras cambiar código, recompilar y copiar el ejecutable nuevo.
 - Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
-- Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (pre-release) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
+- Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (marca de pre-release quitada el 2026-11-22) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
 - La v0.1.0 **no incluye** el soporte Linux (llegó después).
 - **Release v0.2.0 publicada** (2026-11-22; versión estable, marcada «Latest» en GitHub) con `ToledoDiagnosis.exe` de Windows y `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz`, ambos compilados desde la etiqueta `v0.2.0` (`c7a3c77`): https://github.com/jaso69/obd2/releases/tag/v0.2.0 — la web ofrece ya esta versión. Detalle en §8.1.
 
