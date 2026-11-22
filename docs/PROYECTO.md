@@ -222,25 +222,26 @@ fórmula que envía la propia centralita.
 - Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
 - Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (pre-release) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
 - La v0.1.0 **no incluye** el soporte Linux (llegó después).
-- **v0.2.0 a medias (2026-11-21): BORRADOR de release en GitHub, falta el `.exe` de Windows.** Ver §8.1.
+- **v0.2.0 a medias: BORRADOR de release en GitHub con el paquete Linux; el `.exe` ya está compilado y probado en Windows (2026-11-22) pero falta subirlo y publicar desde Fedora.** Ver §8.1.
 
-### 8.1 Terminar la release v0.2.0 desde Windows (pendiente)
+### 8.1 Terminar la release v0.2.0 (pendiente: subir el `.exe` y publicar desde Fedora)
 Hecho en Fedora el 2026-11-21 y rehecho el 2026-11-22:
 - Etiqueta anotada `v0.2.0` en el commit `c7a3c77` (subida a GitHub). El 2026-11-22 se movió desde `5579713` para incluir la prueba de protocolos de línea K del ELM327 (§7.4); el borrador nunca fue público. Los commits posteriores solo tocan documentación.
 - Paquete Linux `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz` (40 150 204 bytes) generado con `./linux/build-portable.sh v0.2.0` desde ese commit (lleva el código de línea K, comprobado dentro del binario); pasó la autoprueba IA, `tests/prueba_simuladores.py` y `tests/prueba_gui.py`. Ya trae el apartado Bluetooth en `LEEME.txt`.
 - Release **en borrador** (`--draft --prerelease`, título «v0.2.0 — Linux») con ese `.tar.gz` y las notas ya escritas (mencionan los dos archivos y la prueba de línea K). Un borrador no es público: la web (`web.js`, API sin autenticar) sigue ofreciendo la v0.1.0 hasta publicarla. En la web de GitHub el borrador aparece en *Releases* solo para el dueño (su URL es `.../releases/tag/untagged-…` hasta que se publica).
 
-Pasos en Windows (`C:\Users\jose\Desktop\obd2`):
-1. `git pull` y `git fetch --tags --force` (la etiqueta se movió: sin `--force` se queda la antigua). Comprobar con `git log --oneline -1 v0.2.0` que sale `c7a3c77`.
-2. Compilar desde la etiqueta: `git checkout v0.2.0`, `build.bat` → `dist\ToledoDiagnosis.exe`, y volver con `git checkout main`.
-3. Probar:
-   - `python tests\prueba_simuladores.py` → «TODO CORRECTO».
-   - `dist\ToledoDiagnosis.exe --autotest-ia salida.txt` → los 3 proveedores con «API key … no válida» y ningún «FALLO».
-   - Abrir el `.exe`, puerto «Simulador (sin coche)», *Conectar* e *Iniciar lectura* en KKL y en ELM327. Si hay cable FTDI o ELM327 Bluetooth a mano, comprobar que sale su puerto COM.
-4. Subir el `.exe` al borrador: `gh release upload v0.2.0 dist\ToledoDiagnosis.exe` (si `gh` no está instalado o autenticado en Windows: web de GitHub → *Releases* → borrador v0.2.0 → *Edit* → arrastrar el `.exe` → *Update release*).
-5. Publicar: `gh release edit v0.2.0 --draft=false` (sigue como pre-release), o en la web *Edit* → *Publish release*.
-6. Comprobar que los botones «Descargar» de https://www.jasodev.es apuntan a los archivos de la v0.2.0 (los coge solos de la API de GitHub; no hace falta volver a publicar la web).
-7. Actualizar esta sección, §10 y el «Estado» de `CLAUDE.md` (release v0.2.0 publicada con `.exe` y paquete Linux), y hacer commit.
+Hecho en Windows el 2026-11-22:
+- `git pull` + `git fetch --tags --force`; `v0.2.0` → `c7a3c77` comprobado.
+- `.exe` compilado con `build.bat` **desde la etiqueta `v0.2.0`**: `C:\Users\jose\Desktop\obd2\dist\ToledoDiagnosis.exe`, **27 532 584 bytes**, SHA-256 `86FCCCD3B758F5BED56D9E430C82158DFD149BB47D5DB6AFDA3253CD74A98C56`. (`dist/` no está en git: el archivo solo existe en el disco de Windows.)
+- Probado: `tests\prueba_simuladores.py` → «TODO CORRECTO» (con las 3 pruebas de línea K); `--autotest-ia` → los 3 proveedores «API key … no válida», ningún «FALLO»; el usuario abrió el `.exe` y probó el Simulador en KKL y ELM327 (bien).
+- **No se subió**: en Windows no está instalado `gh`.
+
+**Pendiente, a hacer desde Fedora** (donde `gh` tiene sesión):
+1. Conseguir el `.exe` del disco de Windows. Desde Fedora se puede montar la partición NTFS (Archivos → disco de Windows, o `udisksctl mount -b /dev/<partición>`); queda en una ruta tipo `/run/media/$USER/<etiqueta>/Users/jose/Desktop/obd2/dist/ToledoDiagnosis.exe`. Copiarlo a una carpeta temporal y comprobar el tamaño y `sha256sum` de arriba. Si NTFS no monta (Windows hibernado/«inicio rápido»), apagar Windows del todo (`shutdown /s /t 0`) o que el usuario lo suba en la web (GitHub → *Releases* → borrador v0.2.0 → *Edit* → arrastrar el `.exe` → *Update release*).
+2. Subirlo con el nombre `ToledoDiagnosis.exe` (el mismo que en la v0.1.0): `gh release upload v0.2.0 /ruta/ToledoDiagnosis.exe`.
+3. Pedir confirmación al usuario y publicar (sigue como pre-release): `gh release edit v0.2.0 --draft=false`.
+4. Comprobar: `gh release view v0.2.0` (dos archivos: `.exe` y `linux-x86_64.tar.gz`) y que los botones «Descargar» de https://www.jasodev.es apuntan a la v0.2.0 (los coge solos de la API de GitHub; no hace falta volver a publicar la web).
+5. Actualizar esta sección, §8, §10 y el «Estado» de `CLAUDE.md` (release v0.2.0 publicada con `.exe` y paquete Linux) y hacer commit + push.
 
 Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-portable.sh v0.2.0` y `gh release upload v0.2.0 <tar.gz> --clobber`.
 - Crear releases: con `gh release create vX.Y.Z <archivos> --prerelease --notes-file notas.md` (en Fedora, tras `gh auth login`) o desde la web de GitHub.
@@ -258,7 +259,7 @@ Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-po
 - No hay funciones de adaptación, ajustes básicos, codificación ni test de actuadores (solo lectura y borrado de averías).
 
 ## 10. Ideas pendientes / hoja de ruta
-- Terminar la release v0.2.0: borrador creado con el paquete Linux; falta subir el `.exe` compilado en Windows y publicarla (§8.1).
+- Terminar la release v0.2.0: borrador con el paquete Linux; `.exe` compilado y probado en Windows, falta subirlo desde Fedora y publicarla (§8.1).
 - Ampliar averías VAG y descripciones; más grupos documentados.
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
