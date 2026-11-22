@@ -2,7 +2,7 @@
 
 Documento de referencia para (1) crear la web del programa y (2) retomar el
 desarrollo en cualquier equipo sin tener que volver a explicar el proyecto.
-Última actualización: 2026-11-22 (versión del código: v0.2.0, publicada con `.exe` de Windows y paquete Linux).
+Última actualización: 2026-11-22 (versión del código: v0.3.0, publicada con el paquete Linux; falta el `.exe`).
 
 - Repositorio: https://github.com/jaso69/obd2 (rama `main`)
 - Autor: jaso69
@@ -228,7 +228,8 @@ fórmula que envía la propia centralita.
 - Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
 - Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (marca de pre-release quitada el 2026-11-22) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
 - La v0.1.0 **no incluye** el soporte Linux (llegó después).
-- **Release v0.2.0 publicada** (2026-11-22; versión estable, marcada «Latest» en GitHub) con `ToledoDiagnosis.exe` de Windows y `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz`, ambos compilados desde la etiqueta `v0.2.0` (`c7a3c77`): https://github.com/jaso69/obd2/releases/tag/v0.2.0 — la web ofrece ya esta versión. Detalle en §8.1.
+- **Release v0.3.0 publicada** (2026-11-22, «Latest») con el paquete Linux; el `.exe` de Windows está pendiente (§8.2).
+- **Release v0.2.0 publicada** (2026-11-22) con `ToledoDiagnosis.exe` de Windows y `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz`, ambos compilados desde la etiqueta `v0.2.0` (`c7a3c77`): https://github.com/jaso69/obd2/releases/tag/v0.2.0 — la web ofrece ya esta versión. Detalle en §8.1.
 
 ### 8.1 Release v0.2.0 (publicada el 2026-11-22)
 Hecho en Fedora el 2026-11-21 y rehecho el 2026-11-22:
@@ -253,20 +254,28 @@ Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-po
 
 ---
 
-### 8.2 v0.3.0 (en desarrollo, 2026-11-22)
-Hecho en el código (sin publicar): tabla de averías VAG ampliada, escaneo de módulos VAG, datos congelados, monitores de preparación, averías permanentes, CALID/CVN, decodificación del VIN, informe HTML, ELM327 WiFi y aviso de versión nueva. `VERSION = "0.3.0"` ya puesto en `gui.py`. Pruebas con simuladores en verde.
+### 8.2 Release v0.3.0 (publicada el 2026-11-22, falta el `.exe`)
+Funciones: tabla de averías VAG ampliada, escaneo de módulos VAG, datos congelados, monitores de preparación, averías permanentes, CALID/CVN, decodificación del VIN, informe HTML, ELM327 WiFi y aviso de versión nueva (`VERSION = "0.3.0"` en `gui.py`).
 
-Para publicarla:
-1. Probarla en coche si es posible (sobre todo el escaneo de módulos y los datos congelados).
-2. Web: **ya actualizada en local** (2026-11-22, sin publicar): funciones nuevas en la portada, «Todo lo que hace» (Averías con escaneo/permanentes/datos congelados/informe; «Vehículo, otros módulos e ITV» con selector KKL/OBD2 y captura nueva `vehiculo-obd.webp`), ELM327 WiFi en «Qué cable necesitas» y en las FAQ, y en «Estado» la frase de la tabla pequeña cambiada por el aviso de que lo nuevo solo está probado con simuladores (quitarlo cuando se pruebe en coche). Capturas regeneradas (`capturas.py` ahora hace el escaneo completo de módulos, ≈2 min). **Publicarla (`./web/publicar.sh`) justo después de publicar la release v0.3.0**, no antes: describiría funciones que la descarga v0.2.0 no tiene.
-3. Etiqueta `v0.3.0`, paquete Linux (`./linux/build-portable.sh v0.3.0`), `.exe` en Windows, release con notas, y comprobar el aviso de versión desde la v0.3.0 cuando salga la siguiente.
+Hecho en Fedora el 2026-11-22:
+- Etiqueta anotada `v0.3.0` en el commit `5c83aa6` (subida).
+- Paquete `ToledoDiagnosis-v0.3.0-linux-x86_64.tar.gz` (40 181 932 bytes) con `./linux/build-portable.sh v0.3.0`: autoprueba IA bien; extraído, el binario abre la ventana. Pruebas con simuladores y de la GUI en verde.
+- Release **publicada** (no pre-release, «Latest»), título «Toledo Diagnosis v0.3.0», solo con el paquete Linux; las notas dicen que el `.exe` llega en breve y enlazan el de la v0.2.0. La web (`web.js`) busca el `.exe` en la release más reciente que lo tenga, así que hasta entonces el botón de Windows da el de la v0.2.0.
+- Web publicada con las funciones nuevas (`./web/publicar.sh`).
+
+**Pendiente, en Windows:**
+1. `git pull` y `git fetch --tags --force`; comprobar `git rev-parse v0.3.0` → `5c83aa6`.
+2. `git checkout v0.3.0`, `build.bat`, volver con `git checkout main`.
+3. Probar: `python tests\prueba_simuladores.py` («TODO CORRECTO»), `dist\ToledoDiagnosis.exe --autotest-ia salida.txt` (3 × «API key … no válida») y abrir el `.exe` con el Simulador en KKL (escanear módulos) y ELM327 (datos congelados, Vehículo, Generar informe).
+4. Subir el `.exe` con el nombre `ToledoDiagnosis.exe`: en Windows no hay `gh`, así que o bien desde la web (GitHub → Releases → v0.3.0 → *Edit* → arrastrar el `.exe` → *Update release*) o desde Fedora montando la partición (como en §8.1). Después quitar de las notas la frase «se añadirá aquí en breve» y el enlace a la v0.2.0.
+5. El `LEEME.txt` del paquete Linux no menciona el ELM327 WiFi (la web y el README sí); añadirlo para la próxima versión.
 
 ## 9. Estado actual y limitaciones (ser honesto en la web)
 - **Probado**: todo contra los simuladores; IA contra la API real (Claude) con el simulador; ejecutable de Windows; en Linux, el código y la GUI en Fedora 44 y el paquete portable en contenedores de Ubuntu 20.04/24.04, Debian 12, Fedora 40/44, Arch y openSUSE Leap 15.6 (instala, autoprueba IA y abre la ventana).
 - **Probado en coches reales** (un par de coches, noviembre 2026): funciona bien. La web ya no dice que esté sin probar con coche.
 - **No probado todavía**: en Linux, los adaptadores físicos (FTDI, `rfcomm`) y el lanzador en un escritorio GNOME/KDE real.
 - Ajustes probables al probar con coche: tiempos entre bytes (`--retardo` en consola), alguna fórmula VAG, textos de averías.
-- **Funciones de la v0.3.0 (2026-11-22) probadas solo con simuladores**: escaneo de módulos VAG, datos congelados, monitores, averías permanentes, CALID/CVN, decodificación del VIN, informe, ELM327 WiFi y aviso de versión (la consulta real a GitHub sí se probó). Falta probarlas en coche y con un ELM327 WiFi real.
+- **Funciones de la v0.3.0 probadas solo con simuladores**: escaneo de módulos VAG, datos congelados, monitores, averías permanentes, CALID/CVN, decodificación del VIN, informe, ELM327 WiFi y aviso de versión (la consulta real a GitHub sí se probó). Falta probarlas en coche y con un ELM327 WiFi real.
 - Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 21 en la tabla). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 para la v0.3.0, **aún sin publicar**: al publicarla hay que actualizar la web (ver §8.2).
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
 - No hay funciones de adaptación, ajustes básicos, codificación ni test de actuadores (solo lectura y borrado de averías).
