@@ -222,7 +222,7 @@ fórmula que envía la propia centralita.
 - Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
 - Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (pre-release) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
 - La v0.1.0 **no incluye** el soporte Linux (llegó después).
-- **Release v0.2.0 publicada** (pre-release, 2026-11-22) con `ToledoDiagnosis.exe` de Windows y `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz`, ambos compilados desde la etiqueta `v0.2.0` (`c7a3c77`): https://github.com/jaso69/obd2/releases/tag/v0.2.0 — la web ofrece ya esta versión. Detalle en §8.1.
+- **Release v0.2.0 publicada** (2026-11-22; versión estable, marcada «Latest» en GitHub) con `ToledoDiagnosis.exe` de Windows y `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz`, ambos compilados desde la etiqueta `v0.2.0` (`c7a3c77`): https://github.com/jaso69/obd2/releases/tag/v0.2.0 — la web ofrece ya esta versión. Detalle en §8.1.
 
 ### 8.1 Release v0.2.0 (publicada el 2026-11-22)
 Hecho en Fedora el 2026-11-21 y rehecho el 2026-11-22:
@@ -238,7 +238,7 @@ Hecho en Windows el 2026-11-22:
 
 Hecho en Fedora el 2026-11-22 (cierre):
 - `.exe` copiado desde la partición de Windows (montada en `/run/media/jaso/D8AE878DAE87633C/...`); tamaño y SHA-256 coinciden con los de arriba.
-- Subido con `gh release upload v0.2.0 ToledoDiagnosis.exe` y publicada con `gh release edit v0.2.0 --draft=false` (sigue como pre-release), 2026-11-22 11:24 UTC.
+- Subido con `gh release upload v0.2.0 ToledoDiagnosis.exe` y publicada con `gh release edit v0.2.0 --draft=false` (como pre-release), 2026-11-22 11:24 UTC; después se le quitó la marca de pre-release con `gh release edit v0.2.0 --prerelease=false --latest` y se cambió el título.
 - Comprobado: la release tiene los dos archivos; el `.exe` descargado de GitHub tiene el mismo SHA-256; la API sin autenticar que usa `web.js` (`releases?per_page=10`) devuelve `v0.2.0` primero, así que los botones «Descargar» de la web apuntan a la v0.2.0.
 
 Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-portable.sh v0.2.0` y `gh release upload v0.2.0 <tar.gz> --clobber`.
