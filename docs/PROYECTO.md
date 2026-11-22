@@ -228,7 +228,7 @@ fórmula que envía la propia centralita.
 - Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
 - Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (marca de pre-release quitada el 2026-11-22) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
 - La v0.1.0 **no incluye** el soporte Linux (llegó después).
-- **Release v0.3.0 publicada** (2026-11-22, «Latest») con el paquete Linux; el `.exe` de Windows está pendiente (§8.2).
+- **Release v0.3.0 publicada** (2026-11-22, «Latest») con `ToledoDiagnosis.exe` de Windows y el paquete Linux, ambos compilados desde la etiqueta `v0.3.0` (`5c83aa6`): https://github.com/jaso69/obd2/releases/tag/v0.3.0 — la web ofrece ya esta versión en los dos sistemas. Detalle en §8.2.
 - **Release v0.2.0 publicada** (2026-11-22) con `ToledoDiagnosis.exe` de Windows y `ToledoDiagnosis-v0.2.0-linux-x86_64.tar.gz`, ambos compilados desde la etiqueta `v0.2.0` (`c7a3c77`): https://github.com/jaso69/obd2/releases/tag/v0.2.0 — la web ofrece ya esta versión. Detalle en §8.1.
 
 ### 8.1 Release v0.2.0 (publicada el 2026-11-22)
@@ -254,7 +254,7 @@ Si hubiera que rehacer el paquete Linux, se hace en Fedora con `./linux/build-po
 
 ---
 
-### 8.2 Release v0.3.0 (publicada el 2026-11-22, `.exe` compilado y sin subir)
+### 8.2 Release v0.3.0 (publicada el 2026-11-22, completa)
 Funciones: tabla de averías VAG ampliada, escaneo de módulos VAG, datos congelados, monitores de preparación, averías permanentes, CALID/CVN, decodificación del VIN, informe HTML, ELM327 WiFi y aviso de versión nueva (`VERSION = "0.3.0"` en `gui.py`).
 
 Hecho en Fedora el 2026-11-22:
@@ -268,9 +268,11 @@ Hecho en Windows el 2026-11-22:
 - `.exe` compilado con `build.bat` **desde la etiqueta `v0.3.0`**: `C:\Users\jose\Desktop\obd2\dist\ToledoDiagnosis.exe`, **27 566 252 bytes**, SHA-256 `FA85A53C4E265B697BAEAAD4B1E4649987EC5048C5C346872797F9B68F983698`. (`dist/` no está en git: solo existe en el disco de Windows.)
 - Probado: `tests\prueba_simuladores.py` → «TODO CORRECTO»; `--autotest-ia` → los 3 proveedores «API key … no válida»; el usuario abrió el `.exe` y probó el Simulador en KKL (escanear módulos) y ELM327 (datos congelados, Vehículo, Generar informe): bien.
 
-**Pendiente:**
-4. Subir el `.exe` con el nombre `ToledoDiagnosis.exe`: en Windows no hay `gh`, así que o bien desde la web (GitHub → Releases → v0.3.0 → *Edit* → arrastrar el `.exe` → *Update release*) o desde Fedora montando la partición (como en §8.1). Después quitar de las notas la frase «se añadirá aquí en breve» y el enlace a la v0.2.0.
-5. El `LEEME.txt` del paquete Linux no menciona el ELM327 WiFi (la web y el README sí); añadirlo para la próxima versión.
+Hecho en Fedora el 2026-11-22 (cierre):
+- `.exe` copiado desde la partición de Windows; tamaño y SHA-256 coinciden con los de arriba. Subido con `gh release upload v0.3.0 ToledoDiagnosis.exe`; en las notas se cambió «se añadirá aquí en breve» (y el enlace a la v0.2.0) por la línea normal de descarga de Windows.
+- Comprobado: la release tiene los dos archivos; el `.exe` descargado de GitHub tiene el mismo SHA-256; la API sin autenticar que usa `web.js` devuelve `v0.3.0` primero con el `.exe`, así que los botones «Descargar» de la web dan la v0.3.0.
+
+**Para la próxima versión:** el `LEEME.txt` del paquete Linux no menciona el ELM327 WiFi (la web y el README sí); añadirlo para la próxima versión.
 
 ## 9. Estado actual y limitaciones (ser honesto en la web)
 - **Probado**: todo contra los simuladores; IA contra la API real (Claude) con el simulador; ejecutable de Windows; en Linux, el código y la GUI en Fedora 44 y el paquete portable en contenedores de Ubuntu 20.04/24.04, Debian 12, Fedora 40/44, Arch y openSUSE Leap 15.6 (instala, autoprueba IA y abre la ventana).
