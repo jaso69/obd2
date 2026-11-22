@@ -272,25 +272,53 @@ Hecho en Fedora el 2026-11-22 (cierre):
 - `.exe` copiado desde la partición de Windows; tamaño y SHA-256 coinciden con los de arriba. Subido con `gh release upload v0.3.0 ToledoDiagnosis.exe`; en las notas se cambió «se añadirá aquí en breve» (y el enlace a la v0.2.0) por la línea normal de descarga de Windows.
 - Comprobado: la release tiene los dos archivos; el `.exe` descargado de GitHub tiene el mismo SHA-256; la API sin autenticar que usa `web.js` devuelve `v0.3.0` primero con el `.exe`, así que los botones «Descargar» de la web dan la v0.3.0.
 
-**Para la próxima versión:** el `LEEME.txt` del paquete Linux no menciona el ELM327 WiFi (la web y el README sí); añadirlo para la próxima versión.
+Hecho el 2026-11-22 (después): el usuario probó la v0.3.0 en un coche y funciona bien. Web actualizada (sección «Estado del proyecto»: novedades de la v0.3.0 probadas en coche; solo queda pendiente un ELM327 WiFi real) y publicada con `./web/publicar.sh`.
+
+**La v0.3.0 está cerrada.** Lo siguiente está en §10.
+
+### 8.3 Cómo sacar la próxima versión (lista de pasos)
+Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
+1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py` y `xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO».
+2. Commit, `git tag -a vX.Y.Z -m "..."`, `git push && git push --tags`.
+3. `./linux/build-portable.sh vX.Y.Z` (hace la autoprueba IA); extraer el `.tar.gz` y abrirlo.
+4. `gh release create vX.Y.Z dist/ToledoDiagnosis-vX.Y.Z-linux-x86_64.tar.gz --title "Toledo Diagnosis vX.Y.Z" --notes-file notas.md` (si el `.exe` aún no está, decirlo en las notas).
+5. Windows: `git pull`, `git fetch --tags --force`, `git checkout vX.Y.Z`, `build.bat`, `git checkout main`; probar simuladores, `--autotest-ia` y abrir el `.exe`. Anotar tamaño y SHA-256 (`certutil -hashfile dist\ToledoDiagnosis.exe SHA256`).
+6. Fedora: copiar el `.exe` desde la partición de Windows (`/run/media/jaso/D8AE878DAE87633C/Users/jose/Desktop/obd2/dist/`), comprobar SHA-256, `gh release upload vX.Y.Z ToledoDiagnosis.exe`, ajustar las notas, descargarlo de GitHub y volver a comprobar el SHA-256.
+7. Web: textos y capturas (`web/capturas.py`) con las funciones nuevas; `./web/publicar.sh`. Los botones de descarga se actualizan solos (`web.js` lee la API de GitHub).
+8. Actualizar `CLAUDE.md` (Estado) y este documento.
 
 ## 9. Estado actual y limitaciones (ser honesto en la web)
 - **Probado**: todo contra los simuladores; IA contra la API real (Claude) con el simulador; ejecutable de Windows; en Linux, el código y la GUI en Fedora 44 y el paquete portable en contenedores de Ubuntu 20.04/24.04, Debian 12, Fedora 40/44, Arch y openSUSE Leap 15.6 (instala, autoprueba IA y abre la ventana).
-- **Probado en coches reales** (un par de coches, noviembre 2026): funciona bien. La web ya no dice que esté sin probar con coche.
+- **Probado en coches reales** (un par de coches, noviembre 2026, v0.2.0; y la v0.3.0 el 2026-11-22): funciona bien. La web lo dice.
 - **No probado todavía**: en Linux, los adaptadores físicos (FTDI, `rfcomm`) y el lanzador en un escritorio GNOME/KDE real.
 - Ajustes probables al probar con coche: tiempos entre bytes (`--retardo` en consola), alguna fórmula VAG, textos de averías.
 - **v0.3.0 probada en coche** (2026-11-22, el usuario: «funciona bien»); la web lo dice. Falta probar con un ELM327 WiFi real (la web lo indica como pendiente).
-- Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 21 en la tabla). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 para la v0.3.0, **aún sin publicar**: al publicarla hay que actualizar la web (ver §8.2).
+- Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 21 en la tabla). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 en la v0.3.0 (publicada, web actualizada).
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
 - No hay funciones de adaptación, ajustes básicos, codificación ni test de actuadores (solo lectura y borrado de averías).
 
-## 10. Ideas pendientes / hoja de ruta
+## 10. Próximos pasos (actualizado el 2026-11-22)
+Por orden de prioridad propuesto; el usuario decide por dónde seguir.
+
+**1. Pequeños pendientes (para la próxima versión, sea cual sea)**
+- `LEEME.txt` del paquete Linux (`linux/`): añadir el ELM327 WiFi (la web y el README ya lo explican).
+- Probar con un **ELM327 WiFi real** (IP/puerto por defecto 192.168.0.10:35000); si va bien, quitar la línea de la web «La conexión WiFi está probada con el simulador…» (sección `#estado` de `web/index.html`).
+- En Linux, probar los adaptadores físicos (cable FTDI con `dialout`, Bluetooth con `rfcomm`) y el lanzador en un escritorio real.
+
+**2. Bloque 2 de funciones (propuesto el 2026-11-22, candidato a v0.4.0)**
+- Consumo instantáneo y medio (a partir de MAF o carga + régimen) y cronómetro 0-100 km/h.
+- Gráfica de cualquier valor en vivo y abrir/ver un CSV grabado.
+- Historial por coche (por VIN): guardar cada diagnóstico y comparar.
+- Más herramientas para la IA (p. ej. que redacte el informe de diagnóstico).
+
+**3. Más adelante**
 - Seguir ampliando averías VAG (más P1 y módulos de confort/clima); más grupos documentados (ME7 gasolina, TDI inyector-bomba).
-- Bloque 2 propuesto el 2026-11-22: consumo instantáneo/medio y 0-100 km/h; gráfica de cualquier valor y abrir un CSV grabado; historial por coche (VIN); más herramientas para la IA (que redacte el informe).
 - Programa en inglés (duplica el público; hay que pasar todos los textos).
+- Firma del ejecutable de Windows (evitar SmartScreen).
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
-- Firma del ejecutable de Windows (evitar SmartScreen).
+
+**Aparcado (no sacarlo por iniciativa propia):** renombrar el programa (candidatos MecanIA y OBD2Desk) y versión para Mac (sin Mac para probar; plan con GitHub Actions).
 
 ## 11. Comprobación en Linux
 Hecha el 2026-11-21 en Fedora 44 (Python 3.14, Tk 9.0, Wayland): pruebas de protocolo y de GUI, `build.sh`, `build-portable.sh` y el paquete en contenedores (§9). Para repetirla en un equipo nuevo:
