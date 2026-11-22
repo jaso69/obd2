@@ -612,7 +612,7 @@ class Worker(threading.Thread):
 
     def _connect_elm(self):
         self.elm = ELM327(self.ser, debug=self.debug, logger=self.log)
-        self.log("Buscando ELM327 y protocolo OBD2 (puede tardar hasta 25 s)...")
+        self.log("Buscando ELM327 y protocolo OBD2 (puede tardar hasta 25 s, o más si hay que probar la línea K)...")
         self.elm.connect()
         e = self.elm
         vin, volt = e.vin(), e.voltage()

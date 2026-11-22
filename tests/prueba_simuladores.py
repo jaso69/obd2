@@ -14,7 +14,7 @@ import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
-from elm327 import ELM327                      # noqa: E402
+from elm327 import ELM327, ELM327Error         # noqa: E402
 from kw1281 import KW1281, KW1281Error          # noqa: E402
 from simulador import FakeELMSerial, FakeSerial  # noqa: E402
 from toledo import leer_grupo_formateado        # noqa: E402
@@ -62,6 +62,31 @@ r = e.read_pids([0x0C, 0x0D, 0x05, 0x04, 0x0F, 0x10, 0x11, 0x42])
 comprobar(len(r) == 8 and e.multi, "lectura multi-PID de 8 PIDs")
 e.clear_dtcs()
 comprobar(e.read_dtcs()["stored"] == [], "borrado de averías")
+
+for proto, larga, nombre in (("5", False, "KWP2000 rápido"), ("4", True, "KWP2000 lento, cabecera de 4 bytes"),
+                             ("3", False, "ISO 9141-2")):
+    print(f"ELM327 (línea K {nombre}, falla la búsqueda automática)")
+    e = ELM327(FakeELMSerial(proto, auto_falla=True, cabecera_larga=larga), logger=lambda m: None)
+    e.connect()
+    comprobar(e.proto_num == proto and not e.is_can and not e.multi, f"protocolo forzado {e.proto_name}")
+    comprobar({0x0C, 0x0D, 0x05}.issubset(e.supported), "PIDs soportados")
+    comprobar(e.vin() == FakeELMSerial.VIN, "VIN en 5 mensajes")
+    comprobar(e.mil() == (True, 2), "testigo MIL")
+    d = e.read_dtcs()
+    comprobar(d["stored"] == ["P0171", "P0420"] and d["pending"] == ["P0301"], "averías")
+    comprobar(len(e.read_pids([0x0C, 0x0D, 0x05, 0x42])) == 4, "lectura de 4 PIDs uno a uno")
+    e.clear_dtcs()
+    comprobar(e.read_dtcs()["stored"] == [], "borrado de averías")
+
+print("ELM327 (coche que no responde a nada)")
+s = FakeELMSerial("5", auto_falla=True)
+s.protocolo = "X"                                 # ningún protocolo forzado encaja
+e = ELM327(s, logger=lambda m: None)
+try:
+    e.connect()
+    comprobar(False, "da error claro")
+except ELM327Error as err:
+    comprobar("KWP2000" in str(err) and s.actual == "0", "da error claro y deja el adaptador en automático")
 
 print("Parseo de respuestas")
 k = ELM327(None)

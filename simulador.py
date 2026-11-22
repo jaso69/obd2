@@ -228,7 +228,18 @@ class FakeELMSerial:
                  0x40, 0x42, 0x44, 0x45, 0x46, 0x49, 0x4A, 0x4C}
     VIN = "VSSZZZ6KZYR000001"
 
-    def __init__(self):
+    NOMBRES = {"3": "ISO 9141-2", "4": "ISO 14230-4 (KWP 5BAUD)", "5": "ISO 14230-4 (KWP FAST)",
+               "6": "ISO 15765-4 (CAN 11/500)"}
+
+    def __init__(self, protocolo="6", auto_falla=False, cabecera_larga=False):
+        """protocolo: el del coche simulado ("6" CAN; "3", "4", "5" línea K).
+        auto_falla: la búsqueda automática (ATSP0) no lo encuentra, como pasa con
+        algunos coches de línea K y clones. cabecera_larga: KWP2000 con el byte de
+        longitud aparte (cabecera de 4 bytes)."""
+        self.protocolo = protocolo
+        self.auto_falla = auto_falla
+        self.cabecera_larga = cabecera_larga
+        self.actual = "0"                     # protocolo elegido con ATSP
         self.baudrate = 38400
         self.timeout = 0.05
         self.rx = deque()
@@ -279,22 +290,30 @@ class FakeELMSerial:
                 text = (cmd + "\r" if self.echo else "") + "OK\r\r>"
                 self.echo = False
                 return text
+            elif c.startswith("ATSP"):
+                self.actual = c[4:] or "0"
+                out = ["OK"]
             elif c == "ATDPN":
-                out = ["A6"]
+                out = [("A" if self.actual == "0" else "") + self.protocolo]
             elif c == "ATDP":
-                out = ["AUTO, ISO 15765-4 (CAN 11/500)"]
+                out = [("AUTO, " if self.actual == "0" else "") + self.NOMBRES[self.protocolo]]
             elif c == "ATRV":
                 out = ["14.2V"]
             elif c == "ATI":
                 out = ["ELM327 v1.5"]
             else:
                 out = ["OK"]
+        elif self.actual == "0" and self.auto_falla:
+            out = ["SEARCHING...", "UNABLE TO CONNECT"]
+        elif self.actual not in ("0", self.protocolo):
+            out = ["BUS INIT: ...ERROR"] if self.actual in "345" else ["NO DATA"]
         else:
             out = self._obd(c)
         return (cmd + "\r" if self.echo else "") + "\r".join(out) + "\r\r>"
 
-    @staticmethod
-    def _frames(payload):
+    def _frames(self, payload):
+        if self.protocolo in "345":
+            return self._frames_k(payload)
         if len(payload) <= 7:
             return ["7E8 " + " ".join(f"{b:02X}" for b in [len(payload)] + payload)]
         lines = ["7E8 10 " + " ".join(f"{b:02X}" for b in [len(payload)] + payload[:6])]
@@ -304,6 +323,29 @@ class FakeELMSerial:
             lines.append("7E8 " + " ".join(f"{b:02X}" for b in [0x20 | (seq & 0xF)] + chunk))
             rest, seq = rest[7:], seq + 1
         return lines
+
+    def _frames_k(self, payload):
+        """Línea K: sin ISO-TP; las respuestas largas van en varios mensajes."""
+        modo = payload[0]
+        if modo in (0x43, 0x47):                       # 3 códigos por mensaje, sin contador
+            codes = payload[2:] or [0, 0]
+            msgs = [[modo] + (codes[i:i + 6] + [0] * 6)[:6] for i in range(0, len(codes), 6)]
+        elif modo == 0x49 and payload[1] == 0x02:      # VIN: 5 mensajes de 4 bytes
+            vin = [0, 0, 0] + payload[3:]
+            msgs = [[0x49, 0x02, n + 1] + vin[n * 4:n * 4 + 4] for n in range(5)]
+        else:
+            msgs = [payload]
+        out = []
+        for m in msgs:
+            if self.protocolo == "3":
+                head = [0x48, 0x6B, 0x10]
+            elif self.cabecera_larga:
+                head = [0x80, 0xF1, 0x10, len(m)]
+            else:
+                head = [0x80 | len(m), 0xF1, 0x10]
+            trama = head + m
+            out.append(" ".join(f"{b:02X}" for b in trama + [sum(trama) & 0xFF]))
+        return out
 
     @staticmethod
     def _enc(code):

@@ -87,16 +87,48 @@ class ELM327:
         self._cmd("ATSP0")
         r = self._cmd("0100", timeout=25)          # la búsqueda de protocolo puede tardar
         if not any(HEX_LINE.match(l) for l in r):
-            raise ELM327Error(
-                f"El vehículo no responde a OBD2 ({' '.join(r) or 'sin respuesta'}).\n"
-                "Pon el contacto. Si es un VAG anterior a 2004 (p. ej. el Toledo TDI del 2000) "
-                "usa el modo KKL · VAG KW1281.")
+            r = self._probar_linea_k(r)
         self.proto_num = self._cmd("ATDPN")[0].lstrip("A").upper()
         self.proto_name = self._cmd("ATDP")[0]
         self.is_can = self.proto_num in ("6", "7", "8", "9", "A", "B", "C")
         self.multi = self.is_can
         self.supported = self._read_supported(self._parse(r))
         self.connected = True
+
+    # Protocolos de línea K que se fuerzan uno a uno si falla la búsqueda automática
+    # (coches anteriores a CAN, p. ej. Mercedes de antes de ~2005, con clones que no
+    # inicializan bien la línea K en modo automático).
+    PROTOCOLOS_K = (("5", "ISO 14230-4 KWP2000 (inicio rápido)"),
+                    ("4", "ISO 14230-4 KWP2000 (inicio lento)"),
+                    ("3", "ISO 9141-2"))
+
+    def _probar_linea_k(self, r_auto):
+        self.logger(f"La búsqueda automática no encontró protocolo ({' '.join(r_auto) or 'sin respuesta'}). "
+                    "Probando los protocolos de línea K uno a uno...")
+        for num, nombre in self.PROTOCOLOS_K:
+            self.logger(f"Probando {nombre}...")
+            try:
+                self._cmd("ATPC", timeout=2)       # cierra el intento anterior
+                self._cmd(f"ATSP{num}")
+                r = self._cmd("0100", timeout=12)  # el inicio lento tarda unos 3 s
+                if not any(HEX_LINE.match(l) for l in r):
+                    r = self._cmd("0100", timeout=12)   # segundo intento: a veces el 1.º solo despierta la ECU
+            except ELM327Error:
+                continue
+            if any(HEX_LINE.match(l) for l in r):
+                self.logger(f"El coche responde por {nombre}.")
+                return r
+        try:
+            self._cmd("ATSP0")                     # deja el adaptador en automático
+        except ELM327Error:
+            pass
+        raise ELM327Error(
+            f"El vehículo no responde a OBD2 ({' '.join(r_auto) or 'sin respuesta'}); probados también "
+            "KWP2000 e ISO 9141 a mano.\n"
+            "Pon el contacto. Si es un VAG anterior a 2004 (p. ej. el Toledo TDI del 2000) "
+            "usa el modo KKL · VAG KW1281. Algunos coches con conector OBD2 (p. ej. Mercedes "
+            "anteriores a 2001 en gasolina o 2004 en diésel) no cumplen OBD2 y solo responden "
+            "a herramientas de la marca. Con línea K, muchos clones baratos de ELM327 tampoco funcionan.")
 
     # ------------------------------------------------------------------
     def _parse(self, lines):
@@ -116,7 +148,11 @@ class ELM327:
                 else:                               # Linea K: "48 6B 10 41 0C 1A F8 xx"
                     if len(tok) < 5:
                         continue
-                    ecu, data = tok[2], tok[3:-1]   # se quita el checksum
+                    fmt = int(tok[0], 16)
+                    if self.proto_num in ("4", "5") and fmt & 0x80 and not fmt & 0x3F and len(tok) >= 6:
+                        ecu, data = tok[2], tok[4:-1]   # KWP2000 con byte de longitud aparte
+                    else:
+                        ecu, data = tok[2], tok[3:-1]   # se quita el checksum
                 frames.setdefault(ecu, []).append(bytes(int(x, 16) for x in data))
             except ValueError:
                 continue
