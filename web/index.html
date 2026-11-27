@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OBD2Desk · Diagnóstico de tu coche desde el portátil</title>
-<meta name="description" content="Programa gratuito para Windows y Linux: lee averías, datos congelados y valores en directo de coches VAG antiguos con cable KKL (KW1281) y de cualquier coche OBD2 con ELM327 (USB, Bluetooth o WiFi), con informe en PDF y un asistente de IA que hace las comprobaciones por ti.">
-<meta name="keywords" content="diagnosis OBD2 portátil, KW1281, cable KKL 409.1, VAG-COM, EDC15, SEAT Toledo TDI, 1.9 TDI averías, ELM327 Bluetooth, ELM327 WiFi, lector OBD2 gratis, datos congelados, monitores readiness ITV, escanear módulos VAG, diagnóstico con IA, Linux OBD2">
+<meta name="description" content="Programa gratuito para Windows y Linux: lee averías, datos congelados y valores en directo con gráficas de coches VAG antiguos con cable KKL (KW1281) y de cualquier coche OBD2 con ELM327 (USB, Bluetooth o WiFi), con consumo y cronómetro 0-100, historial de cada coche, informe en PDF y un asistente de IA que hace las comprobaciones por ti.">
+<meta name="keywords" content="diagnosis OBD2 portátil, KW1281, cable KKL 409.1, VAG-COM, EDC15, SEAT Toledo TDI, 1.9 TDI averías, ELM327 Bluetooth, ELM327 WiFi, lector OBD2 gratis, datos congelados, monitores readiness ITV, escanear módulos VAG, consumo OBD2, cronómetro 0-100, visor CSV OBD2, historial de averías, diagnóstico con IA, Linux OBD2">
 <meta name="theme-color" content="#111418">
 <link rel="icon" type="image/png" href="img/icono.png">
 <meta property="og:type" content="website">
@@ -57,7 +57,7 @@
       <a class="boton boton-secundario" href="https://github.com/jaso69/obd2">Ver en GitHub</a>
     </div>
     <figure class="captura captura-portada">
-      <a href="img/panel-kkl.webp" class="ampliar"><img src="img/panel-kkl.webp" width="1995" height="1200"
+      <a href="img/panel-kkl.webp" class="ampliar"><img src="img/panel-kkl.webp" width="2025" height="1200"
         alt="Panel del programa conectado a una centralita VAG: relojes de régimen, caudal, turbo y refrigerante, y gráficas de presión de turbo y masa de aire"></a>
     </figure>
     <div class="tres">
@@ -91,19 +91,33 @@
           <button role="tab" aria-selected="false" data-img="img/panel-obd.webp" data-alt="Panel en modo OBD2 con régimen, velocidad, refrigerante y carga">ELM327 · OBD2</button>
         </div>
       </div>
-      <figure class="captura"><a href="img/panel-kkl.webp" class="ampliar" data-grupo="panel"><img src="img/panel-kkl.webp" width="1995" height="1200" loading="lazy" alt="Panel en modo KKL con turbo y masa de aire"></a></figure>
+      <figure class="captura"><a href="img/panel-kkl.webp" class="ampliar" data-grupo="panel"><img src="img/panel-kkl.webp" width="2025" height="1200" loading="lazy" alt="Panel en modo KKL con turbo y masa de aire"></a></figure>
     </div>
 
     <div class="fila-funcion invertida">
       <div class="texto-funcion">
-        <h3>Valores medidos y grabación</h3>
-        <p>Elige los grupos de valores medidos VAG (001 inyección, 003 caudalímetro y EGR, 011 turbo…) o los PIDs OBD2 que tu coche soporta, y míralos en una tabla en directo.</p>
-        <p><strong>Grabar CSV</strong> guarda cada lectura con su tiempo para analizarla después en Excel o LibreOffice.</p>
+        <h3>Consumo y cronómetro 0-100</h3>
+        <p>Consumo instantáneo y medio en L/100 km, litros gastados, distancia y tiempo del trayecto, con su gráfica. Usa el dato de consumo de la centralita si lo da; si no, lo calcula con el caudalímetro o, en coches sin él, con la presión del colector y la cilindrada. Reconoce solo si es gasolina o diésel.</p>
+        <p><strong>Cronómetro 0-100 km/h</strong>, con el paso por 50: con el coche parado queda listo y arranca solo al salir. Guarda tus últimas medidas y la mejor. Mídelo solo en un circuito o en un lugar cerrado al tráfico.</p>
+        <p>Con el cable KKL (EDC15) calcula el consumo en L/h con el caudal inyectado; esa centralita no da la velocidad, así que ahí no hay 0-100.</p>
       </div>
-      <figure class="captura"><a href="img/valores-kkl.webp" class="ampliar"><img src="img/valores-kkl.webp" width="1995" height="1200" loading="lazy" alt="Tabla de valores medidos de los grupos 001, 003 y 011 mientras se graba un CSV"></a></figure>
+      <figure class="captura"><a href="img/consumo-obd.webp" class="ampliar"><img src="img/consumo-obd.webp" width="2025" height="1200" loading="lazy" alt="Pestaña de consumo con el consumo instantáneo y medio, y un 0-100 medido"></a></figure>
     </div>
 
     <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Valores medidos, gráficas y grabación</h3>
+        <p>Elige los grupos de valores medidos VAG (001 inyección, 003 caudalímetro y EGR, 011 turbo…) o los PIDs OBD2 que tu coche soporta, y míralos en una tabla en directo. Haz clic en una fila (Ctrl+clic, hasta cuatro) y la verás en una <strong>gráfica en vivo</strong> con el último minuto.</p>
+        <p><strong>Grabar CSV</strong> guarda cada lectura con su tiempo. Ábrela luego en el <strong>visor de CSV</strong> del propio programa: pasa el ratón para ver los valores, arrastra para ampliar un tramo y mira el mínimo, la media y el máximo. También se abre en Excel o LibreOffice.</p>
+        <div class="selector" role="tablist" data-grupo="valores">
+          <button role="tab" aria-selected="true" data-img="img/valores-kkl.webp" data-alt="Valores medidos de los grupos 001, 003 y 011 con la gráfica de la presión de turbo teórica y real">Gráfica en vivo</button>
+          <button role="tab" aria-selected="false" data-img="img/visor-csv.webp" data-alt="Visor de CSV con la velocidad, la carga y la temperatura de una grabación y los valores bajo el ratón">Visor de CSV</button>
+        </div>
+      </div>
+      <figure class="captura"><a href="img/valores-kkl.webp" class="ampliar" data-grupo="valores"><img src="img/valores-kkl.webp" width="2025" height="1200" loading="lazy" alt="Valores medidos de los grupos 001, 003 y 011 con la gráfica de la presión de turbo teórica y real"></a></figure>
+    </div>
+
+    <div class="fila-funcion invertida">
       <div class="texto-funcion">
         <h3>Averías</h3>
         <p>Códigos VAG de 5 cifras con el componente, el tipo de fallo y si es intermitente; también los 16xxx-18xxx de los VAG con OBD, traducidos a su código P. Con <strong>Escanear todos los módulos</strong> recorre motor, cambio, ABS, airbag, cuadro, confort… y te lista las averías de cada uno.</p>
@@ -114,7 +128,16 @@
           <button role="tab" aria-selected="false" data-img="img/averias-obd.webp" data-alt="Averías OBD2 memorizadas, pendiente y permanente, con los datos congelados de la P0171">ELM327 · OBD2</button>
         </div>
       </div>
-      <figure class="captura"><a href="img/averias-kkl.webp" class="ampliar" data-grupo="averias"><img src="img/averias-kkl.webp" width="1995" height="1200" loading="lazy" alt="Escaneo de todos los módulos VAG: motor, ABS, airbag y cuadro con sus averías"></a></figure>
+      <figure class="captura"><a href="img/averias-kkl.webp" class="ampliar" data-grupo="averias"><img src="img/averias-kkl.webp" width="2025" height="1200" loading="lazy" alt="Escaneo de todos los módulos VAG: motor, ABS, airbag y cuadro con sus averías"></a></figure>
+    </div>
+
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Historial de cada coche</h3>
+        <p>Cada lectura, borrado y escaneo de averías se guarda solo, coche por coche (lo reconoce por el VIN o por su centralita). Al leer las averías te dice qué ha cambiado desde la última vez: las <strong>nuevas</strong>, las que <strong>ya no aparecen</strong> y las que <strong>se repiten</strong>.</p>
+        <p>En <em>Historial</em> repasas todos los diagnósticos de cada coche, aunque no esté conectado. Así sabes si una avería ha vuelto después de borrarla o si viene de lejos.</p>
+      </div>
+      <figure class="captura"><a href="img/historial.webp" class="ampliar"><img src="img/historial.webp" width="2025" height="1200" loading="lazy" alt="Historial de diagnósticos de un coche: un borrado comparado con la lectura anterior"></a></figure>
     </div>
 
     <div class="fila-funcion invertida">
@@ -127,7 +150,7 @@
           <button role="tab" aria-selected="false" data-img="img/vehiculo-obd.webp" data-alt="Datos del vehículo OBD2 con el VIN descifrado y los monitores de preparación">ELM327 · OBD2</button>
         </div>
       </div>
-      <figure class="captura"><a href="img/vehiculo-kkl.webp" class="ampliar" data-grupo="vehiculo"><img src="img/vehiculo-kkl.webp" width="1995" height="1200" loading="lazy" alt="Identificación de la centralita del motor"></a></figure>
+      <figure class="captura"><a href="img/vehiculo-kkl.webp" class="ampliar" data-grupo="vehiculo"><img src="img/vehiculo-kkl.webp" width="2025" height="1200" loading="lazy" alt="Identificación de la centralita del motor"></a></figure>
     </div>
 
     <ul class="extras">
@@ -135,7 +158,7 @@
       <li><strong>Un solo archivo</strong>: no hay que instalar Python ni nada más.</li>
       <li><strong>Registro</strong> de toda la comunicación, con modo de depuración, por si algo falla.</li>
       <li><strong>Sesión estable</strong>: mantiene viva la conexión KW1281 y avisa si se pierde.</li>
-      <li><strong>Informe de diagnóstico</strong> en HTML, listo para imprimir o guardar como PDF.</li>
+      <li><strong>Informe de diagnóstico</strong> en HTML, listo para imprimir o guardar como PDF, con la comparación con el diagnóstico anterior.</li>
       <li><strong>Avisa de versiones nuevas</strong> al arrancar.</li>
       <li><strong>En español e inglés</strong>: el idioma se cambia en el selector junto al nombre del programa.</li>
     </ul>
@@ -150,15 +173,15 @@
 
     <ol class="pasos">
       <li><span>1</span><div><h3>Cuéntale qué le pasa</h3><p>«Le falta potencia al acelerar y echa humo negro». O pulsa <em>Analizar averías del vehículo</em>.</p></div></li>
-      <li><span>2</span><div><h3>Comprueba por su cuenta</h3><p>Lee las averías y los grupos o PIDs que importan, con series de lecturas durante un acelerón o un calentamiento.</p></div></li>
+      <li><span>2</span><div><h3>Comprueba por su cuenta</h3><p>Lee las averías, mira en el historial si son nuevas o ya habían salido, y lee o graba los grupos o PIDs que importan durante un acelerón o un calentamiento.</p></div></li>
       <li><span>3</span><div><h3>Te pide ayuda cuando hace falta</h3><p>«Arranca el motor y da un acelerón en vacío». Pulsas <em>Hecho</em> o <em>No puedo</em> y sigue.</p></div></li>
-      <li><span>4</span><div><h3>Diagnóstico razonado</h3><p>Causas por orden de probabilidad con la evidencia, qué hacer de lo más barato a lo más caro y si puedes circular.</p></div></li>
+      <li><span>4</span><div><h3>Diagnóstico razonado</h3><p>Causas por orden de probabilidad con la evidencia, qué hacer de lo más barato a lo más caro y si puedes circular. Si se lo pides, te deja el informe listo para imprimir con su diagnóstico.</p></div></li>
     </ol>
 
     <div class="dos-capturas">
-      <figure class="captura"><a href="img/ia-accion.webp" class="ampliar"><img src="img/ia-accion.webp" width="1995" height="1200" loading="lazy" alt="El asistente pide al usuario que arranque el motor y dé un acelerón"></a>
+      <figure class="captura"><a href="img/ia-accion.webp" class="ampliar"><img src="img/ia-accion.webp" width="2025" height="1200" loading="lazy" alt="El asistente pide al usuario que arranque el motor y dé un acelerón"></a>
         <figcaption>El asistente pide una acción y espera a que la hagas.</figcaption></figure>
-      <figure class="captura"><a href="img/ia-diagnostico.webp" class="ampliar"><img src="img/ia-diagnostico.webp" width="1995" height="1200" loading="lazy" alt="Diagnóstico final del asistente con conclusión, causas probables y qué hacer"></a>
+      <figure class="captura"><a href="img/ia-diagnostico.webp" class="ampliar"><img src="img/ia-diagnostico.webp" width="2025" height="1200" loading="lazy" alt="Diagnóstico final del asistente con conclusión, causas probables y qué hacer"></a>
         <figcaption>Cada comprobación queda a la vista (⚙) antes del diagnóstico.</figcaption></figure>
     </div>
     <p class="aclaracion">Capturas con el simulador. Las lecturas y la ventana de acción son reales; el texto del diagnóstico es un ejemplo de cómo responde.</p>
@@ -295,7 +318,7 @@ sudo usermod -aG dialout $USER</code></pre>
         <li><span>1</span><div><h3>Pruébalo sin coche</h3><p>Elige el puerto «Simulador (sin coche)», pulsa <em>Conectar</em> y, en la pestaña Panel, <em>Iniciar lectura</em>.</p></div></li>
         <li><span>2</span><div><h3>Conecta al coche</h3><p>Contacto puesto (para leer averías basta con el motor parado). Enchufa el cable al conector OBD y al portátil, elige <em>Conexión</em> y <em>Puerto</em> y pulsa <em>Conectar</em> (si es Bluetooth, antes <a href="#bluetooth">empareja y busca su puerto COM</a>). Con KKL tarda de 2 a 6 s; con ELM327, hasta 25 s (hasta un minuto si tiene que probar los protocolos de línea K).</p></div></li>
         <li><span>3</span><div><h3>Lee las averías</h3><p>Pestaña <em>Averías → Leer averías</em> (en un VAG antiguo, <em>Escanear todos los módulos</em> para revisarlo entero). Guárdalas con <em>Generar informe</em> antes de borrar nada.</p></div></li>
-        <li><span>4</span><div><h3>Mira los valores</h3><p><em>Panel</em> para el vistazo rápido; <em>Valores medidos</em> para elegir grupos o PIDs y grabar un CSV.</p></div></li>
+        <li><span>4</span><div><h3>Mira los valores</h3><p><em>Panel</em> para el vistazo rápido; <em>Valores medidos</em> para elegir grupos o PIDs, verlos en gráfica y grabar un CSV; <em>Consumo y 0-100</em> para el trayecto.</p></div></li>
         <li><span>5</span><div><h3>Pide ayuda a la IA</h3><p>En <em>✦ Asistente IA</em>, guarda tu clave, describe el problema y deja que haga las comprobaciones.</p></div></li>
       </ol>
       <div>
@@ -355,10 +378,11 @@ sudo usermod -aG dialout $USER</code></pre>
     <ul class="lista-ok">
       <li>Verificado en coches reales, incluidas las novedades de la v0.3.0 (escaneo de módulos, datos congelados, monitores e informe).</li>
       <li>Batería de pruebas automáticas con los simuladores integrados: cable KKL con varias centralitas VAG (motor EDC15, ABS, airbag y cuadro), y ELM327 con un coche OBD2 simulado.</li>
-      <li>Asistente IA validado con la API real de Claude.</li>
+      <li>Asistente IA validado con la API real de Claude y de DeepSeek.</li>
       <li>Compatible con Windows 10/11 y Linux (Ubuntu, Debian, Fedora, Arch y openSUSE).</li>
     </ul>
     <ul class="lista-no">
+      <li>Novedades de la v0.5.0 (consumo y 0-100, gráficas, visor de CSV e historial) probadas con los simuladores; pendientes de verificar en coche.</li>
       <li>Conexión WiFi validada con el simulador; pendiente de verificar con un adaptador ELM327 WiFi real.</li>
       <li>Centrado en el diagnóstico (averías y valores medidos): las adaptaciones, ajustes básicos, codificación y test de actuadores no están incluidos en esta versión.</li>
     </ul>

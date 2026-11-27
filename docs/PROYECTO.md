@@ -385,6 +385,8 @@ Hecha el 2026-11-21 en Fedora 44 (Python 3.14, Tk 9.0, Wayland): pruebas de prot
 - `web/vercel.json`: `trailingSlash`, cabeceras de seguridad (CSP sin scripts ni estilos en línea; `connect-src` permite `https://api.github.com` para los botones de descarga) y caché de `img/`. Si se añade un script o estilo en línea al HTML, la CSP lo bloqueará. `robots.txt` y `sitemap.xml` apuntan a `obd2desk.com`.
 
 
+**Web de la v0.5.0 preparada (2026-11-27), SIN PUBLICAR**: bloques nuevos «Consumo y cronómetro 0-100» e «Historial de cada coche», «Valores medidos, gráficas y grabación» con selector «Gráfica en vivo / Visor de CSV», pasos del asistente con historial e informe, estado con las novedades «probadas con los simuladores; pendientes de verificar en coche». Capturas regeneradas (miden 2025×1200 en español y 2015×1200 en inglés: la pestaña nueva ensancha la ventana; los `width` del HTML lo reflejan). **Publicarla solo cuando exista la release v0.5.0** (si no, anuncia funciones que la descarga no trae); si se prueba en coche antes, quitar la línea «pendientes de verificar en coche».
+
 ### 12.1 Público y tono
 Aficionados a la mecánica y dueños de coches VAG antiguos (y de cualquier coche con
 OBD2) que quieren diagnosticar en casa. Español de España, cercano y claro, técnico
@@ -407,6 +409,7 @@ pero sin jerga innecesaria. Honesto sobre el estado (versión preliminar).
 - Averías KKL (00553 y 01262 intermitente) y averías OBD2 (P0171, P0420, pendiente P0301, MIL).
 - Pestaña Vehículo.
 - Asistente IA en mitad de un diagnóstico guiado (líneas ⚙ y diálogo «Acción solicitada por la IA»).
+- Consumo y 0-100 (ELM327, con un 0-100 medido: `capturas.py` adelanta el reloj del simulador), Valores medidos con la gráfica de turbo teórico/real, visor de CSV (30 s grabados, ratón encima) e Historial (lectura + borrado). Las ventanas secundarias se capturan al tamaño de la principal.
 - Icono y foto del cable KKL / ELM327 conectados al coche.
 
 ### 12.4 FAQ / problemas típicos

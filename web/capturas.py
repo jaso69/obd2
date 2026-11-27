@@ -79,16 +79,25 @@ def pausa(seg):
     esperar(lambda: False, seg)
 
 
-def capturar(nombre):
-    """Captura la pantalla virtual recortada a la ventana principal (incluye diálogos encima)."""
+def capturar(nombre, ventana=None):
+    """Captura la pantalla virtual recortada a la ventana principal (incluye diálogos encima) o a otra ventana."""
+    ventana = ventana or root
     root.update()
     pausa(0.5)
-    x, y, w, h = root.winfo_rootx(), root.winfo_rooty(), root.winfo_width(), root.winfo_height()
+    x, y, w, h = ventana.winfo_rootx(), ventana.winfo_rooty(), ventana.winfo_width(), ventana.winfo_height()
     png = os.path.join(tempfile.gettempdir(), "captura.png")
     subprocess.run(["import", "-window", "root", "-crop", f"{w}x{h}+{x}+{y}", "+repage", png], check=True)
     destino = os.path.join(SALIDA, nombre + ".webp")
     subprocess.run(["magick", png, "-quality", "88", destino], check=True)
     print(f"  {destino} ({os.path.getsize(destino) // 1024} KB)")
+
+
+def como_principal(win):
+    """Pone una ventana secundaria encima y del mismo tamaño que la principal (capturas iguales)."""
+    win.geometry(f"{root.winfo_width()}x{root.winfo_height()}+{root.winfo_rootx()}+{root.winfo_rooty()}")
+    win.lift()
+    root.update()
+    pausa(1)
 
 
 def conectar(modo):
@@ -107,6 +116,7 @@ def guion_ia(self, peticion, on_text, on_tool, cancelado):
     """Sustituye a Conversacion.enviar: herramientas reales, texto de ejemplo."""
     on_tool("estado_conexion", {})
     on_tool("leer_averias", {})
+    on_tool("consultar_historial", {})
     on_text("There are two stored faults. I'll check the air and the turbo with the engine running.\n" if EN else
             "Hay dos averías memorizadas. Voy a comprobar el aire y el turbo con el motor en marcha.\n")
     on_tool("pedir_accion_usuario", {"instruccion": (
@@ -144,7 +154,9 @@ app.nb.select(app.tab_vals)
 for g, v in app.group_vars.items():
     v.set(g in (1, 3, 11))
 app.toggle_rec()
-pausa(6)
+pausa(4)
+app.tree.selection_set([app.tree_items[(11, 1)], app.tree_items[(11, 2)]])   # gráfica: turbo teórico y real
+pausa(20)
 capturar("valores-kkl")
 nombre = app.csv_file.name if app.csv_file else None
 app._stop_rec()
@@ -191,10 +203,57 @@ pausa(25)
 app.nb.select(app.tab_panel)
 capturar("panel-obd")
 app._stop_live()
+
+print("Consumo y 0-100")
+app.nb.select(app.tab_cons)
+app.worker.ser.t0 = time.monotonic() - (8 * 3.14159265 - 1.5)   # el simulador sale de parado en 1,5 s
+app.toggle_live("cons")
+esperar(lambda: app.crono.tiempos, 30)
+pausa(9)
+capturar("consumo-obd")
+app._stop_live()
+
+print("Visor de CSV (30 s de grabación)")
+app.nb.select(app.tab_vals)
+app.pid_list.selection_clear(0, "end")
+for pid in (0x0C, 0x0D, 0x04, 0x05, 0x10, 0x11):
+    if pid in app.pid_order:
+        app.pid_list.selection_set(app.pid_order.index(pid))
+app.toggle_rec()
+pausa(30)
+nombre = app.csv_file.name if app.csv_file else None
+app._stop_rec()
+app._stop_live()
+if nombre:
+    v = app.abrir_csv(nombre)
+    como_principal(v.win)
+    v.lista.selection_clear(0, "end")
+    for i in range(v.lista.size()):
+        if v.lista.get(i).strip().split(" (")[0] in (gui.tr("Velocidad"), gui.tr("Carga del motor"), gui.tr("Temp. refrigerante")):
+            v.lista.selection_set(i)
+    v._elegir()
+    root.update()
+    v.grafica._mover(type("E", (), {"x": int(v.grafica.winfo_width() * 0.42)})())
+    capturar("visor-csv", v.win)
+    v.win.destroy()
+    os.remove(nombre)
+
 app.nb.select(app.tab_dtc)
 app.read_dtcs()
 esperar(lambda: app.ff_tree.get_children(), 15)
 capturar("averias-obd")
+
+print("Historial")
+app.clear_dtcs()
+esperar(lambda: gui.tr("Comparado con el diagnóstico del {fecha} ({tipo}):", fecha="", tipo="")[:12]
+        in str(app.hist_lbl.cget("text")), 20)
+vh = app.ver_historial()
+for w in vh.win.winfo_children():                 # la carpeta temporal de la captura, como la de verdad
+    if isinstance(w, gui.ttk.Label) and app.historial.carpeta in str(w.cget("text")):
+        w.configure(text=str(w.cget("text")).replace(app.historial.carpeta, "~/.config/OBD2Desk/historial"))
+como_principal(vh.win)
+capturar("historial", vh.win)
+vh.win.destroy()
 app.nb.select(app.tab_ecu)
 capturar("vehiculo-obd")
 

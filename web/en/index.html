@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OBD2Desk · Car diagnostics from your laptop</title>
-<meta name="description" content="Free program for Windows and Linux: read fault codes, freeze frame data and live values from older VAG cars with a KKL cable (KW1281) and from any OBD2 car with an ELM327 (USB, Bluetooth or WiFi), with a PDF report and an AI assistant that runs the checks for you.">
-<meta name="keywords" content="OBD2 laptop diagnostics, KW1281, KKL 409.1 cable, VAG-COM, EDC15, 1.9 TDI fault codes, ELM327 Bluetooth, ELM327 WiFi, free OBD2 scanner, freeze frame, readiness monitors, VAG module scan, AI car diagnostics, Linux OBD2">
+<meta name="description" content="Free program for Windows and Linux: read fault codes, freeze frame data and live values with graphs from older VAG cars with a KKL cable (KW1281) and from any OBD2 car with an ELM327 (USB, Bluetooth or WiFi), with fuel consumption and a 0-100 timer, a history of each car, a PDF report and an AI assistant that runs the checks for you.">
+<meta name="keywords" content="OBD2 laptop diagnostics, KW1281, KKL 409.1 cable, VAG-COM, EDC15, 1.9 TDI fault codes, ELM327 Bluetooth, ELM327 WiFi, free OBD2 scanner, freeze frame, readiness monitors, VAG module scan, OBD2 fuel consumption, 0-100 timer, OBD2 CSV viewer, fault code history, AI car diagnostics, Linux OBD2">
 <meta name="theme-color" content="#111418">
 <link rel="icon" type="image/png" href="../img/icono.png">
 <meta property="og:type" content="website">
@@ -56,7 +56,7 @@
       <a class="boton boton-secundario" href="https://github.com/jaso69/obd2">View on GitHub</a>
     </div>
     <figure class="captura captura-portada">
-      <a href="../img/en/panel-kkl.webp" class="ampliar"><img src="../img/en/panel-kkl.webp" width="1995" height="1200"
+      <a href="../img/en/panel-kkl.webp" class="ampliar"><img src="../img/en/panel-kkl.webp" width="2015" height="1200"
         alt="Dashboard connected to a VAG engine control unit: gauges for RPM, injected quantity, boost and coolant, and charts of boost pressure and air mass"></a>
     </figure>
     <div class="tres">
@@ -90,19 +90,33 @@
           <button role="tab" aria-selected="false" data-img="../img/en/panel-obd.webp" data-alt="Dashboard in OBD2 mode with RPM, speed, coolant and load">ELM327 · OBD2</button>
         </div>
       </div>
-      <figure class="captura"><a href="../img/en/panel-kkl.webp" class="ampliar" data-grupo="panel"><img src="../img/en/panel-kkl.webp" width="1995" height="1200" loading="lazy" alt="Dashboard in KKL mode with boost and air mass"></a></figure>
+      <figure class="captura"><a href="../img/en/panel-kkl.webp" class="ampliar" data-grupo="panel"><img src="../img/en/panel-kkl.webp" width="2015" height="1200" loading="lazy" alt="Dashboard in KKL mode with boost and air mass"></a></figure>
     </div>
 
     <div class="fila-funcion invertida">
       <div class="texto-funcion">
-        <h3>Measuring blocks and logging</h3>
-        <p>Pick VAG measuring blocks (001 injection, 003 MAF and EGR, 011 boost…) or the OBD2 PIDs your car supports, and watch them in a live table.</p>
-        <p><strong>CSV logging</strong> saves every reading with a timestamp so you can analyse it later in Excel or LibreOffice.</p>
+        <h3>Fuel consumption and 0-100 timer</h3>
+        <p>Instant and average consumption in L/100 km, litres used, distance and trip time, with a chart. It uses the fuel rate reported by the control unit if available; otherwise it calculates it from the mass air flow sensor or, on cars without one, from manifold pressure and engine displacement. It detects by itself whether the car runs on petrol or diesel.</p>
+        <p><strong>0-100 km/h timer</strong>, with the 50 km/h split: it arms with the car stopped and starts by itself when you pull away. It keeps your latest runs and your best time. Only measure on a track or a place closed to traffic.</p>
+        <p>With the KKL cable (EDC15) it calculates consumption in L/h from the injected quantity; that control unit does not report road speed, so there is no 0-100 there.</p>
       </div>
-      <figure class="captura"><a href="../img/en/valores-kkl.webp" class="ampliar"><img src="../img/en/valores-kkl.webp" width="1995" height="1200" loading="lazy" alt="Live table of measuring blocks 001, 003 and 011 while logging to CSV"></a></figure>
+      <figure class="captura"><a href="../img/en/consumo-obd.webp" class="ampliar"><img src="../img/en/consumo-obd.webp" width="2015" height="1200" loading="lazy" alt="Fuel tab with instant and average consumption and a measured 0-100 run"></a></figure>
     </div>
 
     <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Measuring blocks, graphs and logging</h3>
+        <p>Pick VAG measuring blocks (001 injection, 003 MAF and EGR, 011 boost…) or the OBD2 PIDs your car supports, and watch them in a live table. Click a row (Ctrl+click, up to four) to see it in a <strong>live graph</strong> with the last minute.</p>
+        <p><strong>CSV logging</strong> saves every reading with a timestamp. Open it later in the program's own <strong>CSV viewer</strong>: hover to see the values, drag to zoom into a section and check the minimum, average and maximum. It also opens in Excel or LibreOffice.</p>
+        <div class="selector" role="tablist" data-grupo="valores">
+          <button role="tab" aria-selected="true" data-img="../img/en/valores-kkl.webp" data-alt="Measuring blocks 001, 003 and 011 with a graph of specified and actual boost pressure">Live graph</button>
+          <button role="tab" aria-selected="false" data-img="../img/en/visor-csv.webp" data-alt="CSV viewer with speed, load and temperature from a recording and the values under the mouse">CSV viewer</button>
+        </div>
+      </div>
+      <figure class="captura"><a href="../img/en/valores-kkl.webp" class="ampliar" data-grupo="valores"><img src="../img/en/valores-kkl.webp" width="2015" height="1200" loading="lazy" alt="Measuring blocks 001, 003 and 011 with a graph of specified and actual boost pressure"></a></figure>
+    </div>
+
+    <div class="fila-funcion invertida">
       <div class="texto-funcion">
         <h3>Fault codes</h3>
         <p>5-digit VAG codes with the component, the fault type and whether it is intermittent; also the 16xxx-18xxx codes of OBD-era VAG cars, translated to their P code. <strong>Scan all modules</strong> goes through engine, gearbox, ABS, airbag, instrument cluster, comfort… and lists the faults in each one.</p>
@@ -113,7 +127,16 @@
           <button role="tab" aria-selected="false" data-img="../img/en/averias-obd.webp" data-alt="OBD2 stored, pending and permanent codes, with the freeze frame data of P0171">ELM327 · OBD2</button>
         </div>
       </div>
-      <figure class="captura"><a href="../img/en/averias-kkl.webp" class="ampliar" data-grupo="averias"><img src="../img/en/averias-kkl.webp" width="1995" height="1200" loading="lazy" alt="Scan of all VAG modules: engine, ABS, airbag and instrument cluster with their faults"></a></figure>
+      <figure class="captura"><a href="../img/en/averias-kkl.webp" class="ampliar" data-grupo="averias"><img src="../img/en/averias-kkl.webp" width="2015" height="1200" loading="lazy" alt="Scan of all VAG modules: engine, ABS, airbag and instrument cluster with their faults"></a></figure>
+    </div>
+
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>History of each car</h3>
+        <p>Every fault code reading, clearing and scan is saved automatically, car by car (it recognises the car by its VIN or its control unit). When you read the fault codes it tells you what has changed since last time: the <strong>new</strong> ones, the ones <strong>no longer present</strong> and the ones <strong>still present</strong>.</p>
+        <p>In <em>History</em> you can go through every diagnosis of each car, even when it is not connected. That way you know whether a fault came back after clearing it or has been there for a long time.</p>
+      </div>
+      <figure class="captura"><a href="../img/en/historial.webp" class="ampliar"><img src="../img/en/historial.webp" width="2015" height="1200" loading="lazy" alt="Diagnosis history of a car: a clearing compared with the previous reading"></a></figure>
     </div>
 
     <div class="fila-funcion invertida">
@@ -126,7 +149,7 @@
           <button role="tab" aria-selected="false" data-img="../img/en/vehiculo-obd.webp" data-alt="OBD2 vehicle data with the decoded VIN and readiness monitors">ELM327 · OBD2</button>
         </div>
       </div>
-      <figure class="captura"><a href="../img/en/vehiculo-kkl.webp" class="ampliar" data-grupo="vehiculo"><img src="../img/en/vehiculo-kkl.webp" width="1995" height="1200" loading="lazy" alt="Engine control unit identification"></a></figure>
+      <figure class="captura"><a href="../img/en/vehiculo-kkl.webp" class="ampliar" data-grupo="vehiculo"><img src="../img/en/vehiculo-kkl.webp" width="2015" height="1200" loading="lazy" alt="Engine control unit identification"></a></figure>
     </div>
 
     <ul class="extras">
@@ -134,7 +157,7 @@
       <li><strong>A single file</strong>: no need to install Python or anything else.</li>
       <li><strong>Full communication log</strong>, with a debug mode, in case something goes wrong.</li>
       <li><strong>Stable session</strong>: keeps the KW1281 connection alive and warns you if it drops.</li>
-      <li><strong>Diagnostic report</strong> in HTML, ready to print or save as PDF.</li>
+      <li><strong>Diagnostic report</strong> in HTML, ready to print or save as PDF, with the comparison with the previous diagnosis.</li>
       <li><strong>Update notice</strong> on start-up when a new version is out.</li>
       <li><strong>English and Spanish</strong>: switch the language from the selector next to the program name.</li>
     </ul>
@@ -149,15 +172,15 @@
 
     <ol class="pasos">
       <li><span>1</span><div><h3>Tell it what's wrong</h3><p>“It lacks power when accelerating and blows black smoke.” Or press <em>Analyse vehicle faults</em>.</p></div></li>
-      <li><span>2</span><div><h3>It checks on its own</h3><p>It reads the fault codes and the relevant blocks or PIDs, taking series of readings during a rev or while the engine warms up.</p></div></li>
+      <li><span>2</span><div><h3>It checks on its own</h3><p>It reads the fault codes, checks the history to see whether they are new or have appeared before, and reads or records the relevant blocks or PIDs during a rev or while the engine warms up.</p></div></li>
       <li><span>3</span><div><h3>It asks for help when needed</h3><p>“Start the engine and give it a rev in neutral.” You press <em>Done</em> or <em>I can't</em> and it carries on.</p></div></li>
-      <li><span>4</span><div><h3>Reasoned diagnosis</h3><p>Causes ranked by probability with the evidence, what to do from cheapest to most expensive, and whether the car is safe to drive.</p></div></li>
+      <li><span>4</span><div><h3>Reasoned diagnosis</h3><p>Causes ranked by probability with the evidence, what to do from cheapest to most expensive, and whether the car is safe to drive. If you ask, it leaves the report ready to print with its diagnosis.</p></div></li>
     </ol>
 
     <div class="dos-capturas">
-      <figure class="captura"><a href="../img/en/ia-accion.webp" class="ampliar"><img src="../img/en/ia-accion.webp" width="1995" height="1200" loading="lazy" alt="The assistant asks the user to start the engine and rev it"></a>
+      <figure class="captura"><a href="../img/en/ia-accion.webp" class="ampliar"><img src="../img/en/ia-accion.webp" width="2015" height="1200" loading="lazy" alt="The assistant asks the user to start the engine and rev it"></a>
         <figcaption>The assistant asks for an action and waits for you to do it.</figcaption></figure>
-      <figure class="captura"><a href="../img/en/ia-diagnostico.webp" class="ampliar"><img src="../img/en/ia-diagnostico.webp" width="1995" height="1200" loading="lazy" alt="Final diagnosis from the assistant with conclusion, likely causes and next steps"></a>
+      <figure class="captura"><a href="../img/en/ia-diagnostico.webp" class="ampliar"><img src="../img/en/ia-diagnostico.webp" width="2015" height="1200" loading="lazy" alt="Final diagnosis from the assistant with conclusion, likely causes and next steps"></a>
         <figcaption>Every check is shown (⚙) before the diagnosis.</figcaption></figure>
     </div>
     <p class="aclaracion">Screenshots taken with the simulator. The readings and the action window are real; the diagnosis text is an example of how it responds.</p>
@@ -294,7 +317,7 @@ sudo usermod -aG dialout $USER</code></pre>
         <li><span>1</span><div><h3>Try it without a car</h3><p>Choose the port “Simulator (no car)”, press <em>Connect</em> and, in the <em>Dashboard</em> tab, <em>Start reading</em>.</p></div></li>
         <li><span>2</span><div><h3>Connect to the car</h3><p>Ignition on (to read fault codes the engine can be off). Plug the cable into the OBD connector and the laptop, choose <em>Connection</em> and <em>Port</em> and press <em>Connect</em> (for Bluetooth, first <a href="#bluetooth">pair it and find its COM port</a>). With KKL it takes 2 to 6 s; with an ELM327, up to 25 s (up to a minute if it has to try the K-line protocols).</p></div></li>
         <li><span>3</span><div><h3>Read the fault codes</h3><p><em>Fault codes</em> tab → <em>Read fault codes</em>; on an older VAG car, <em>Scan all modules</em> to check the whole car. Save them with <em>Generate report</em> before clearing anything.</p></div></li>
-        <li><span>4</span><div><h3>Watch the values</h3><p><em>Dashboard</em> for a quick look; <em>Measured values</em> to pick blocks or PIDs and record a CSV.</p></div></li>
+        <li><span>4</span><div><h3>Watch the values</h3><p><em>Dashboard</em> for a quick look; <em>Measured values</em> to pick blocks or PIDs, graph them and record a CSV; <em>Fuel &amp; 0-100</em> for the trip.</p></div></li>
         <li><span>5</span><div><h3>Ask the AI for help</h3><p>In <em>✦ AI assistant</em>, save your key, describe the problem and let it run the checks.</p></div></li>
       </ol>
       <div>
@@ -354,10 +377,11 @@ sudo usermod -aG dialout $USER</code></pre>
     <ul class="lista-ok">
       <li>Verified on real cars, including the new features in v0.3.0 (module scan, freeze frame data, monitors and report).</li>
       <li>Automated test suite with the built-in simulators: KKL cable with several VAG control units (EDC15 engine, ABS, airbag and instrument cluster), and ELM327 with a simulated OBD2 car.</li>
-      <li>AI assistant validated with the real Claude API.</li>
+      <li>AI assistant validated with the real Claude and DeepSeek APIs.</li>
       <li>Compatible with Windows 10/11 and Linux (Ubuntu, Debian, Fedora, Arch and openSUSE).</li>
     </ul>
     <ul class="lista-no">
+      <li>New features in v0.5.0 (fuel consumption and 0-100, graphs, CSV viewer and history) tested with the simulators; yet to be verified on a car.</li>
       <li>WiFi connection validated with the simulator; yet to be verified with a real WiFi ELM327 adapter.</li>
       <li>Focused on diagnostics (fault codes and measured values): adaptations, basic settings, coding and actuator tests are not included in this version.</li>
     </ul>
