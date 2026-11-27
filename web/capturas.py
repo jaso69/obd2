@@ -101,6 +101,20 @@ def guion_ia(self, peticion, on_text, on_tool, cancelado):
 root = tk.Tk(className="ToledoDiagnosis")
 gui._elegir_fuentes(root)
 app = gui.App(root)
+
+
+def renombrar(w):
+    """La web ya usa el nombre OBD2Desk; el programa aún no (pendiente de renombrar)."""
+    try:
+        if w.cget("text") == "Toledo Diagnosis":
+            w.configure(text="OBD2Desk")
+    except tk.TclError:
+        pass
+    for h in w.winfo_children():
+        renombrar(h)
+
+
+renombrar(root)
 root.geometry("+0+0")
 pausa(1)
 

@@ -24,7 +24,7 @@ Programa de escritorio (Python + tkinter) para diagnosticar coches:
 - Paquete Linux para publicar: `./linux/build-portable.sh vX.Y.Z` (contenedor Debian 11 con podman/docker) → `dist/ToledoDiagnosis-vX.Y.Z-linux-x86_64.tar.gz`.
 - Autoprueba IA del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt`.
 - Instalar en Linux: `./linux/instalar.sh`.
-- Web (`web/`, ver `docs/PROYECTO.md` §12): capturas con `xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py`; ver en local con `python3 -m http.server -d web 8000`. Se publica en https://www.jasodev.es con `./web/publicar.sh` (repo `jaso69/jasodev`, Vercel).
+- Web (`web/`, ver `docs/PROYECTO.md` §12): capturas con `xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py`; ver en local con `python3 -m http.server -d web 8000`. Se publica en https://obd2desk.com con `./web/publicar.sh` (repo `jaso69/obd2desk`, Vercel). La web ya se llama **OBD2Desk** y tiene versión en inglés (`web/en/`); el programa aún no está renombrado.
 
 ## Reglas al trabajar
 - Probar contra los simuladores (y `tests/`) antes de dar algo por hecho; decir claramente qué no se ha podido probar (p. ej. coche real).
@@ -35,6 +35,6 @@ Programa de escritorio (Python + tkinter) para diagnosticar coches:
 - Commits con la línea `Co-Authored-By` que indique el sistema; en Windows el push lo suele lanzar el usuario (login interactivo de GitHub).
 
 ## Estado (2026-11-22)
-**v0.3.0 publicada y cerrada** en GitHub («Latest», etiqueta `v0.3.0` → `5c83aa6`) con el `.exe` de Windows y el paquete Linux: escaneo de módulos VAG, tabla de averías VAG ampliada, datos congelados, monitores de preparación, averías permanentes, CALID/CVN, VIN decodificado, informe HTML, ELM327 WiFi y aviso de versión nueva. **Probada en coche: funciona bien**; falta probar un ELM327 WiFi real. Web https://www.jasodev.es al día (descargas de la v0.3.0, estado actualizado). Antes: v0.2.0 probada en un par de coches, Linux comprobado en Fedora 44 y en 7 distros, IA probada con la API real. Licencia MIT.
+**v0.3.0 publicada y cerrada** en GitHub («Latest», etiqueta `v0.3.0` → `5c83aa6`) con el `.exe` de Windows y el paquete Linux: escaneo de módulos VAG, tabla de averías VAG ampliada, datos congelados, monitores de preparación, averías permanentes, CALID/CVN, VIN decodificado, informe HTML, ELM327 WiFi y aviso de versión nueva. **Probada en coche: funciona bien**; falta probar un ELM327 WiFi real. Web al día (descargas de la v0.3.0, estado actualizado). Antes: v0.2.0 probada en un par de coches, Linux comprobado en Fedora 44 y en 7 distros, IA probada con la API real. Licencia MIT.
 
 **Próximos pasos**: `docs/PROYECTO.md` §10 (pequeños pendientes → Bloque 2 de funciones para la v0.4.0 → más adelante). Pasos para sacar una versión: §8.3. Renombrar el programa y la versión para Mac están aparcados.

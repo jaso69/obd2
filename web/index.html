@@ -3,25 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Toledo Diagnosis · Diagnóstico de tu coche desde el portátil</title>
+<title>OBD2Desk · Diagnóstico de tu coche desde el portátil</title>
 <meta name="description" content="Programa gratuito para Windows y Linux: lee averías, datos congelados y valores en directo de coches VAG antiguos con cable KKL (KW1281) y de cualquier coche OBD2 con ELM327 (USB, Bluetooth o WiFi), con informe en PDF y un asistente de IA que hace las comprobaciones por ti.">
 <meta name="keywords" content="diagnosis OBD2 portátil, KW1281, cable KKL 409.1, VAG-COM, EDC15, SEAT Toledo TDI, 1.9 TDI averías, ELM327 Bluetooth, ELM327 WiFi, lector OBD2 gratis, datos congelados, monitores readiness ITV, escanear módulos VAG, diagnóstico con IA, Linux OBD2">
 <meta name="theme-color" content="#111418">
 <link rel="icon" type="image/png" href="img/icono.png">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Toledo Diagnosis · Diagnóstico de tu coche desde el portátil">
+<meta property="og:title" content="OBD2Desk · Diagnóstico de tu coche desde el portátil">
 <meta property="og:description" content="Averías, valores en directo y un asistente de IA que hace las comprobaciones por ti. Para VAG antiguos con cable KKL y cualquier coche con OBD2.">
-<meta property="og:image" content="https://www.jasodev.es/img/og.jpg">
-<meta property="og:url" content="https://www.jasodev.es/">
-<link rel="canonical" href="https://www.jasodev.es/">
+<meta property="og:image" content="https://obd2desk.com/img/og.jpg">
+<meta property="og:url" content="https://obd2desk.com/">
+<meta property="og:locale" content="es_ES">
+<meta property="og:locale:alternate" content="en_US">
+<link rel="canonical" href="https://obd2desk.com/">
+<link rel="alternate" hreflang="es" href="https://obd2desk.com/">
+<link rel="alternate" hreflang="en" href="https://obd2desk.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://obd2desk.com/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="estilo.css">
+<script src="idioma.js"></script>
 </head>
 <body>
 
 <header class="cabecera">
   <div class="contenedor cabecera-fila">
-    <a class="marca" href="#inicio"><img src="img/icono.png" alt="" width="32" height="32"> Toledo Diagnosis</a>
+    <a class="marca" href="#inicio"><img src="img/icono.png" alt="" width="32" height="32"> OBD2Desk</a>
     <button class="menu-boton" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">☰</button>
     <nav id="menu" class="menu">
       <a href="#funciones">Funciones</a>
@@ -30,6 +36,7 @@
       <a href="#descargar">Descargar</a>
       <a href="#guia">Guía</a>
       <a href="#faq">Problemas</a>
+      <a class="idioma" href="en/" hreflang="en" lang="en" data-idioma="en" title="English">EN</a>
       <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
     </nav>
   </div>
@@ -216,7 +223,7 @@
     <p class="aclaracion">El conector de diagnóstico suele estar bajo el salpicadero, en el lado del conductor. Una radio no original puede bloquear la línea K: si no conecta, desconéctala para probar.</p>
 
     <h3 id="bluetooth" class="titulo-bloque">Conectar un ELM327 Bluetooth: emparejar y elegir su puerto COM</h3>
-    <p>Un ELM327 Bluetooth funciona como un <strong>cable serie sin cable</strong>. Cuando lo emparejas, el sistema crea un <strong>puerto serie virtual</strong> (un puerto COM en Windows, <code>/dev/rfcomm0</code> en Linux) y el programa habla con él igual que con un adaptador USB. Por eso en Toledo Diagnosis no se busca «el Bluetooth»: se elige <strong>ese puerto</strong>. Son dos pasos: primero emparejar desde el sistema y después conectar desde el programa.</p>
+    <p>Un ELM327 Bluetooth funciona como un <strong>cable serie sin cable</strong>. Cuando lo emparejas, el sistema crea un <strong>puerto serie virtual</strong> (un puerto COM en Windows, <code>/dev/rfcomm0</code> en Linux) y el programa habla con él igual que con un adaptador USB. Por eso en OBD2Desk no se busca «el Bluetooth»: se elige <strong>ese puerto</strong>. Son dos pasos: primero emparejar desde el sistema y después conectar desde el programa.</p>
     <div class="dos">
       <div class="tarjeta">
         <h3>Windows 10 y 11</h3>
@@ -252,7 +259,7 @@
     <div class="dos">
       <div class="tarjeta tarjeta-grande">
         <h3>Windows 10 y 11 (64 bits)</h3>
-        <a class="boton boton-principal" data-descarga="windows" href="https://github.com/jaso69/obd2/releases">⬇ ToledoDiagnosis.exe</a>
+        <a class="boton boton-principal" data-descarga="windows" href="https://github.com/jaso69/obd2/releases">⬇ Descargar .exe</a>
         <ol class="lista-pasos">
           <li>Descárgalo y ábrelo; no hace falta instalar nada.</li>
           <li>Windows SmartScreen avisará la primera vez porque no está firmado: <em>Más información → Ejecutar de todas formas</em>.</li>
@@ -343,7 +350,7 @@ sudo usermod -aG dialout $USER</code></pre>
 <section id="estado" class="seccion">
   <div class="contenedor contenedor-estrecho">
     <h2>Estado del proyecto</h2>
-    <p>Toledo Diagnosis está en desarrollo activo. Esto es lo que está verificado y lo que queda por cubrir en la versión actual:</p>
+    <p>OBD2Desk está en desarrollo activo. Esto es lo que está verificado y lo que queda por cubrir en la versión actual:</p>
     <ul class="lista-ok">
       <li>Verificado en coches reales, incluidas las novedades de la v0.3.0 (escaneo de módulos, datos congelados, monitores e informe).</li>
       <li>Batería de pruebas automáticas con los simuladores integrados: cable KKL con varias centralitas VAG (motor EDC15, ABS, airbag y cuadro), y ELM327 con un coche OBD2 simulado.</li>
@@ -362,7 +369,7 @@ sudo usermod -aG dialout $USER</code></pre>
 
 <footer class="pie">
   <div class="contenedor">
-    <p><strong>Toledo Diagnosis</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p><strong>OBD2Desk</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
     <p class="legal">Proyecto independiente, sin relación con SEAT, Volkswagen Group, Bosch, FTDI, Elm Electronics, Anthropic, OpenAI ni DeepSeek. Las marcas pertenecen a sus propietarios. El programa se ofrece tal cual, sin garantía; úsalo bajo tu responsabilidad. No realices pruebas que distraigan de la conducción. Las sugerencias del asistente de IA son orientativas y no sustituyen a un taller.</p>
   </div>
 </footer>

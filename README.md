@@ -1,6 +1,6 @@
 # Toledo Diagnosis - VAG KW1281 + OBD2 (ELM327)
 
-**Web: https://www.jasodev.es** · descargas, guía de uso y qué cable comprar.
+**Web: https://obd2desk.com** (español e inglés) · descargas, guía de uso y qué cable comprar.
 
 Dos modos de conexión, elegibles en la parte superior de la ventana:
 
@@ -35,7 +35,7 @@ el programa consulta en GitHub si hay una versión nueva y lo avisa junto al tí
 | `build.sh`, `linux/` | Ejecutable, paquete para distribuir e instalación en Linux |
 | `tests/prueba_simuladores.py` | Pruebas de protocolo contra los simuladores |
 | `tests/prueba_gui.py` | Prueba de la interfaz con los dos simuladores |
-| `web/` | Web del proyecto (https://www.jasodev.es); `web/publicar.sh` la sube |
+| `web/` | Web del proyecto (https://obd2desk.com, en español e inglés); `web/publicar.sh` la sube |
 | `gui.py` | Interfaz gráfica (panel con relojes y gráficas, valores, averías, CSV) |
 | `toledo.py` | Versión de consola (menú de texto) |
 | `kw1281.py` | Protocolo KW1281: init 5 baudios, bloques, complementos, keep-alive |

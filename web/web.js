@@ -1,4 +1,19 @@
-// Toledo Diagnosis · menú móvil, selector de capturas, visor y enlaces de descarga
+// OBD2Desk · menú móvil, selector de capturas, visor y enlaces de descarga
+
+const EN = document.documentElement.lang === "en";
+const T = EN
+  ? { sinPaquete: "No package published yet: open the releases page",
+      version: (v, f) => `Latest version: <strong>${v}</strong> (${f}). All versions on `, locale: "en-GB" }
+  : { sinPaquete: "Todavía no hay paquete publicado: abre la página de versiones",
+      version: (v, f) => `Última versión: <strong>${v}</strong> (${f}). Todas las versiones en `, locale: "es-ES" };
+
+// Selector de idioma: recuerda la elección (idioma.js la respeta)
+document.querySelectorAll("[data-idioma]").forEach((a) => {
+  a.addEventListener("click", () => {
+    try { localStorage.setItem("idioma", a.dataset.idioma); } catch (e) { /* sin almacenamiento */ }
+    a.href = a.getAttribute("href").split("#")[0] + location.hash;
+  });
+});
 
 // Menú en móvil
 const menuBoton = document.querySelector(".menu-boton");
@@ -61,14 +76,14 @@ fetch("https://api.github.com/repos/jaso69/obd2/releases?per_page=10")
         b.href = f.url;
         b.title = `${f.version} · ${f.mb} MB`;
       } else {
-        b.title = "Todavía no hay paquete publicado: abre la página de versiones";
+        b.title = T.sinPaquete;
       }
     });
     if (publicadas.length) {
       const v = publicadas[0];
-      const fecha = new Date(v.published_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+      const fecha = new Date(v.published_at).toLocaleDateString(T.locale, { day: "numeric", month: "long", year: "numeric" });
       document.getElementById("version-actual").innerHTML =
-        `Última versión: <strong>${v.tag_name}</strong> (${fecha}). Todas las versiones en ` +
+        T.version(v.tag_name, fecha) +
         `<a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.`;
     }
   })

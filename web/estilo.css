@@ -1,4 +1,4 @@
-/* Toledo Diagnosis · mismos colores que el programa (docs/PROYECTO.md §7.5) */
+/* OBD2Desk · mismos colores que el programa (docs/PROYECTO.md §7.5) */
 :root {
   --fondo: #111418;
   --panel: #181c22;
@@ -202,3 +202,13 @@ details p { padding: 0 20px 6px; color: #c5cbd5; }
   .botones .boton { width: 100%; text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---- selector de idioma ---- */
+.menu a.idioma {
+  border: 1px solid var(--pista); border-radius: 6px; padding: 3px 9px;
+  font-size: .85rem; font-weight: 600; letter-spacing: .03em;
+}
+.menu a.idioma:hover { border-color: var(--texto); }
+@media (max-width: 760px) {
+  .menu a.idioma { align-self: flex-start; margin: 6px 0 2px; padding: 4px 12px; }
+}
