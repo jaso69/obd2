@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=OBD2Desk
+GenericName=Car diagnostics
+GenericName[es]=Diagnóstico del automóvil
+Comment=VAG KW1281 and OBD2 diagnostics with AI assistant
+Comment[es]=Diagnóstico VAG KW1281 y OBD2 con asistente IA
+Exec=OBD2Desk
+Icon=obd2desk
+Terminal=false
+Categories=Utility;
+Keywords=OBD2;ELM327;VAG;KW1281;diagnostics;diagnosis;car;coche;
+StartupWMClass=Obd2desk

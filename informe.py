@@ -6,6 +6,8 @@ Se abre en el navegador y desde ahí se puede imprimir o guardar como PDF.
 import datetime
 import html
 
+import idioma
+from idioma import tr
 from obd_datos import describe_dtc as describe_obd_dtc
 from vag_datos import FAULT_TYPES, MODULOS, componente
 
@@ -41,50 +43,55 @@ def _campos(campos):
 
 def _dtcs_vag(dtcs):
     if not dtcs:
-        return "<p class='ok'>Sin averías memorizadas.</p>"
+        return f"<p class='ok'>{_e(tr('Sin averías memorizadas.'))}</p>"
     filas = []
     for code, ftype, inter in dtcs:
-        tipo = f"{ftype:02d} · {FAULT_TYPES.get(ftype, 'Desconocido') or '—'}"
-        estado = "<span class='aviso'>Intermitente</span>" if inter else "<span class='mal'>Presente</span>"
+        tipo = f"{ftype:02d} · {FAULT_TYPES.get(ftype, tr('Desconocido')) or '—'}"
+        estado = (f"<span class='aviso'>{_e(tr('Intermitente'))}</span>" if inter
+                  else f"<span class='mal'>{_e(tr('Presente'))}</span>")
         filas.append((f"<code>{code:05d}</code>", _e(componente(code)), _e(tipo), estado))
-    return _tabla(("Código", "Componente", "Tipo de fallo", "Estado"), filas)
+    return _tabla((tr("Código"), tr("Componente"), tr("Tipo de fallo"), tr("Estado")), filas)
 
 
 def _seccion_obd(d):
     out = []
     mil = d.get("mil")
-    out.append(f"<p>Testigo de avería (MIL): "
-               f"{'<span class=mal>ENCENDIDO</span>' if mil else '<span class=ok>apagado</span>'}</p>")
+    out.append(f"<p>{_e(tr('Testigo de avería (MIL)'))}: "
+               + (f"<span class=mal>{_e(tr('ENCENDIDO'))}</span>" if mil else f"<span class=ok>{_e(tr('apagado'))}</span>")
+               + "</p>")
     filas = []
-    for clave, estado, css in (("stored", "Memorizada", "mal"), ("pending", "Pendiente", "aviso"),
-                               ("permanent", "Permanente", "aviso")):
+    for clave, estado, css in (("stored", tr("Memorizada"), "mal"), ("pending", tr("Pendiente"), "aviso"),
+                               ("permanent", tr("Permanente"), "aviso")):
         for code in d.get(clave) or []:
             filas.append((f"<code>{_e(code)}</code>", _e(describe_obd_dtc(code)),
-                          f"<span class='{css}'>{estado}</span>"))
-    out.append(_tabla(("Código", "Descripción", "Estado"), filas) if filas
-               else "<p class='ok'>Sin averías memorizadas, pendientes ni permanentes.</p>")
+                          f"<span class='{css}'>{_e(estado)}</span>"))
+    out.append(_tabla((tr("Código"), tr("Descripción"), tr("Estado")), filas) if filas
+               else f"<p class='ok'>{_e(tr('Sin averías memorizadas, pendientes ni permanentes.'))}</p>")
     ff = d.get("ff")
-    out.append("<h2>Datos congelados</h2>")
+    out.append(f"<h2>{_e(tr('Datos congelados'))}</h2>")
     if ff:
-        out.append(f"<p>Valores del motor en el momento en que se registró la avería "
-                   f"<code>{_e(ff['dtc'])}</code> ({_e(describe_obd_dtc(ff['dtc']))}).</p>")
-        out.append(_tabla(("Dato", "Valor"), [(_e(n), _e(f"{v} {u}".strip())) for _, n, v, u in ff["values"]]))
+        out.append("<p>" + tr("Valores del motor en el momento en que se registró la avería {dtc} ({desc}).",
+                              dtc=f"<code>{_e(ff['dtc'])}</code>", desc=_e(describe_obd_dtc(ff["dtc"]))) + "</p>")
+        out.append(_tabla((tr("Dato"), tr("Valor")),
+                          [(_e(n), _e(f"{v} {u}".strip())) for _, n, v, u in ff["values"]]))
     else:
-        out.append("<p class='nota'>La centralita no tiene datos congelados guardados.</p>")
-    out.append("<h2>Monitores de preparación (readiness)</h2>")
+        out.append(f"<p class='nota'>{_e(tr('La centralita no tiene datos congelados guardados.'))}</p>")
+    out.append(f"<h2>{_e(tr('Monitores de preparación (readiness)'))}</h2>")
     r = d.get("readiness")
     if r:
         diesel, mons = r
-        filas = [(_e(n), "<span class='ok'>Completo</span>" if ok else "<span class='aviso'>Sin completar</span>")
-                 for n, ok in mons]
-        out.append(f"<p>Motor {'diésel' if diesel else 'de gasolina'}. "
-                   f"{sum(1 for _, ok in mons if not ok)} de {len(mons)} sin completar.</p>")
-        out.append(_tabla(("Monitor", "Estado"), filas))
-        out.append("<p class='nota'>Tras borrar averías o desconectar la batería los monitores vuelven a "
-                   "«sin completar» y hacen falta varios ciclos de conducción. En la inspección de emisiones "
-                   "(ITV) pueden rechazar el coche si hay monitores sin completar.</p>")
+        filas = [(_e(n), f"<span class='ok'>{_e(tr('Completo'))}</span>" if ok
+                  else f"<span class='aviso'>{_e(tr('Sin completar'))}</span>") for n, ok in mons]
+        out.append("<p>" + _e((tr("Motor diésel") if diesel else tr("Motor de gasolina")) + ". "
+                              + tr("{n} de {total} sin completar.", n=sum(1 for _, ok in mons if not ok),
+                                   total=len(mons))) + "</p>")
+        out.append(_tabla(("Monitor", tr("Estado")), filas))
+        out.append("<p class='nota'>" + _e(tr("Tras borrar averías o desconectar la batería los monitores vuelven a "
+                                               "«sin completar» y hacen falta varios ciclos de conducción. En la "
+                                               "inspección de emisiones (ITV) pueden rechazar el coche si hay "
+                                               "monitores sin completar.")) + "</p>")
     else:
-        out.append("<p class='nota'>No disponible.</p>")
+        out.append(f"<p class='nota'>{_e(tr('No disponible.'))}</p>")
     return "".join(out)
 
 
@@ -93,41 +100,46 @@ def generar(datos):
     "dtcs": lista VAG o dict OBD, "modulo": dirección, "escaneo": resultados o None}."""
     ahora = datetime.datetime.now()
     kkl = datos["modo"] == "kkl"
-    out = [f"<!DOCTYPE html><html lang='es'><head><meta charset='utf-8'>"
+    fecha = f"{ahora:%d/%m/%Y %H:%M}" if idioma.actual() == "es" else f"{ahora:%Y-%m-%d %H:%M}"
+    titulo = _e(tr("Informe de diagnóstico"))
+    out = [f"<!DOCTYPE html><html lang='{idioma.actual()}'><head><meta charset='utf-8'>"
            f"<meta name='viewport' content='width=device-width,initial-scale=1'>"
-           f"<title>Informe de diagnóstico · {ahora:%d/%m/%Y %H:%M}</title><style>{CSS}</style></head><body>",
-           "<h1>Informe de diagnóstico</h1>",
-           f"<p class='sub'>{ahora:%d/%m/%Y %H:%M} · Toledo Diagnosis {_e(datos.get('version', ''))} · "
+           f"<title>{titulo} · {fecha}</title><style>{CSS}</style></head><body>",
+           f"<h1>{titulo}</h1>",
+           f"<p class='sub'>{fecha} · OBD2Desk {_e(datos.get('version', ''))} · "
            f"{'KKL · VAG KW1281' if kkl else 'ELM327 · OBD2'}</p>",
-           "<button class='boton' onclick='window.print()'>Imprimir o guardar como PDF</button>",
-           "<h2>Vehículo</h2>", _campos(datos.get("vehiculo") or [("Datos", "no disponibles")])]
+           f"<button class='boton' onclick='window.print()'>{_e(tr('Imprimir o guardar como PDF'))}</button>",
+           f"<h2>{_e(tr('Vehículo'))}</h2>",
+           _campos(datos.get("vehiculo") or [(tr("Datos"), tr("no disponibles"))])]
     if kkl:
         esc = datos.get("escaneo")
         if esc:
             resp = [m for m in esc if m["ok"]]
             total = sum(len(m["dtcs"] or []) for m in resp)
-            out.append(f"<h2>Escaneo de módulos</h2><p>Responden {len(resp)} de {len(esc)} módulos probados · "
-                       f"{total} avería(s) en total.</p>")
+            out.append(f"<h2>{_e(tr('Escaneo de módulos'))}</h2><p>"
+                       + _e(tr("Responden {n} de {total} módulos probados · {averias} avería(s) en total.",
+                               n=len(resp), total=len(esc), averias=total)) + "</p>")
             for m in resp:
                 ident = " · ".join(x.strip() for x in m["ident"][:2] if x.strip())
-                out.append(f"<h3>{m['addr']:02X} · {_e(MODULOS.get(m['addr'], 'Módulo'))}"
+                out.append(f"<h3>{m['addr']:02X} · {_e(MODULOS.get(m['addr'], tr('Módulo')))}"
                            f"{' — ' + _e(ident) if ident else ''}</h3>")
                 out.append(_dtcs_vag(m["dtcs"]) if m["dtcs"] is not None
-                           else f"<p class='mal'>No se pudieron leer las averías: {_e(m['error'])}</p>")
+                           else "<p class='mal'>" + _e(tr("No se pudieron leer las averías: {e}", e=m["error"])) + "</p>")
             sin = [f"{m['addr']:02X}" for m in esc if not m["ok"]]
             if sin:
-                out.append(f"<p class='nota'>Sin respuesta (no instalados o no accesibles por línea K): "
-                           f"{', '.join(sin)}.</p>")
+                out.append("<p class='nota'>" + _e(tr("Sin respuesta (no instalados o no accesibles por línea K): "
+                                                      "{lista}.", lista=", ".join(sin))) + "</p>")
         if datos.get("dtcs") is not None:
             addr = datos.get("modulo", 1)
-            out.append(f"<h2>Averías · módulo {addr:02X} ({_e(MODULOS.get(addr, '?'))})</h2>"
-                       + ("<p class='nota'>Lectura hecha al generar el informe.</p>" if esc else ""))
+            out.append("<h2>" + _e(tr("Averías · módulo {dir} ({nombre})", dir=f"{addr:02X}",
+                                      nombre=MODULOS.get(addr, "?"))) + "</h2>"
+                       + (f"<p class='nota'>{_e(tr('Lectura hecha al generar el informe.'))}</p>" if esc else ""))
             out.append(_dtcs_vag(datos["dtcs"]))
     else:
-        out.append("<h2>Averías</h2>")
+        out.append(f"<h2>{_e(tr('Averías'))}</h2>")
         out.append(_seccion_obd(datos.get("dtcs") or {}))
-    out.append("<h2>Notas</h2><ul class='nota'><li>Borrar un código no repara la avería: si la causa sigue, "
-               "vuelve a aparecer.</li><li>Las descripciones de los códigos son orientativas; confírmalas con "
-               "la documentación del fabricante.</li></ul>"
-               "<p class='nota'>Generado con Toledo Diagnosis · https://www.jasodev.es</p></body></html>")
+    out.append(f"<h2>{_e(tr('Notas'))}</h2><ul class='nota'>"
+               f"<li>{_e(tr('Borrar un código no repara la avería: si la causa sigue, vuelve a aparecer.'))}</li>"
+               f"<li>{_e(tr('Las descripciones de los códigos son orientativas; confírmalas con la documentación del fabricante.'))}</li></ul>"
+               f"<p class='nota'>{_e(tr('Generado con OBD2Desk'))} · https://obd2desk.com</p></body></html>")
     return "".join(out)

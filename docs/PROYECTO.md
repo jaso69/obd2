@@ -1,8 +1,8 @@
-# Toledo Diagnosis — Documentación completa del proyecto
+# OBD2Desk — Documentación completa del proyecto
 
 Documento de referencia para (1) crear la web del programa y (2) retomar el
 desarrollo en cualquier equipo sin tener que volver a explicar el proyecto.
-Última actualización: 2026-11-22 (versión del código: v0.3.0, publicada con el paquete Linux; falta el `.exe`).
+Última actualización: 2026-11-27 (código en `main`: renombrado a OBD2Desk y con inglés, sin publicar todavía; la última release es la v0.3.0, aún con el nombre Toledo Diagnosis).
 
 - Repositorio: https://github.com/jaso69/obd2 (rama `main`)
 - Autor: jaso69
@@ -12,8 +12,8 @@ desarrollo en cualquier equipo sin tener que volver a explicar el proyecto.
 
 ## 1. Qué es
 
-**Toledo Diagnosis** es un programa de escritorio (Windows y Linux) para
-diagnosticar coches desde un portátil:
+**OBD2Desk** (hasta la v0.3.0 se llamaba *Toledo Diagnosis*) es un programa de
+escritorio (Windows y Linux), en **español e inglés**, para diagnosticar coches desde un portátil:
 
 - Nació para un **SEAT Toledo II 1.9 TDI del año 2000** (centralita Bosch EDC15),
   que **no tiene OBD2 genérico** y habla el protocolo propietario de VAG
@@ -53,7 +53,8 @@ Cabecera: selector **Conexión** (KKL · VAG KW1281 / ELM327 · OBD2 genérico),
 Otros detalles:
 - **Puerto**: en OBD2 la lista incluye «WiFi · 192.168.0.10:35000» y el campo se puede escribir (otra dirección `ip:puerto` de un ELM327 WiFi). Se abre con `serial.serial_for_url("socket://ip:puerto")`.
 - **Informe** (`informe.py`): HTML de un solo archivo `informe_AAAAMMDD_HHMMSS.html` en la misma carpeta que los CSV; se abre en el navegador, con botón «Imprimir o guardar como PDF». Lleva datos del vehículo, averías (y el último escaneo de módulos en KKL) y, en OBD2, datos congelados y monitores.
-- **Aviso de versión nueva**: al arrancar, un hilo consulta `api.github.com/repos/jaso69/obd2/releases/latest` (5 s como mucho; sin datos del usuario, User-Agent `ToledoDiagnosis`) y, si la etiqueta es mayor que `VERSION` de `gui.py`, muestra «↑ Nueva vX.Y.Z» junto al título (clic → página de la release). La variable de entorno `TOLEDO_SIN_COMPROBAR_VERSION=1` lo desactiva (la usan las pruebas). **Al publicar una versión hay que subir `VERSION` en `gui.py`.**
+- **Aviso de versión nueva**: al arrancar, un hilo consulta `api.github.com/repos/jaso69/obd2/releases/latest` (5 s como mucho; sin datos del usuario, User-Agent `OBD2Desk`) y, si la etiqueta es mayor que `VERSION` de `gui.py`, muestra «↑ Nueva vX.Y.Z» junto al título (clic → página de la release). La variable de entorno `OBD2DESK_SIN_COMPROBAR_VERSION=1` lo desactiva (la usan las pruebas).
+- **Idioma**: selector «Español / English» junto al nombre del programa. Por defecto, el del sistema (`idioma.detectar()`: español si el sistema está en español, catalán, gallego o euskera; si no, inglés); la elección se guarda en `config.json` (`"idioma"`). Al cambiarlo se desconecta si hace falta y la ventana se reconstruye sin cerrar el programa. El asistente IA usa el prompt del idioma elegido. Ver §7.6. **Al publicar una versión hay que subir `VERSION` en `gui.py`.**
 - Los CSV se guardan junto al ejecutable (`log_AAAAMMDD_HHMMSS.csv`, separador `;`, coma decimal: se abren directamente en Excel/LibreOffice).
 - La sesión KW1281 se mantiene viva sola mientras estás en el menú (keep-alive).
 - Si se pierde la conexión, se avisa y se puede reconectar.
@@ -90,26 +91,26 @@ Otros detalles:
 ## 4. Instalación y primer uso
 
 ### 4.1 Windows (10/11, 64 bits)
-- **Ejecutable**: `ToledoDiagnosis.exe` (≈26 MB, un solo archivo). Se genera con `build.bat` en `dist\`. No necesita Python.
+- **Ejecutable**: `OBD2Desk.exe` (≈26 MB, un solo archivo; hasta la v0.3.0, `ToledoDiagnosis.exe`). Se genera con `build.bat` en `dist\`. No necesita Python.
 - SmartScreen avisará la primera vez (no está firmado): «Más información → Ejecutar de todas formas».
 - Cable FTDI: el driver lo instala Windows Update (si no, driver VCP de FTDI). **Poner la latencia a 1 ms**: Administrador de dispositivos → Puertos → USB Serial Port → Propiedades → Configuración de puerto → Opciones avanzadas → Temporizador de latencia = 1. Es por equipo: repetir en cada PC.
-- Desde código: `pip install -r requirements.txt` y `python gui.py` (o doble clic en `Toledo Diagnosis.pyw`).
+- Desde código: `pip install -r requirements.txt` y `python gui.py` (o doble clic en `OBD2Desk.pyw`).
 
 ### 4.2 Linux (comprobado en Fedora 44 y en contenedores de 7 distros, ver §11)
 - Requisitos para ejecutar desde código: Python 3.10+ y tkinter.
   - Fedora: `sudo dnf install python3 python3-tkinter`
   - Debian/Ubuntu: `sudo apt install python3 python3-venv python3-tk`
   - Luego: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python gui.py`
-- **Ejecutable local**: `./build.sh` genera `dist/ToledoDiagnosis` (binario único con PyInstaller, usa un venv `.venv`). Solo vale para distros con una glibc igual o más nueva que la del equipo donde se compila (compilado en Fedora 44 no arranca en Ubuntu 22.04).
-- **Para distribuir**: `./linux/build-portable.sh [versión]` compila dentro de un contenedor Debian 11 (podman o docker, imagen `python:3.13-bullseye`, glibc 2.31), pasa la autoprueba de IA y genera `dist/ToledoDiagnosis-<versión>-linux-x86_64.tar.gz` con: `ToledoDiagnosis`, `instalar.sh`, `toledo-diagnosis.desktop`, `icono.png`, `LEEME.txt` (`linux/LEEME.txt`) y `LICENSE`. Funciona en Ubuntu 20.04+, Debian 11+, Mint 20+, Fedora, openSUSE, Arch.
-- **Instalar en el menú**: `./instalar.sh [ejecutable]` (desde el paquete) o `./linux/instalar.sh` (desde el repositorio) → copia a `~/.local/bin`, icono y lanzador `.desktop` (sin sudo). `--desinstalar` lo quita (deja la configuración).
+- **Ejecutable local**: `./build.sh` genera `dist/OBD2Desk` (binario único con PyInstaller, usa un venv `.venv`). Solo vale para distros con una glibc igual o más nueva que la del equipo donde se compila (compilado en Fedora 44 no arranca en Ubuntu 22.04).
+- **Para distribuir**: `./linux/build-portable.sh [versión]` compila dentro de un contenedor Debian 11 (podman o docker, imagen `python:3.13-bullseye`, glibc 2.31), pasa la autoprueba de IA y genera `dist/OBD2Desk-<versión>-linux-x86_64.tar.gz` (carpeta `OBD2Desk/`) con: `OBD2Desk`, `instalar.sh`, `obd2desk.desktop`, `icono.png`, `LEEME.txt` y `README.txt` (`linux/`, español e inglés) y `LICENSE`. Funciona en Ubuntu 20.04+, Debian 11+, Mint 20+, Fedora, openSUSE, Arch.
+- **Instalar en el menú**: `./instalar.sh [ejecutable]` (desde el paquete) o `./linux/instalar.sh` (desde el repositorio) → copia a `~/.local/bin/OBD2Desk`, icono y lanzador `obd2desk.desktop` (sin sudo); si encuentra la instalación anterior (`ToledoDiagnosis`, `toledo-diagnosis.desktop`) la quita. `--desinstalar` (o `--uninstall`) lo quita (deja la configuración). Mensajes en español o inglés según `LANG`.
 - **Permisos del puerto serie**: `sudo usermod -aG dialout $USER` (en Arch el grupo es `uucp`) y cerrar sesión. Sin esto sale «Permission denied»; el programa y el instalador detectan el grupo del puerto y dicen el comando exacto.
 - **brltty** (Ubuntu/Mint): el lector braille captura adaptadores USB-serie (CH340, a veces FTDI) y `/dev/ttyUSB0` desaparece. Solución: `sudo apt remove brltty`. El instalador avisa si está.
-- **Lanzador**: Tk pone la clase de ventana `Toledodiagnosis` (capitaliza `className`), por eso `StartupWMClass=Toledodiagnosis` en el `.desktop`; si no coincide, el dock muestra un icono genérico duplicado.
-- **CSV**: con el binario van a `Documentos/ToledoDiagnosis` (`xdg-user-dir DOCUMENTS`); desde el código, junto a `gui.py`. En Windows, junto al `.exe`.
+- **Lanzador**: Tk pone la clase de ventana `Obd2desk` (capitaliza `className="OBD2Desk"` y pasa el resto a minúsculas; comprobado con `xprop`), por eso `StartupWMClass=Obd2desk` en el `.desktop`; si no coincide, el dock muestra un icono genérico duplicado.
+- **CSV e informes**: con el binario van a `Documentos/OBD2Desk` (`xdg-user-dir DOCUMENTS`); desde el código, junto a `gui.py`. En Windows, junto al `.exe`.
 - Puertos: cable FTDI = `/dev/ttyUSB0`; ELM327 USB = `/dev/ttyUSB0` o `/dev/ttyACM0`; ELM327 Bluetooth: `bluetoothctl` (pair, trust) y `sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF` → `/dev/rfcomm0`.
 - Latencia FTDI: en Linux el programa activa el modo de baja latencia automáticamente (`set_low_latency_mode`), equivalente a poner 1 ms.
-- Clave de IA en `~/.config/ToledoDiagnosis/config.json` con permisos 600 (no cifrada; en Windows va cifrada con DPAPI).
+- Clave de IA en `~/.config/OBD2Desk/config.json` (Windows: `%APPDATA%\OBD2Desk`) con permisos 600; si no existe y sí la de la versión anterior (`ToledoDiagnosis/config.json`), `ia._ruta_config()` la copia la primera vez (no cifrada; en Windows va cifrada con DPAPI).
 - Fuentes: elige automáticamente Noto Sans / Cantarell / DejaVu Sans / Liberation según lo instalado.
 
 ### 4.3 Primeros pasos (guía de uso para la web)
@@ -182,17 +183,20 @@ fórmula que envía la propia centralita.
 | `vag_datos.py` | Fórmulas de valores medidos VAG (≈60), tipos de fallo, averías VAG de 5 cifras (≈90 clásicos 00xxx-01xxx, 21 P1 de VAG y traducción de 16xxx-18xxx a P0/P1), grupos EDC15, 21 módulos. |
 | `elm327.py` | OBD2 por ELM327: inicialización, protocolo automático, parseo con cabeceras (CAN 11/29 bits y línea K), reensamblado ISO-TP, multi-PID, averías (03/07/0A/04), datos congelados (02), monitores (01 01), VIN y CALID/CVN/nombre (09 02/04/06/0A), MIL, tensión. |
 | `obd_datos.py` | PIDs del modo 01 (≈50) con decodificadores, estándares OBD, descripciones de averías P0xxx (≈110), monitores de preparación (gasolina y diésel). |
-| `ia.py` | Proveedores, configuración y claves, `Conversacion` (bucle de herramientas para Anthropic y OpenAI/DeepSeek), prompt de sistema, definición de herramientas. |
+| `ia.py` | Proveedores, configuración y claves (y migración desde `ToledoDiagnosis`), `Conversacion` (bucle de herramientas para Anthropic y OpenAI/DeepSeek), prompt de sistema en español e inglés, definición de herramientas (`herramientas()` las da traducidas). |
+| `idioma.py` | Idioma de la interfaz: `tr()`, `poner()`, `detectar()`, registro de tablas de datos que se traducen en su sitio (`tabla()`). |
+| `textos_en.py` | Diccionario español → inglés de todos los textos (≈790). |
 | `simulador.py` | `FakeSerial` (cable KKL + centralitas a 9600 bd: motor EDC15 01, ABS 03, airbag 15 y cuadro 17; decodifica el init de 5 baudios por tiempos reales) y `FakeELMSerial` (ELM327 + coche gasolina CAN 11/500 o línea K, con datos congelados de la P0171, permanente P0420, EVAP sin completar y CALID/CVN). |
 | `toledo.py` | Versión consola KKL (y utilidades reutilizadas por la GUI: `leer_grupo_formateado`, `texto_id`). |
 | `sonda_toledo.py` | Sonda de protocolos con ELM327 para el Toledo. |
 | `tests/prueba_simuladores.py` | ≈60 comprobaciones contra los simuladores (`python tests/prueba_simuladores.py`, ≈20 s): KW1281 (también varias centralitas), ELM327 en CAN y línea K (datos congelados, monitores, permanentes, modo 09), VIN, informe y tablas de averías. |
-| `tests/prueba_gui.py` | Maneja la ventana real con los dos simuladores: conectar, averías, escaneo de módulos, datos congelados, monitores, informe, panel, valores + CSV, ELM327 WiFi (servidor TCP local), configuración IA (`xvfb-run -a .venv/bin/python tests/prueba_gui.py` en Linux, ≈55 s). Necesita `pyserial` (el Python del sistema en Fedora no lo trae: usar `.venv`). |
+| `tests/prueba_idioma.py` | Comprueba (≈1 s) que todo `tr("...")` del código y todas las tablas tienen traducción, que coinciden los huecos `{nombre}`, que no hay claves repetidas ni español en las traducciones. |
+| `tests/prueba_gui.py` | Maneja la ventana real con los dos simuladores: conectar, averías, escaneo de módulos, datos congelados, monitores, informe, panel, valores + CSV, ELM327 WiFi (servidor TCP local), configuración IA y cambio de idioma con el selector (`xvfb-run -a .venv/bin/python tests/prueba_gui.py` en Linux, ≈90 s; con `OBD2DESK_IDIOMA=en` corre en inglés y además busca restos de español en todos los textos de la ventana y en el informe). Necesita `pyserial` (el Python del sistema en Fedora no lo trae: usar `.venv`). |
 | `build.bat` / `build.sh` | Ejecutable único con PyInstaller (Windows / Linux). |
 | `linux/build-portable.sh` | Binario Linux portable (contenedor Debian 11) y paquete `.tar.gz` para distribuir. |
-| `linux/instalar.sh`, `linux/toledo-diagnosis.desktop`, `linux/LEEME.txt` | Instalación de usuario en Linux y LÉEME del paquete. |
+| `linux/instalar.sh`, `linux/obd2desk.desktop`, `linux/LEEME.txt`, `linux/README.txt` | Instalación de usuario en Linux y LÉEME del paquete (español e inglés). |
 | `crear_icono.py` | Genera `icono.ico`/`icono.png` con Pillow (solo desarrollo). |
-| `Toledo Diagnosis.pyw` | Lanzador sin consola en Windows. |
+| `OBD2Desk.pyw` | Lanzador sin consola en Windows. |
 
 ### 7.2 Hilos
 - **Hilo principal (Tk)**: interfaz. Sondea una cola cada 50 ms (`App.poll`).
@@ -220,12 +224,20 @@ fórmula que envía la propia centralita.
 - Fuentes: Segoe UI (Windows), Noto Sans (Linux).
 - Icono: reloj de turbo naranja con aguja y texto «TDI» sobre cuadrado oscuro redondeado (`icono.png` 256 px, `icono.ico` multi-tamaño).
 
+### 7.6 Idioma (español e inglés)
+- Los textos se escriben **en español en el código** envueltos en `tr()` (`from idioma import tr`); con datos variables, `tr("Conectado a {baud} baudios", baud=x)` (nada de f-strings dentro de `tr`). En inglés, `tr()` busca el texto en `textos_en.EN`; si falta, deja el español y lo apunta en `idioma.faltan`.
+- Tablas de datos (averías VAG y OBD2, tipos de fallo, módulos, grupos EDC15, PIDs, estándares OBD): se registran con `idioma.tabla(dict[, fn])` y `idioma.poner()` las traduce en su sitio conservando el original. Monitores, países del VIN y textos entre paréntesis de fabricantes/modelos se traducen al usarse.
+- Textos que hacen de valor (puerto «Simulador (sin coche)», modos de conexión) se recalculan en `gui._textos_fijos()` al crear la ventana.
+- **Al añadir o cambiar un texto: añadirlo a `textos_en.py` y pasar `python tests/prueba_idioma.py`** (dice qué falta). La prueba de GUI en inglés detecta textos visibles sin `tr()`.
+- `OBD2DESK_IDIOMA=es|en` fuerza el idioma (pruebas y capturas) por encima de la configuración.
+- `toledo.py` (consola) y `sonda_toledo.py` siguen solo en español; los mensajes de depuración (`[elm327] …`) tampoco se traducen.
+
 ---
 
 ## 8. Compilar, versionar y publicar
-- Windows: `build.bat` → `dist\ToledoDiagnosis.exe`. Linux: `./build.sh` → `dist/ToledoDiagnosis` (uso local); para publicar, `./linux/build-portable.sh vX.Y.Z` → `dist/ToledoDiagnosis-vX.Y.Z-linux-x86_64.tar.gz`.
+- Windows: `build.bat` → `dist\OBD2Desk.exe`. Linux: `./build.sh` → `dist/OBD2Desk` (uso local); para publicar, `./linux/build-portable.sh vX.Y.Z` → `dist/OBD2Desk-vX.Y.Z-linux-x86_64.tar.gz`. (Hasta la v0.3.0 los archivos se llamaban `ToledoDiagnosis…`.)
 - Tras cambiar código, recompilar y copiar el ejecutable nuevo.
-- Comprobación rápida del ejecutable (sin gastar saldo): `ToledoDiagnosis --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
+- Comprobación rápida del ejecutable (sin gastar saldo): `OBD2Desk --autotest-ia salida.txt` → debe poner «API key … no válida» para los 3 proveedores (confirma que los SDK y HTTPS funcionan dentro del binario).
 - Git: etiqueta `v0.1.0` en el commit inicial `a354d67`. **Release v0.1.0 publicada** (marca de pre-release quitada el 2026-11-22) con `ToledoDiagnosis.exe` de Windows compilado desde esa etiqueta: https://github.com/jaso69/obd2/releases/tag/v0.1.0 — descarga directa: https://github.com/jaso69/obd2/releases/download/v0.1.0/ToledoDiagnosis.exe
 - La v0.1.0 **no incluye** el soporte Linux (llegó después).
 - **Release v0.3.0 publicada** (2026-11-22, «Latest») con `ToledoDiagnosis.exe` de Windows y el paquete Linux, ambos compilados desde la etiqueta `v0.3.0` (`5c83aa6`): https://github.com/jaso69/obd2/releases/tag/v0.3.0 — la web ofrece ya esta versión en los dos sistemas. Detalle en §8.2.
@@ -278,13 +290,13 @@ Hecho el 2026-11-22 (después): el usuario probó la v0.3.0 en un coche y funcio
 
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
-1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py` y `xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO».
+1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py`, `.venv/bin/python tests/prueba_idioma.py`, `xvfb-run -a .venv/bin/python tests/prueba_gui.py` y `OBD2DESK_IDIOMA=en xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO» (las dos de GUI una detrás de otra: a la vez chocan en el nombre del CSV).
 2. Commit, `git tag -a vX.Y.Z -m "..."`, `git push && git push --tags`.
 3. `./linux/build-portable.sh vX.Y.Z` (hace la autoprueba IA); extraer el `.tar.gz` y abrirlo.
-4. `gh release create vX.Y.Z dist/ToledoDiagnosis-vX.Y.Z-linux-x86_64.tar.gz --title "Toledo Diagnosis vX.Y.Z" --notes-file notas.md` (si el `.exe` aún no está, decirlo en las notas).
-5. Windows: `git pull`, `git fetch --tags --force`, `git checkout vX.Y.Z`, `build.bat`, `git checkout main`; probar simuladores, `--autotest-ia` y abrir el `.exe`. Anotar tamaño y SHA-256 (`certutil -hashfile dist\ToledoDiagnosis.exe SHA256`).
-6. Fedora: copiar el `.exe` desde la partición de Windows (`/run/media/jaso/D8AE878DAE87633C/Users/jose/Desktop/obd2/dist/`), comprobar SHA-256, `gh release upload vX.Y.Z ToledoDiagnosis.exe`, ajustar las notas, descargarlo de GitHub y volver a comprobar el SHA-256.
-7. Web: textos y capturas (`web/capturas.py`) con las funciones nuevas; `./web/publicar.sh`. Los botones de descarga se actualizan solos (`web.js` lee la API de GitHub).
+4. `gh release create vX.Y.Z dist/OBD2Desk-vX.Y.Z-linux-x86_64.tar.gz --title "OBD2Desk vX.Y.Z" --notes-file notas.md` (si el `.exe` aún no está, decirlo en las notas).
+5. Windows: `git pull`, `git fetch --tags --force`, `git checkout vX.Y.Z`, `build.bat`, `git checkout main`; probar simuladores, `--autotest-ia` y abrir el `.exe`. Anotar tamaño y SHA-256 (`certutil -hashfile dist\OBD2Desk.exe SHA256`).
+6. Fedora: copiar el `.exe` desde la partición de Windows (`/run/media/jaso/D8AE878DAE87633C/Users/jose/Desktop/obd2/dist/`), comprobar SHA-256, `gh release upload vX.Y.Z OBD2Desk.exe`, ajustar las notas, descargarlo de GitHub y volver a comprobar el SHA-256.
+7. Web: textos (las dos páginas, `web/index.html` y `web/en/index.html`) y capturas (`web/capturas.py` y `web/capturas.py en`) con las funciones nuevas; `./web/publicar.sh`. Los botones de descarga se actualizan solos (`web.js` lee la API de GitHub).
 8. Actualizar `CLAUDE.md` (Estado) y este documento.
 
 ## 9. Estado actual y limitaciones (ser honesto en la web)
@@ -301,7 +313,6 @@ Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 
 **1. Pequeños pendientes (para la próxima versión, sea cual sea)**
-- `LEEME.txt` del paquete Linux (`linux/`): añadir el ELM327 WiFi (la web y el README ya lo explican).
 - Probar con un **ELM327 WiFi real** (IP/puerto por defecto 192.168.0.10:35000); si va bien, quitar la línea de la web «La conexión WiFi está probada con el simulador…» (sección `#estado` de `web/index.html`).
 - En Linux, probar los adaptadores físicos (cable FTDI con `dialout`, Bluetooth con `rfcomm`) y el lanzador en un escritorio real.
 
@@ -313,12 +324,13 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 
 **3. Más adelante**
 - Seguir ampliando averías VAG (más P1 y módulos de confort/clima); más grupos documentados (ME7 gasolina, TDI inyector-bomba).
-- Programa en inglés (duplica el público; hay que pasar todos los textos).
 - Firma del ejecutable de Windows (evitar SmartScreen).
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
 
-**Aparcado (no sacarlo por iniciativa propia):** renombrar el programa (candidatos MecanIA y OBD2Desk) y versión para Mac (sin Mac para probar; plan con GitHub Actions).
+**Hecho el 2026-11-27 (pendiente de publicar en una versión):** renombrado a **OBD2Desk** (dominio obd2desk.com) e interfaz en inglés.
+
+**Aparcado (no sacarlo por iniciativa propia):** versión para Mac (sin Mac para probar; plan con GitHub Actions).
 
 ## 11. Comprobación en Linux
 Hecha el 2026-11-21 en Fedora 44 (Python 3.14, Tk 9.0, Wayland): pruebas de protocolo y de GUI, `build.sh`, `build-portable.sh` y el paquete en contenedores (§9). Para repetirla en un equipo nuevo:
@@ -335,11 +347,11 @@ Hecha el 2026-11-21 en Fedora 44 (Python 3.14, Tk 9.0, Wayland): pruebas de prot
 
 ## 12. Guion para la web
 
-**Estado (2026-11-27): la web usa ya el nombre OBD2Desk y su dominio https://obd2desk.com**, en español e inglés (código en `web/` de este repositorio). El programa sigue llamándose Toledo Diagnosis hasta que se renombre (ejecutable, paquete, configuración e `informe.py`, que aún enlaza a jasodev.es). Hasta el 2026-11-27 se publicaba en https://www.jasodev.es (repo `jaso69/jasodev`).
-- `web/index.html` (español, una sola página con las secciones de §12.2), `web/en/index.html` (inglés, misma estructura; rutas con `../`; avisa de que la interfaz del programa y las respuestas de la IA están en español), `web/estilo.css` (colores de §7.5, fuentes del sistema, sin recursos de terceros), `web/web.js` (menú móvil, selector KKL/OBD2 de capturas, visor ampliado, enlaces de descarga y textos según `<html lang>`).
+**Estado (2026-11-27): la web usa ya el nombre OBD2Desk y su dominio https://obd2desk.com**, en español e inglés (código en `web/` de este repositorio). El programa se renombró a OBD2Desk el 2026-11-27 (en `main`; sale en la próxima versión). Hasta el 2026-11-27 se publicaba en https://www.jasodev.es (repo `jaso69/jasodev`).
+- `web/index.html` (español, una sola página con las secciones de §12.2), `web/en/index.html` (inglés, misma estructura; rutas con `../`; usa las capturas de `img/en/` y nombra los botones en inglés), `web/estilo.css` (colores de §7.5, fuentes del sistema, sin recursos de terceros), `web/web.js` (menú móvil, selector KKL/OBD2 de capturas, visor ampliado, enlaces de descarga y textos según `<html lang>`).
 - Idioma: botón ES/EN en el menú (`data-idioma`, guarda la elección en `localStorage`). `web/idioma.js` (solo en la página en español, en `<head>`): la primera visita de un navegador sin español/catalán/gallego/euskera va a `/en/`; respeta la elección guardada y no redirige a los buscadores. `hreflang` en ambas páginas y en `sitemap.xml`. Al cambiar un texto, cambiarlo en las dos páginas.
 - Descargas: `web.js` consulta `api.github.com/repos/jaso69/obd2/releases` (incluye pre-releases, que `releases/latest` ignora) y apunta los botones al `.exe` y al `*linux*.tar.gz` de la última release; sin JS o sin paquete, llevan a la página de releases.
-- Capturas: `xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py` → `web/img/*.webp` + `og.jpg` (1200×630 para redes). Usa los simuladores en una pantalla virtual; en la conversación de IA solo se sustituye la llamada al modelo por un guion (herramientas reales, texto de ejemplo coherente con los datos del simulador; la web lo aclara). Mientras el programa no esté renombrado, `capturas.py` cambia el título de la ventana a «OBD2Desk». Regenerar si cambia la interfaz.
+- Capturas: `xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py` → `web/img/*.webp` + `og.jpg` (1200×630 para redes). Usa los simuladores en una pantalla virtual; en la conversación de IA solo se sustituye la llamada al modelo por un guion (herramientas reales, texto de ejemplo coherente con los datos del simulador; la web lo aclara). `python3 web/capturas.py en` genera las capturas en inglés en `web/img/en/` (las usa `web/en/index.html`). Regenerar si cambia la interfaz.
 - Ver en local: `python3 -m http.server -d web 8000` → http://127.0.0.1:8000 (y `/en/`).
 - Publicación: `./web/publicar.sh ["mensaje"]` sustituye el contenido del repositorio https://github.com/jaso69/obd2desk (rama `main`, enlazado con Vercel, dominio `obd2desk.com`) por `web/` (sin `capturas.py` ni `publicar.sh`) y lo sube con un commit normal; Vercel la publica en segundos.
 - `web/vercel.json`: `trailingSlash`, cabeceras de seguridad (CSP sin scripts ni estilos en línea; `connect-src` permite `https://api.github.com` para los botones de descarga) y caché de `img/`. Si se añade un script o estilo en línea al HTML, la CSP lo bloqueará. `robots.txt` y `sitemap.xml` apuntan a `obd2desk.com`.
@@ -381,7 +393,7 @@ pero sin jerga innecesaria. Honesto sobre el estado (versión preliminar).
 - *SmartScreen*: ejecutable no firmado.
 
 ### 12.5 Aviso legal (texto base)
-«Toledo Diagnosis es software libre bajo licencia MIT y un proyecto independiente, sin relación con SEAT, Volkswagen
+«OBD2Desk es software libre bajo licencia MIT y un proyecto independiente, sin relación con SEAT, Volkswagen
 Group, Bosch, FTDI, Elm Electronics, Anthropic, OpenAI ni DeepSeek. Las marcas
 pertenecen a sus propietarios. El programa se ofrece tal cual, sin garantía; úsalo
 bajo tu responsabilidad. No realices pruebas que distraigan de la conducción. Las

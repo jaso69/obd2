@@ -20,6 +20,8 @@ Resumen del protocolo
 import threading
 import time
 
+from idioma import tr
+
 # Titulos de bloque
 ACK = 0x09
 NAK = 0x0A
@@ -35,7 +37,10 @@ BLOCK_END = 0x03
 
 
 class KW1281Error(Exception):
-    pass
+    def __init__(self, msg, sin_respuesta=False, kwp2000=False):
+        super().__init__(msg)
+        self.sin_respuesta = sin_respuesta      # la centralita no contestó nada al init
+        self.kwp2000 = kwp2000                  # habla KWP2000 en vez de KW1281
 
 
 class Block:
@@ -116,14 +121,14 @@ class KW1281:
             d = self.ser.read(1)
             if d:
                 return d[0]
-        raise KW1281Error("Timeout esperando byte de la ECU")
+        raise KW1281Error(tr("Timeout esperando byte de la ECU"))
 
     def _write_raw(self, b):
         self.ser.write(bytes([b]))
         if self.echo:
             e = self._read_raw(0.3)
             if e != b:
-                raise KW1281Error(f"Eco incorrecto: enviado {b:02X}, leido {e:02X}")
+                raise KW1281Error(tr("Eco incorrecto: enviado {tx}, leído {rx}", tx=f"{b:02X}", rx=f"{e:02X}"))
 
     def _send_byte(self, b, expect_ack=True):
         if self.byte_delay:
@@ -132,7 +137,7 @@ class KW1281:
         if expect_ack:
             c = self._read_raw(0.5)
             if c != (0xFF ^ b):
-                raise KW1281Error(f"Complemento incorrecto: enviado {b:02X}, ECU {c:02X}")
+                raise KW1281Error(tr("Complemento incorrecto: enviado {tx}, ECU {rx}", tx=f"{b:02X}", rx=f"{c:02X}"))
 
     def _recv_byte(self, ack=True):
         if self._pending is not None:
@@ -159,7 +164,7 @@ class KW1281:
     def _recv_block(self):
         n = self._recv_byte()
         if n < 3:
-            raise KW1281Error(f"Longitud de bloque invalida: {n}")
+            raise KW1281Error(tr("Longitud de bloque no válida: {n}", n=n))
         cnt = self._recv_byte()
         if self._counter is not None and cnt != (self._counter + 1) & 0xFF:
             self._dbg(f"Aviso: contador {cnt:02X}, esperado {(self._counter + 1) & 0xFF:02X}")
@@ -168,7 +173,7 @@ class KW1281:
         data = [self._recv_byte() for _ in range(n - 3)]
         end = self._recv_byte(ack=False)
         if end != BLOCK_END:
-            raise KW1281Error(f"Fin de bloque incorrecto: {end:02X}")
+            raise KW1281Error(tr("Fin de bloque incorrecto: {b}", b=f"{end:02X}"))
         self._last = time.monotonic()
         blk = Block(cnt, title, data)
         self._dbg(f"RX {blk}")
@@ -212,16 +217,16 @@ class KW1281:
             if sync == 0x55:
                 break
         if sync != 0x55:
-            raise KW1281Error(f"Sin byte de sincronismo 0x55 a {baud} baudios "
-                              f"(leido {'nada' if sync is None else f'{sync:02X}'})")
+            raise KW1281Error(tr("Sin byte de sincronismo 0x55 a {baud} baudios (leído {rx})", baud=baud,
+                                 rx=tr("nada") if sync is None else f"{sync:02X}"), sin_respuesta=sync is None)
         kw1 = self._read_raw(0.5)
         kw2 = self._read_raw(0.5)
         self.keywords = (kw1, kw2)
         self._dbg(f"Keywords {kw1:02X} {kw2:02X}")
         if (kw1, kw2) != (0x01, 0x8A):
             if kw2 == 0x8F or kw1 & 0x80:
-                raise KW1281Error(f"La ECU responde con keywords {kw1:02X} {kw2:02X}: "
-                                  "habla KWP2000, no KW1281.")
+                raise KW1281Error(tr("La ECU responde con keywords {kw}: habla KWP2000, no KW1281.",
+                                     kw=f"{kw1:02X} {kw2:02X}"), kwp2000=True)
             self._dbg("Keywords no tipicas de KW1281, se intenta igualmente")
         time.sleep(0.03)                    # W4: 25-50 ms
         self.ser.write(bytes([0xFF ^ kw2]))
@@ -246,13 +251,13 @@ class KW1281:
                     break
                 except KW1281Error as e:
                     last = e
-                    if "KWP2000" in str(e):
+                    if e.kwp2000:
                         raise
-                    if rapido and "leido nada" in str(e):
-                        raise KW1281Error(f"El módulo {self.address:02X} no responde")
+                    if rapido and e.sin_respuesta:
+                        raise KW1281Error(tr("El módulo {dir} no responde", dir=f"{self.address:02X}"), sin_respuesta=True)
                     self._dbg(str(e))
             else:
-                raise KW1281Error(f"No se pudo iniciar la comunicacion: {last}")
+                raise KW1281Error(tr("No se pudo iniciar la comunicación: {e}", e=last))
 
             self.ident = [b.data for b in self._receive_until_ack(self._recv_block())
                           if b.title == R_ASCII]
@@ -294,7 +299,7 @@ class KW1281:
     def _call(self, title, data=b""):
         with self._lock:
             if not self.connected:
-                raise KW1281Error(f"Sin conexion con la ECU ({self.error or 'no conectado'})")
+                raise KW1281Error(tr("Sin conexión con la ECU ({e})", e=self.error or tr("no conectado")))
             try:
                 return self._transact(title, data)
             except KW1281Error as e:
@@ -333,7 +338,7 @@ class KW1281:
         o, para el grupo 0, la lista de bytes en bruto."""
         blocks = self._call(GROUP_READ, bytes([group & 0xFF]))
         if not blocks or blocks[0].title != R_GROUP:
-            raise KW1281Error(f"Grupo {group:03d} no soportado por la ECU")
+            raise KW1281Error(tr("Grupo {g} no soportado por la ECU", g=f"{group:03d}"))
         d = blocks[0].data
         if group == 0:
             return list(d)

@@ -7,6 +7,9 @@ algun valor sale raro, el programa muestra tambien el numero de formula y los
 bytes a/b en bruto para poder revisarlo.
 """
 
+import idioma
+from idioma import tr
+
 # ---------------------------------------------------------------------------
 # Formulas de los bloques de valores medidos: id -> (funcion(a, b), unidad)
 # ---------------------------------------------------------------------------
@@ -24,7 +27,7 @@ FORMULAS = {
     0x07: (lambda a, b: 0.01 * a * b, "km/h"),
     0x08: (lambda a, b: 0.1 * a * b, ""),
     0x09: (lambda a, b: (b - 127) * 0.02 * a, "°"),
-    0x0A: (lambda a, b: "FRIO" if b == 0 else "CALIENTE", ""),
+    0x0A: (lambda a, b: tr("FRÍO") if b == 0 else tr("CALIENTE"), ""),
     0x0B: (lambda a, b: 0.0001 * a * (b - 128) + 1, ""),
     0x0C: (lambda a, b: 0.001 * a * b, "Ω"),
     0x0D: (lambda a, b: (b - 127) * 0.001 * a, "mm"),
@@ -87,12 +90,12 @@ def decode_value(formula, a, b):
     """Devuelve (texto_valor, unidad, conocida)."""
     f = FORMULAS.get(formula)
     if not f:
-        return f"a={a} b={b}", f"(formula {formula:02X}h)", False
+        return f"a={a} b={b}", tr("(fórmula {f})", f=f"{formula:02X}h"), False
     fn, unit = f
     try:
         v = fn(a, b)
     except Exception:
-        return f"a={a} b={b}", f"(formula {formula:02X}h)", False
+        return f"a={a} b={b}", tr("(fórmula {f})", f=f"{formula:02X}h"), False
     if isinstance(v, float):
         txt = f"{v:.0f}" if abs(v) >= 100 else f"{v:.2f}".rstrip("0").rstrip(".")
     else:
@@ -289,19 +292,19 @@ def componente(code):
     p = codigo_obd(code)
     if p:
         if p.startswith("P1"):
-            desc = DTCS_P1.get(int(p[1:]), "código específico de VAG no incluido en la tabla")
+            desc = DTCS_P1.get(int(p[1:]), tr("código específico de VAG no incluido en la tabla"))
         else:
             from obd_datos import describe_dtc as obd_desc
             desc = obd_desc(p)
         return f"{p} · {desc}"
-    return "Código no incluido en la tabla (consultar documentación VAG)"
+    return tr("Código no incluido en la tabla (consultar documentación VAG)")
 
 
 def describe_dtc(code, ftype, intermittent):
     desc = componente(code)
-    t = FAULT_TYPES.get(ftype, f"Tipo de fallo {ftype}")
+    t = FAULT_TYPES.get(ftype, tr("Tipo de fallo {n}", n=ftype))
     extra = f" - {t}" if t else ""
-    inter = " - INTERMITENTE" if intermittent else ""
+    inter = " - " + tr("INTERMITENTE") if intermittent else ""
     return f"{code:05d} {desc}  [{ftype:02d}{extra}{inter}]"
 
 
@@ -345,3 +348,8 @@ MODULOS = {
     0x76: "Ayuda al aparcamiento",
     0x77: "Teléfono",
 }
+
+# Traducción de las tablas al idioma de la interfaz (ver idioma.py)
+for _t in (FAULT_TYPES, DTCS, DTCS_P1, MODULOS):
+    idioma.tabla(_t)
+idioma.tabla(GRUPOS_EDC15, lambda v: (tr(v[0]), [tr(x) for x in v[1]]))

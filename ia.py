@@ -12,16 +12,21 @@ El bucle de herramientas se ejecuta en local porque las herramientas hablan con
 el adaptador conectado al coche.
 
 API keys:
-- Windows: cifradas con DPAPI en %APPDATA%\\ToledoDiagnosis\\config.json (solo las
+- Windows: cifradas con DPAPI en %APPDATA%\\OBD2Desk\\config.json (solo las
   puede descifrar el mismo usuario de Windows en el mismo equipo).
-- Linux: en ~/.config/ToledoDiagnosis/config.json con permisos 600 (solo legible
+- Linux: en ~/.config/OBD2Desk/config.json con permisos 600 (solo legible
   por el usuario), codificadas pero no cifradas.
+La primera vez se copia la configuración de la carpeta antigua (ToledoDiagnosis).
 """
 import base64
 import ctypes
 import json
 import os
+import shutil
 import sys
+
+import idioma
+from idioma import tr
 
 PROVEEDORES = {
     "anthropic": {
@@ -48,13 +53,13 @@ _CLAUDE_FALLBACK = {"claude-opus-5-5", "claude-opus-5", "claude-fable-5-2", "cla
 
 MAX_RONDAS = 15          # rondas de herramientas por mensaje del usuario (limita el coste)
 
-SYSTEM_PROMPT = """Eres un técnico experto en diagnosis electrónica de automóviles, integrado en la aplicación de escritorio "Toledo Diagnosis". Puedes hacer comprobaciones en el coche tú mismo mediante herramientas.
+SYSTEM_PROMPT = """Eres un técnico experto en diagnosis electrónica de automóviles, integrado en la aplicación de escritorio "OBD2Desk". Puedes hacer comprobaciones en el coche tú mismo mediante herramientas.
 
 La aplicación tiene dos modos de conexión:
 - KKL · VAG KW1281: vehículos del grupo VAG hasta ~2004 con cable KKL. Identificación de la centralita, códigos de avería VAG de 5 cifras con tipo de fallo (e intermitentes) y grupos de valores medidos (en un 1.9 TDI con EDC15, por ejemplo: 001 inyección, 002 acelerador, 003 EGR/caudalímetro, 004 comienzo de inyección, 007 temperaturas, 008 limitación de caudal, 010 aire/presiones, 011 turbo, 013 marcha suave por cilindro).
 - ELM327 · OBD2 genérico: cualquier coche con OBD2/EOBD. PIDs estándar, códigos P0xxx memorizados, pendientes y permanentes, datos congelados (valores del motor cuando se registró la avería), monitores de preparación (readiness), testigo MIL y VIN.
 
-El vehículo principal del usuario es un SEAT Toledo II 1.9 TDI del año 2000 (centralita Bosch EDC15). Confírmalo con la identificación de la centralita; si los datos indican otro vehículo, trabaja con ese.
+La aplicación nació para un SEAT Toledo II 1.9 TDI del año 2000 (centralita Bosch EDC15), pero se usa con cualquier coche: identifica el vehículo con los datos de la centralita o el VIN y trabaja con ese.
 
 Diagnóstico guiado:
 - Cuando el usuario describa un síntoma o pida un análisis, plantea hipótesis y comprueba las que importan con las herramientas: lee averías, lee los grupos o PIDs que confirman o descartan cada hipótesis e interpreta los valores frente a los esperados para ese motor.
@@ -74,6 +79,38 @@ Respuesta final:
 - Recuerda cuando proceda que borrar códigos no repara la avería.
 - Si analizas errores del programa o de comunicación, explica qué indica el registro (cable, puerto COM, protocolo, tiempos, contacto) y da pasos concretos.
 - Formato Markdown sencillo: títulos con ##, listas con -, negritas con **. Sin tablas."""
+
+SYSTEM_PROMPT_EN = """You are an expert automotive electronic diagnostics technician, built into the desktop application "OBD2Desk". You can run checks on the car yourself using tools.
+
+The application has two connection modes:
+- KKL · VAG KW1281: VAG group vehicles up to ~2004 with a KKL cable. Control unit identification, 5-digit VAG fault codes with fault type (and intermittent flag) and measuring blocks (on a 1.9 TDI with EDC15, for example: 001 injection, 002 accelerator, 003 EGR/MAF, 004 start of injection, 007 temperatures, 008 quantity limitation, 010 air/pressures, 011 boost, 013 smooth running per cylinder).
+- ELM327 · generic OBD2: any car with OBD2/EOBD. Standard PIDs, stored, pending and permanent P0xxx codes, freeze frame data (engine values when the fault was stored), readiness monitors, MIL status and VIN.
+
+The application was originally built for a 2000 SEAT Toledo II 1.9 TDI (Bosch EDC15 ECU), but it is used with any car: identify the vehicle from the control unit data or the VIN and work with that.
+
+Guided diagnosis:
+- When the user describes a symptom or asks for an analysis, form hypotheses and test the ones that matter with the tools: read the fault codes, read the blocks or PIDs that confirm or rule out each hypothesis and interpret the values against what is expected for that engine.
+- If a reading needs specific conditions (engine running, operating temperature, a fixed RPM, a rev in neutral, air conditioning on…), ask the user for them with pedir_accion_usuario before reading. To capture something that lasts a few seconds, first ask for the action ("when you press Done, floor the throttle and release it") and read with several samples right after.
+- Be efficient: group what you can into a single reading, don't repeat readings without a reason and don't go beyond about 10 checks unless it is really needed.
+- If there is no connection to the car, ask the user with pedir_accion_usuario to connect (the «Connection» and «Port» selectors and the «Connect» button at the top) and then check with estado_conexion.
+- Clear fault codes only if it helps the diagnosis (to see whether they come back) and only after reading them.
+
+Safety (mandatory):
+- Never ask the user to look at the screen or operate the laptop while driving. Road tests only with a passenger operating the laptop, in a safe place and following traffic rules. Prefer stationary tests.
+- Warn about the risks when you ask for something near a running engine (belts, fan, hot parts) and never ask to disconnect components with the engine running.
+
+Final answer:
+- In English, clear and direct, for a hobbyist with some mechanical knowledge. Use metric units as the application shows them.
+- Based on the data read. Don't invent values or codes; if something couldn't be checked, say so.
+- Structure: short conclusion; most likely causes ranked by probability with the supporting evidence; what to do next (from cheapest and most likely to most expensive); whether the car can be driven and how urgent it is.
+- Where relevant, remind the user that clearing codes does not fix the fault.
+- If you analyse program or communication errors, explain what the log shows (cable, COM port, protocol, timing, ignition) and give concrete steps.
+- Simple Markdown: headings with ##, lists with -, bold with **. No tables.
+- The instructions you send with pedir_accion_usuario must be in English."""
+
+
+def system_prompt():
+    return SYSTEM_PROMPT_EN if idioma.actual() == "en" else SYSTEM_PROMPT
 
 _SIN_PARAMS = {"type": "object", "properties": {}, "additionalProperties": False}
 
@@ -119,7 +156,7 @@ HERRAMIENTAS = [
         "input_schema": {
             "type": "object",
             "properties": {"instruccion": {"type": "string",
-                                           "description": "Instrucción clara y breve, en español."}},
+                                           "description": "Instrucción clara y breve, en el idioma del usuario."}},
             "required": ["instruccion"],
             "additionalProperties": False,
         },
@@ -143,6 +180,20 @@ HERRAMIENTAS = [
 ]
 
 
+def herramientas():
+    """Definición de las herramientas con las descripciones en el idioma de la interfaz."""
+    if idioma.actual() != "en":
+        return HERRAMIENTAS
+    out = []
+    for h in HERRAMIENTAS:
+        h = json.loads(json.dumps(h))
+        h["description"] = tr(h["description"])
+        for p in h["input_schema"].get("properties", {}).values():
+            p["description"] = tr(p["description"])
+        out.append(h)
+    return out
+
+
 class IAError(Exception):
     pass
 
@@ -162,7 +213,7 @@ def _dpapi(data, cifrar):
     salida = _BLOB()
     fn = ctypes.windll.crypt32.CryptProtectData if cifrar else ctypes.windll.crypt32.CryptUnprotectData
     if not fn(ctypes.byref(entrada), None, None, None, None, 0, ctypes.byref(salida)):
-        raise IAError("No se pudo cifrar/descifrar la API key en este equipo.")
+        raise IAError(tr("No se pudo cifrar/descifrar la API key en este equipo."))
     try:
         return ctypes.string_at(salida.pbData, salida.cbData)
     finally:
@@ -174,9 +225,18 @@ def _ruta_config():
         base = os.environ.get("APPDATA") or os.path.expanduser("~")
     else:
         base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
-    carpeta = os.path.join(base, "ToledoDiagnosis")
+    carpeta = os.path.join(base, "OBD2Desk")
+    ruta = os.path.join(carpeta, "config.json")
+    antigua = os.path.join(base, "ToledoDiagnosis", "config.json")
     os.makedirs(carpeta, exist_ok=True)
-    return os.path.join(carpeta, "config.json")
+    if not os.path.exists(ruta) and os.path.isfile(antigua):
+        try:
+            shutil.copy2(antigua, ruta)          # mismas claves: DPAPI sigue valiendo (mismo usuario)
+            if sys.platform != "win32":
+                os.chmod(ruta, 0o600)
+        except OSError:
+            pass
+    return ruta
 
 
 def cargar_config():
@@ -242,7 +302,7 @@ class Conversacion:
 
     def __init__(self, proveedor, api_key, modelo):
         if not api_key:
-            raise IAError("Falta la API key. Introdúcela en la configuración del asistente.")
+            raise IAError(tr("Falta la API key. Introdúcela en la configuración del asistente."))
         self.proveedor = proveedor
         self.api_key = api_key
         self.modelo = modelo
@@ -270,11 +330,11 @@ class Conversacion:
     def _turno_claude(self, on_text, on_tool, cancelado):
         import anthropic
         client = anthropic.Anthropic(api_key=self.api_key)
-        tools = [dict(t, eager_input_streaming=True) for t in HERRAMIENTAS]
+        tools = [dict(t, eager_input_streaming=True) for t in herramientas()]
         hubo_texto = False
         try:
             for ronda in range(MAX_RONDAS + 1):
-                kwargs = dict(model=self.modelo, max_tokens=16000, system=SYSTEM_PROMPT,
+                kwargs = dict(model=self.modelo, max_tokens=16000, system=system_prompt(),
                               messages=self.msgs, tools=tools)
                 if ronda == MAX_RONDAS:
                     kwargs["tool_choice"] = {"type": "none"}     # obliga a concluir
@@ -297,12 +357,12 @@ class Conversacion:
                     final = stream.get_final_message()
 
                 if final.stop_reason == "refusal":
-                    raise IAError("El modelo ha declinado responder a esta consulta.")
+                    raise IAError(tr("El modelo ha declinado responder a esta consulta."))
                 self.msgs.append({"role": "assistant", "content": final.content})
                 if final.stop_reason == "pause_turn":
                     continue
                 if final.stop_reason == "max_tokens":
-                    on_text("\n\n*(Respuesta cortada por longitud)*")
+                    on_text("\n\n*(" + tr("Respuesta cortada por longitud") + ")*")
                     if any(b.type == "tool_use" for b in final.content):
                         self.msgs.pop()             # llamada a herramienta incompleta: no se ejecuta
                     return True
@@ -319,17 +379,19 @@ class Conversacion:
                 self.msgs.append({"role": "user", "content": resultados})
             return True
         except anthropic.AuthenticationError:
-            raise IAError("API key de Anthropic no válida.")
+            raise IAError(tr("API key de {proveedor} no válida.", proveedor="Anthropic"))
         except anthropic.PermissionDeniedError:
-            raise IAError("La API key no tiene permiso para usar este modelo.")
+            raise IAError(tr("La API key de {proveedor} no tiene permiso para usar este modelo.", proveedor="Anthropic"))
         except anthropic.NotFoundError:
-            raise IAError(f"Modelo '{self.modelo}' no encontrado. Revisa el nombre del modelo.")
+            raise IAError(tr("Modelo '{modelo}' no encontrado en {proveedor}. Revisa el nombre del modelo.",
+                             modelo=self.modelo, proveedor="Anthropic"))
         except anthropic.RateLimitError:
-            raise IAError("Límite de uso alcanzado o sin saldo en la cuenta. Espera o revisa la facturación.")
+            raise IAError(tr("Límite de uso alcanzado o sin saldo en {proveedor}.", proveedor="Anthropic"))
         except anthropic.APIConnectionError:
-            raise IAError("Sin conexión con Anthropic. Comprueba la conexión a internet.")
+            raise IAError(tr("Sin conexión con {proveedor}. Comprueba la conexión a internet.", proveedor="Anthropic"))
         except anthropic.APIStatusError as e:
-            raise IAError(f"Error de la API de Anthropic ({e.status_code}): {e.message}")
+            raise IAError(tr("Error de la API de {proveedor} ({codigo}): {e}", proveedor="Anthropic",
+                             codigo=e.status_code, e=e.message))
 
     # ---------------- OpenAI / DeepSeek ----------------
     def _turno_openai(self, on_text, on_tool, cancelado):
@@ -338,14 +400,14 @@ class Conversacion:
         nombre = cfg["nombre"]
         client = openai.OpenAI(api_key=self.api_key, base_url=cfg.get("base_url"))
         tools = [{"type": "function", "function": {"name": t["name"], "description": t["description"],
-                                                   "parameters": t["input_schema"]}} for t in HERRAMIENTAS]
+                                                   "parameters": t["input_schema"]}} for t in herramientas()]
         hubo_texto = False
         try:
             for ronda in range(MAX_RONDAS + 1):
                 stream = client.chat.completions.create(
                     model=self.modelo, stream=True, tools=tools,
                     tool_choice="none" if ronda == MAX_RONDAS else "auto",
-                    messages=[{"role": "system", "content": SYSTEM_PROMPT}] + self.msgs)
+                    messages=[{"role": "system", "content": system_prompt()}] + self.msgs)
                 texto, llamadas = [], {}
                 try:
                     for chunk in stream:
@@ -386,7 +448,7 @@ class Conversacion:
                     try:
                         entrada = json.loads(c["args"] or "{}")
                     except ValueError:
-                        res, err = "Error: argumentos JSON no válidos.", True
+                        res, err = tr("Error: argumentos JSON no válidos."), True
                     else:
                         res, err = self._ejecutar(on_tool, c["name"], entrada, ronda)
                     if err:
@@ -394,27 +456,29 @@ class Conversacion:
                     self.msgs.append({"role": "tool", "tool_call_id": c["id"], "content": res})
             return True
         except openai.AuthenticationError:
-            raise IAError(f"API key de {nombre} no válida.")
+            raise IAError(tr("API key de {proveedor} no válida.", proveedor=nombre))
         except openai.PermissionDeniedError:
-            raise IAError(f"La API key de {nombre} no tiene permiso para usar este modelo.")
+            raise IAError(tr("La API key de {proveedor} no tiene permiso para usar este modelo.", proveedor=nombre))
         except openai.NotFoundError:
-            raise IAError(f"Modelo '{self.modelo}' no encontrado en {nombre}. Revisa el nombre del modelo.")
+            raise IAError(tr("Modelo '{modelo}' no encontrado en {proveedor}. Revisa el nombre del modelo.",
+                             modelo=self.modelo, proveedor=nombre))
         except openai.RateLimitError:
-            raise IAError(f"Límite de uso alcanzado o sin saldo en {nombre}.")
+            raise IAError(tr("Límite de uso alcanzado o sin saldo en {proveedor}.", proveedor=nombre))
         except openai.APIConnectionError:
-            raise IAError(f"Sin conexión con {nombre}. Comprueba la conexión a internet.")
+            raise IAError(tr("Sin conexión con {proveedor}. Comprueba la conexión a internet.", proveedor=nombre))
         except openai.APIStatusError as e:
-            raise IAError(f"Error de la API de {nombre} ({e.status_code}): {e.message}")
+            raise IAError(tr("Error de la API de {proveedor} ({codigo}): {e}", proveedor=nombre,
+                             codigo=e.status_code, e=e.message))
 
     @staticmethod
     def _ejecutar(on_tool, nombre, entrada, ronda):
         if not isinstance(entrada, dict):
-            return "Error: la entrada de la herramienta debe ser un objeto JSON.", True
+            return tr("Error: la entrada de la herramienta debe ser un objeto JSON."), True
         try:
             res, err = on_tool(nombre, entrada)
         except Exception as e:
-            res, err = f"Error al ejecutar {nombre}: {e}", True
+            res, err = tr("Error al ejecutar {nombre}: {e}", nombre=nombre, e=e), True
         if ronda == MAX_RONDAS - 1:
-            res += ("\n\n[Límite de comprobaciones alcanzado: da ya tu conclusión con los datos "
-                    "disponibles, sin usar más herramientas.]")
+            res += "\n\n[" + tr("Límite de comprobaciones alcanzado: da ya tu conclusión con los datos "
+                                 "disponibles, sin usar más herramientas.") + "]"
         return res, err

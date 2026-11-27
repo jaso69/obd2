@@ -1,8 +1,9 @@
-TOLEDO DIAGNOSIS PARA LINUX
-===========================
+OBD2DESK PARA LINUX
+===================
 
 Diagnóstico de coches: VAG KW1281 con cable KKL 409.1 (SEAT/VW/Audi/Skoda
-hasta ~2004) y OBD2 genérico con ELM327 (USB o Bluetooth), con asistente IA.
+hasta ~2004) y OBD2 genérico con ELM327 (USB, Bluetooth o WiFi), con asistente IA.
+Interfaz en español e inglés (selector junto al nombre del programa).
 
 Funciona en distribuciones de 64 bits (x86_64) con glibc 2.31 o posterior:
 Ubuntu 20.04+, Debian 11+, Linux Mint 20+, Fedora, openSUSE, Arch...
@@ -13,7 +14,11 @@ INSTALAR (sin sudo)
     ./instalar.sh
 
 Copia el programa a ~/.local/bin y lo añade al menú de aplicaciones como
-«Toledo Diagnosis». También se puede ejecutar directamente: ./ToledoDiagnosis
+«OBD2Desk». También se puede ejecutar directamente: ./OBD2Desk
+
+Si tenías instalada la versión anterior (Toledo Diagnosis), el instalador la
+quita del menú y la configuración (API key incluida) se copia sola al abrir
+OBD2Desk por primera vez.
 
 Desinstalar: ./instalar.sh --desinstalar
 
@@ -69,9 +74,10 @@ Car Scanner...) o apaga su Bluetooth antes de conectar desde el ordenador.
 
 DATOS
 -----
-- Configuración y API key de la IA: ~/.config/ToledoDiagnosis/config.json
+- Configuración y API key de la IA: ~/.config/OBD2Desk/config.json
   (solo legible por tu usuario).
-- Grabaciones CSV: carpeta Documentos/ToledoDiagnosis.
+- Grabaciones CSV e informes: carpeta Documentos/OBD2Desk.
 
+Web: https://obd2desk.com
 Código, ayuda y nuevas versiones: https://github.com/jaso69/obd2
 Licencia MIT (ver LICENSE).

@@ -7,6 +7,7 @@ centralitas y reconstruir los mensajes multi-trama de CAN (ISO-TP).
 import re
 import time
 
+from idioma import tr
 from obd_datos import PIDS, decode_dtc, decode_pid, monitores, pid_len
 
 HEX_LINE = re.compile(r"^[0-9A-F ]+$")
@@ -51,7 +52,7 @@ class ELM327:
                     break
         else:
             self._dbg(f"> {cmd}  [timeout] {buf!r}")
-            raise ELM327Error(f"El ELM327 no responde al comando {cmd}")
+            raise ELM327Error(tr("El ELM327 no responde al comando {cmd}", cmd=cmd))
         text = buf.decode("ascii", errors="ignore").replace(">", "").replace("\x00", "")
         lines = [l.strip() for l in re.split(r"[\r\n]+", text) if l.strip()]
         if lines and lines[0].replace(" ", "").upper() == cmd.replace(" ", "").upper():
@@ -76,8 +77,8 @@ class ELM327:
                 self.version = ver
                 break
         else:
-            raise ELM327Error("No se detecta ningún ELM327 en el puerto. Comprueba el puerto COM "
-                              "y que el adaptador esté conectado al coche (se alimenta del OBD).")
+            raise ELM327Error(tr("No se detecta ningún ELM327 en el puerto. Comprueba el puerto COM "
+                                 "y que el adaptador esté conectado al coche (se alimenta del OBD)."))
         for c in ("ATE0", "ATL0", "ATS1", "ATH1"):
             self._cmd(c)
         try:
@@ -103,10 +104,12 @@ class ELM327:
                     ("3", "ISO 9141-2"))
 
     def _probar_linea_k(self, r_auto):
-        self.logger(f"La búsqueda automática no encontró protocolo ({' '.join(r_auto) or 'sin respuesta'}). "
-                    "Probando los protocolos de línea K uno a uno...")
+        self.logger(tr("La búsqueda automática no encontró protocolo ({respuesta}). "
+                       "Probando los protocolos de línea K uno a uno...",
+                       respuesta=" ".join(r_auto) or tr("sin respuesta")))
         for num, nombre in self.PROTOCOLOS_K:
-            self.logger(f"Probando {nombre}...")
+            nombre = tr(nombre)
+            self.logger(tr("Probando {nombre}...", nombre=nombre))
             try:
                 self._cmd("ATPC", timeout=2)       # cierra el intento anterior
                 self._cmd(f"ATSP{num}")
@@ -116,19 +119,19 @@ class ELM327:
             except ELM327Error:
                 continue
             if any(HEX_LINE.match(l) for l in r):
-                self.logger(f"El coche responde por {nombre}.")
+                self.logger(tr("El coche responde por {nombre}.", nombre=nombre))
                 return r
         try:
             self._cmd("ATSP0")                     # deja el adaptador en automático
         except ELM327Error:
             pass
         raise ELM327Error(
-            f"El vehículo no responde a OBD2 ({' '.join(r_auto) or 'sin respuesta'}); probados también "
-            "KWP2000 e ISO 9141 a mano.\n"
-            "Pon el contacto. Si es un VAG anterior a 2004 (p. ej. el Toledo TDI del 2000) "
-            "usa el modo KKL · VAG KW1281. Algunos coches con conector OBD2 (p. ej. Mercedes "
-            "anteriores a 2001 en gasolina o 2004 en diésel) no cumplen OBD2 y solo responden "
-            "a herramientas de la marca. Con línea K, muchos clones baratos de ELM327 tampoco funcionan.")
+            tr("El vehículo no responde a OBD2 ({respuesta}); probados también KWP2000 e ISO 9141 a mano.",
+               respuesta=" ".join(r_auto) or tr("sin respuesta")) + "\n"
+            + tr("Pon el contacto. Si es un VAG anterior a 2004 (p. ej. un SEAT Toledo TDI del 2000) "
+                 "usa el modo KKL · VAG KW1281. Algunos coches con conector OBD2 (p. ej. Mercedes "
+                 "anteriores a 2001 en gasolina o 2004 en diésel) no cumplen OBD2 y solo responden "
+                 "a herramientas de la marca. Con línea K, muchos clones baratos de ELM327 tampoco funcionan."))
 
     # ------------------------------------------------------------------
     def _parse(self, lines):
@@ -193,7 +196,7 @@ class ELM327:
         lines = self._cmd(cmd, timeout)
         errs = [l for l in lines if any(e in l.upper() for e in ERRORES)]
         if errs and not any(HEX_LINE.match(l.upper()) for l in lines):
-            raise ELM327Error(f"Error de comunicación: {' '.join(errs)}")
+            raise ELM327Error(tr("Error de comunicación: {e}", e=" ".join(errs)))
         return self._parse(lines)
 
     # ------------------------------------------------------------------
@@ -283,7 +286,7 @@ class ELM327:
     def clear_dtcs(self):
         resp = self.query("04", timeout=5)
         if not any(m and m[0] == 0x44 for msgs in resp.values() for m in msgs):
-            raise ELM327Error("La centralita no confirmó el borrado (pon el contacto con el motor parado).")
+            raise ELM327Error(tr("La centralita no confirmó el borrado (pon el contacto con el motor parado)."))
 
     def mil(self):
         msg = next((m for m in self._engine(self.query("0101")) if len(m) >= 3 and m[0] == 0x41), None)

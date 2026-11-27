@@ -1,6 +1,8 @@
 """
 Datos OBD2/EOBD estandar (SAE J1979): PIDs del modo 01 y codigos de averia genericos.
 """
+import idioma
+from idioma import tr
 
 
 def _u16(d):
@@ -223,8 +225,8 @@ def describe_dtc(code):
     if code in DTCS:
         return DTCS[code]
     if len(code) == 5 and code[1] in "13":
-        return "Código específico del fabricante"
-    return "Código no incluido en la tabla"
+        return tr("Código específico del fabricante")
+    return tr("Código no incluido en la tabla")
 
 
 # ---------------------------------------------------------------------------
@@ -248,8 +250,14 @@ def monitores(b, c, d):
     out = []
     for i, nombre in enumerate(MONITORES_COMUNES):
         if b & (1 << i):
-            out.append((nombre, not b & (1 << (i + 4))))
+            out.append((tr(nombre), not b & (1 << (i + 4))))
     for i, nombre in enumerate(MONITORES_DIESEL if diesel else MONITORES_GASOLINA):
         if nombre and c & (1 << i):
-            out.append((nombre, not d & (1 << i)))
+            out.append((tr(nombre), not d & (1 << i)))
     return diesel, out
+
+
+# Traducción de las tablas al idioma de la interfaz (ver idioma.py)
+idioma.tabla(PIDS, lambda v: (tr(v[0]),) + v[1:])
+idioma.tabla(OBD_STANDARDS)
+idioma.tabla(DTCS)

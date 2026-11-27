@@ -1,6 +1,11 @@
-# Toledo Diagnosis - VAG KW1281 + OBD2 (ELM327)
+# OBD2Desk - VAG KW1281 + OBD2 (ELM327)
 
 **Web: https://obd2desk.com** (español e inglés) · descargas, guía de uso y qué cable comprar.
+
+Programa de escritorio para Windows y Linux, con la interfaz en **español e inglés**
+(selector junto al nombre del programa; por defecto, el idioma del sistema). Hasta
+la v0.3.0 se llamaba *Toledo Diagnosis*: al abrir OBD2Desk por primera vez se copia
+la configuración anterior (API keys incluidas).
 
 Dos modos de conexión, elegibles en la parte superior de la ventana:
 
@@ -31,10 +36,12 @@ el programa consulta en GitHub si hay una versión nueva y lo avisa junto al tí
 | Archivo | Qué es |
 |---|---|
 | `docs/PROYECTO.md` | **Documentación completa** (uso, hardware, IA, arquitectura, guion de la web) |
-| `Toledo Diagnosis.pyw` | **Doble clic** (Windows): abre la interfaz gráfica |
+| `OBD2Desk.pyw` | **Doble clic** (Windows): abre la interfaz gráfica |
 | `build.sh`, `linux/` | Ejecutable, paquete para distribuir e instalación en Linux |
 | `tests/prueba_simuladores.py` | Pruebas de protocolo contra los simuladores |
-| `tests/prueba_gui.py` | Prueba de la interfaz con los dos simuladores |
+| `tests/prueba_gui.py` | Prueba de la interfaz con los dos simuladores (`OBD2DESK_IDIOMA=en` para probarla en inglés) |
+| `tests/prueba_idioma.py` | Comprueba que todos los textos tienen traducción al inglés |
+| `idioma.py`, `textos_en.py` | Idioma de la interfaz: `tr()` y el diccionario español → inglés |
 | `web/` | Web del proyecto (https://obd2desk.com, en español e inglés); `web/publicar.sh` la sube |
 | `gui.py` | Interfaz gráfica (panel con relojes y gráficas, valores, averías, CSV) |
 | `toledo.py` | Versión de consola (menú de texto) |
@@ -67,27 +74,30 @@ preguntas de seguimiento.
 - Proveedores: **Anthropic (Claude)** por defecto (`claude-opus-5-5`), **OpenAI**
   (`gpt-5`) y **DeepSeek** (`deepseek-chat`). El modelo se puede cambiar.
 - Necesita una API key del proveedor (enlace «Conseguir una API key» en la pestaña).
-  Se guarda cifrada (DPAPI de Windows) en `%APPDATA%\ToledoDiagnosis\config.json`;
+  Se guarda cifrada (DPAPI de Windows) en `%APPDATA%\OBD2Desk\config.json`;
   solo vale para ese usuario y equipo, así que en el portátil hay que introducirla de nuevo.
 - Se envían al proveedor: datos del vehículo/centralita (incluido el VIN), averías,
   últimos valores medidos y, en «Analizar errores del programa», el registro.
 - Cada consulta tiene un coste pequeño en la cuenta del proveedor.
+- Responde en el idioma de la interfaz (prompt en español o en inglés).
 - Con Claude Opus 5.5 / Sonnet 5.5 se activa el reintento automático en otro modelo
   si el modelo declina responder (`fallbacks: "default"`).
 
 ## Instalación en Linux (paquete)
 
-Descarga `ToledoDiagnosis-<versión>-linux-x86_64.tar.gz` de
+Descarga `OBD2Desk-<versión>-linux-x86_64.tar.gz` de
 [Releases](https://github.com/jaso69/obd2/releases/latest) (Ubuntu 20.04+, Debian 11+,
 Mint 20+, Fedora, openSUSE, Arch... 64 bits):
 
 ```
-tar xzf ToledoDiagnosis-*-linux-x86_64.tar.gz
-cd ToledoDiagnosis && ./instalar.sh        # sin sudo; --desinstalar para quitarlo
+tar xzf OBD2Desk-*-linux-x86_64.tar.gz
+cd OBD2Desk && ./instalar.sh               # sin sudo; --desinstalar para quitarlo
 sudo usermod -aG dialout $USER             # permiso para el cable (Arch: uucp); cerrar sesión
 ```
 
-Las grabaciones CSV van a `Documentos/ToledoDiagnosis`. Más detalles en el `LEEME.txt` del paquete.
+Las grabaciones CSV y los informes van a `Documentos/OBD2Desk`. Si estaba instalada la versión
+anterior (Toledo Diagnosis), el instalador la quita del menú. Más detalles en el `LEEME.txt`
+(o `README.txt`, en inglés) del paquete.
 
 ## Instalación desde el código
 

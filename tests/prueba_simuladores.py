@@ -14,6 +14,7 @@ import sys
 import time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+os.environ["OBD2DESK_IDIOMA"] = "es"     # compara textos en español (el inglés: tests/prueba_idioma.py)
 
 from elm327 import ELM327, ELM327Error         # noqa: E402
 from kw1281 import KW1281, KW1281Error          # noqa: E402

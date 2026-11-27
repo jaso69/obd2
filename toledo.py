@@ -17,6 +17,7 @@ import os
 import sys
 import time
 
+from idioma import tr
 from kw1281 import KW1281, KW1281Error
 from vag_datos import GRUPOS_EDC15, MODULOS, decode_value, describe_dtc
 
@@ -83,11 +84,11 @@ def leer_grupo_formateado(ecu, g):
     campos = ecu.read_group(g)
     nombres = GRUPOS_EDC15.get(g, (None, []))[1]
     if g == 0:
-        return [(f"Byte {i + 1}", str(v), "", True) for i, v in enumerate(campos)]
+        return [(tr("Byte {n}", n=i + 1), str(v), "", True) for i, v in enumerate(campos)]
     filas = []
     for i, (f, a, b) in enumerate(campos):
         valor, unidad, ok = decode_value(f, a, b)
-        nombre = nombres[i] if i < len(nombres) else f"Campo {i + 1}"
+        nombre = nombres[i] if i < len(nombres) else tr("Campo {n}", n=i + 1)
         filas.append((nombre, valor, unidad, ok))
     return filas
 

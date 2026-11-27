@@ -19,8 +19,10 @@ from collections import deque
 from tkinter import messagebox, ttk
 
 import ia
+import idioma
 import informe
 from elm327 import ELM327, ELM327Error
+from idioma import tr
 from kw1281 import KW1281, KW1281Error
 from obd_datos import OBD_STANDARDS, PIDS, decode_pid
 from obd_datos import describe_dtc as describe_obd_dtc
@@ -49,13 +51,22 @@ WINDOWS = sys.platform == "win32"
 # Fuentes: en Linux se eligen al arrancar entre las instaladas (ver _elegir_fuentes)
 FONT = "Segoe UI" if WINDOWS else "DejaVu Sans"
 MONO = "Consolas" if WINDOWS else "DejaVu Sans Mono"
-SIM = "Simulador (sin coche)"
+NOMBRE = "OBD2Desk"
 WIFI = "WiFi · 192.168.0.10:35000"      # dirección habitual de los ELM327 WiFi
 VERSION = "0.3.0"
 URL_RELEASES = "https://github.com/jaso69/obd2/releases"
 
 KKL, ELM = "kkl", "elm"
-MODOS = {KKL: "KKL · VAG KW1281 (hasta 2004)", ELM: "ELM327 · OBD2 genérico"}
+
+
+def _textos_fijos():
+    """Textos que se usan como valores (puerto simulado, modos): dependen del idioma."""
+    global SIM, MODOS
+    SIM = tr("Simulador (sin coche)")
+    MODOS = {KKL: tr("KKL · VAG KW1281 (hasta 2004)"), ELM: tr("ELM327 · OBD2 genérico")}
+
+
+_textos_fijos()
 
 PANEL_GROUPS = [1, 3, 11]
 PANEL_PIDS = [0x0C, 0x0D, 0x05, 0x04, 0x0F, 0x10, 0x11, 0x42]
@@ -78,10 +89,10 @@ def _carpeta_documentos():
 
 
 # Carpeta donde se guardan los CSV: junto al .exe si esta empaquetado en Windows;
-# en Linux el binario suele estar en ~/.local/bin, asi que van a Documentos/ToledoDiagnosis
+# en Linux el binario suele estar en ~/.local/bin, asi que van a Documentos/OBD2Desk
 if getattr(sys, "frozen", False):
     CARPETA = (os.path.dirname(sys.executable) if WINDOWS
-               else os.path.join(_carpeta_documentos(), "ToledoDiagnosis"))
+               else os.path.join(_carpeta_documentos(), NOMBRE))
 else:
     CARPETA = os.path.dirname(os.path.abspath(__file__))
 
@@ -98,7 +109,7 @@ def _dpi_aware():
             import ctypes
             ctypes.windll.shcore.SetProcessDpiAwareness(1)
             # icono propio en la barra de tareas (en vez del de Python)
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("toledo.kw1281.diagnosis")
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("jasodev.obd2desk")
         except Exception:
             pass
 
@@ -291,7 +302,7 @@ class Chart(tk.Canvas):
             self.create_line(L, y, w - R, y, fill=TRACK)
             self.create_text(L - 6 * s, y, text=f"{v:g}", anchor="e", fill=MUTED, font=(FONT, 8))
             v += step
-        for i, lbl in ((0, f"-{self.window}s"), (0.5, f"-{self.window // 2}s"), (1, "ahora")):
+        for i, lbl in ((0, f"-{self.window}s"), (0.5, f"-{self.window // 2}s"), (1, tr("ahora"))):
             self.create_text(L + pw * i, h - B + 12 * s, text=lbl, fill=MUTED, font=(FONT, 8))
 
         now = time.monotonic()
@@ -306,19 +317,19 @@ class Chart(tk.Canvas):
 def texto_ff(ff):
     """Datos congelados en texto (para el asistente IA)."""
     if not ff:
-        return "Datos congelados: no hay ninguno guardado."
-    vals = "\n".join(f"- {n}: {v} {u}".rstrip() for _, n, v, u in ff["values"]) or "- (sin valores)"
-    return f"Datos congelados (avería {ff['dtc']}: {describe_obd_dtc(ff['dtc'])}):\n{vals}"
+        return tr("Datos congelados: no hay ninguno guardado.")
+    vals = "\n".join(f"- {n}: {v} {u}".rstrip() for _, n, v, u in ff["values"]) or tr("- (sin valores)")
+    return tr("Datos congelados (avería {dtc}: {desc}):", dtc=ff["dtc"], desc=describe_obd_dtc(ff["dtc"])) + f"\n{vals}"
 
 
 def texto_readiness(r):
     if not r:
-        return "Monitores de preparación: no disponibles."
+        return tr("Monitores de preparación: no disponibles.")
     diesel, mons = r
     sin = [n for n, ok in mons if not ok]
-    return (f"Monitores de preparación (motor {'diésel' if diesel else 'gasolina'}): "
-            f"{len(mons) - len(sin)} de {len(mons)} completos"
-            + (f"; sin completar: {', '.join(sin)}." if sin else "."))
+    return (tr("Monitores de preparación (motor {tipo}): {ok} de {total} completos",
+               tipo=tr("diésel") if diesel else tr("gasolina"), ok=len(mons) - len(sin), total=len(mons))
+            + (tr("; sin completar: {lista}.", lista=", ".join(sin)) if sin else "."))
 
 
 def wifi_destino(puerto):
@@ -348,7 +359,7 @@ def comprobar_version(avisar):
             import urllib.request
             req = urllib.request.Request("https://api.github.com/repos/jaso69/obd2/releases/latest",
                                          headers={"Accept": "application/vnd.github+json",
-                                                  "User-Agent": "ToledoDiagnosis"})
+                                                  "User-Agent": NOMBRE})
             with urllib.request.urlopen(req, timeout=5) as r:
                 datos = json.load(r)
             tag = datos.get("tag_name", "")
@@ -401,7 +412,7 @@ class Worker(threading.Thread):
                 try:
                     self.handle(*task)
                 except Exception as e:
-                    self.log(f"Error: {e}")
+                    self.log(tr("Error: {e}", e=e))
                     self.post("error", str(e))
                     if self.mode == ELM and self.online and self._is_port_error(e):
                         self._lost(str(e))
@@ -451,13 +462,14 @@ class Worker(threading.Thread):
         import serial
         destino = wifi_destino(port) if mode == ELM else None
         if destino:
-            self.log(f"Conectando por WiFi a {destino[0]}:{destino[1]}...")
+            self.log(tr("Conectando por WiFi a {host}:{puerto}...", host=destino[0], puerto=destino[1]))
             try:
                 return serial.serial_for_url(f"socket://{destino[0]}:{destino[1]}", timeout=0.05)
             except Exception as e:
-                raise ELM327Error(f"No se pudo conectar al ELM327 WiFi en {destino[0]}:{destino[1]} ({e}). "
-                                  "Conecta el ordenador a la red WiFi del adaptador (suele llamarse "
-                                  "«WiFi_OBDII» o «V-LINK») y comprueba la dirección.")
+                raise ELM327Error(tr("No se pudo conectar al ELM327 WiFi en {host}:{puerto} ({e}). "
+                                     "Conecta el ordenador a la red WiFi del adaptador (suele llamarse "
+                                     "«WiFi_OBDII» o «V-LINK») y comprueba la dirección.",
+                                     host=destino[0], puerto=destino[1], e=e))
         if mode == KKL:
             ser = serial.Serial(port, 9600, timeout=0.05)
             ser.dtr, ser.rts = True, False
@@ -465,7 +477,7 @@ class Worker(threading.Thread):
                 try:
                     ser.set_low_latency_mode(True)   # FTDI: latencia de 16 ms a 1 ms
                 except Exception as e:
-                    self.log(f"Aviso: no se pudo activar baja latencia en {port} ({e})")
+                    self.log(tr("Aviso: no se pudo activar baja latencia en {puerto} ({e})", puerto=port, e=e))
         else:
             ser = serial.Serial(port, 38400, timeout=0.05)
         return ser
@@ -475,7 +487,7 @@ class Worker(threading.Thread):
             mode, port, addr = args
             self._disconnect()
             self.mode = mode
-            self.log(f"Abriendo {port}...")
+            self.log(tr("Abriendo {puerto}...", puerto=port))
             self.ser = self._open(mode, port)
             try:
                 info = self._connect_kkl(addr) if mode == KKL else self._connect_elm()
@@ -487,7 +499,7 @@ class Worker(threading.Thread):
             self.post("connected", info)
         elif kind == "disconnect":
             self._disconnect()
-            self.log("Desconectado.")
+            self.log(tr("Desconectado."))
             self.post("disconnected")
         elif kind == "dtcs":
             self.post("dtcs", self.ecu.read_dtcs() if self.mode == KKL else self._elm_dtcs())
@@ -501,8 +513,8 @@ class Worker(threading.Thread):
             try:
                 self._scan(args[0])
             except Exception as e:              # p. ej. se desenchufa el cable a mitad
-                self.log(f"Error: {e}")
-                self._lost(f"error durante el escaneo: {e}")
+                self.log(tr("Error: {e}", e=e))
+                self._lost(tr("error durante el escaneo: {e}", e=e))
         elif kind == "report":
             if self.mode == KKL:
                 d = self.ecu.read_dtcs()
@@ -525,7 +537,7 @@ class Worker(threading.Thread):
             try:
                 reply.put(self._tool(nombre, entrada))
             except Exception as e:
-                reply.put((f"Error de comunicación: {e}", True))
+                reply.put((tr("Error de comunicación: {e}", e=e), True))
                 if self.mode == ELM and self.online and self._is_port_error(e):
                     self._lost(str(e))
 
@@ -533,12 +545,12 @@ class Worker(threading.Thread):
     @staticmethod
     def _fmt_obd_dtcs(d):
         def lista(codes):
-            return "\n".join(f"- {c}: {describe_obd_dtc(c)}" for c in codes) or "- ninguna"
-        return (f"Memorizadas:\n{lista(d['stored'])}\nPendientes:\n{lista(d['pending'])}\n"
-                f"Permanentes (no se borran hasta que el monitor correspondiente pasa):\n"
-                f"{lista(d.get('permanent') or [])}\n"
-                f"Testigo MIL: {'encendido' if d['mil'] else 'apagado'}\n"
-                f"{texto_ff(d.get('ff'))}\n{texto_readiness(d.get('readiness'))}")
+            return "\n".join(f"- {c}: {describe_obd_dtc(c)}" for c in codes) or tr("- ninguna")
+        return (tr("Memorizadas:") + f"\n{lista(d['stored'])}\n" + tr("Pendientes:") + f"\n{lista(d['pending'])}\n"
+                + tr("Permanentes (no se borran hasta que el monitor correspondiente pasa):") + "\n"
+                + f"{lista(d.get('permanent') or [])}\n"
+                + tr("Testigo MIL: {estado}", estado=tr("encendido") if d["mil"] else tr("apagado")) + "\n"
+                + f"{texto_ff(d.get('ff'))}\n{texto_readiness(d.get('readiness'))}")
 
     def _elm_dtcs(self):
         """Averías OBD2 con datos congelados y monitores de preparación."""
@@ -547,7 +559,8 @@ class Worker(threading.Thread):
             try:
                 d[clave] = fn()
             except ELM327Error as e:
-                self.log(f"Aviso: no se pudo leer {'los datos congelados' if clave == 'ff' else 'los monitores'} ({e})")
+                self.log(tr("Aviso: no se pudieron leer los datos congelados ({e})", e=e) if clave == "ff"
+                         else tr("Aviso: no se pudieron leer los monitores ({e})", e=e))
                 d[clave] = None
         return d
 
@@ -564,7 +577,7 @@ class Worker(threading.Thread):
         res = []
         for i, a in enumerate(direcciones):
             if self.scan_stop.is_set():
-                self.log("Escaneo detenido por el usuario.")
+                self.log(tr("Escaneo detenido por el usuario."))
                 break
             self.post("scan_progress", (i, len(direcciones), a))
             time.sleep(0.3)
@@ -572,7 +585,7 @@ class Worker(threading.Thread):
             try:
                 ecu.connect(rapido=True)
             except KW1281Error as e:
-                self.log(f"Módulo {a:02X}: {e}")
+                self.log(tr("Módulo {dir}: {e}", dir=f"{a:02X}", e=e))
                 res.append({"addr": a, "ok": False, "error": str(e)})
                 continue
             ident = [texto_id(d) for d in ecu.ident]
@@ -584,28 +597,28 @@ class Worker(threading.Thread):
                 ecu.disconnect()
             except Exception:
                 pass
-            self.log(f"Módulo {a:02X} ({MODULOS.get(a, '?')}): " +
-                     (f"{len(dtcs)} avería(s)" if dtcs is not None else f"error al leer averías: {err}"))
+            self.log(tr("Módulo {dir} ({nombre}): ", dir=f"{a:02X}", nombre=MODULOS.get(a, "?")) +
+                     (tr("{n} avería(s)", n=len(dtcs)) if dtcs is not None else tr("error al leer averías: {e}", e=err)))
             res.append({"addr": a, "ok": True, "ident": ident, "dtcs": dtcs, "error": err})
         self.post("scan_done", res)
-        self.log(f"Volviendo al módulo {orig:02X}...")
+        self.log(tr("Volviendo al módulo {dir}...", dir=f"{orig:02X}"))
         try:
             info = self._connect_kkl(orig)
         except Exception as e:
-            self._lost(f"no se pudo volver al módulo {orig:02X}: {e}")
+            self._lost(tr("no se pudo volver al módulo {dir}: {e}", dir=f"{orig:02X}", e=e))
             return
         self.online = True
         self.post("connected", info)
 
     def _tool(self, nombre, e):
         if not self.online:
-            return ("No hay conexión con el vehículo. Pide al usuario que conecte "
-                    "(selector Conexión, Puerto y botón Conectar).", True)
+            return (tr("No hay conexión con el vehículo. Pide al usuario que conecte "
+                       "(selector Conexión, Puerto y botón Conectar)."), True)
         if nombre == "leer_averias":
             if self.mode == KKL:
                 d = self.ecu.read_dtcs()
                 self.post("dtcs", d)
-                return ("\n".join("- " + vag_describe_dtc(*x) for x in d) or "Sin averías memorizadas.", False)
+                return ("\n".join("- " + vag_describe_dtc(*x) for x in d) or tr("Sin averías memorizadas."), False)
             d = self._elm_dtcs()
             self.post("dtcs", d)
             return self._fmt_obd_dtcs(d), False
@@ -613,22 +626,22 @@ class Worker(threading.Thread):
             if self.mode == KKL:
                 rest = self.ecu.clear_dtcs()
                 self.post("cleared", rest)
-                return ("Averías borradas. " + ("Siguen presentes (avería activa):\n" +
-                        "\n".join("- " + vag_describe_dtc(*x) for x in rest) if rest else "No queda ninguna."), False)
+                return (tr("Averías borradas. ") + (tr("Siguen presentes (avería activa):") + "\n" +
+                        "\n".join("- " + vag_describe_dtc(*x) for x in rest) if rest else tr("No queda ninguna.")), False)
             self.elm.clear_dtcs()
             d = self._elm_dtcs()
             self.post("cleared", d)
-            return "Averías borradas. Estado después de borrar:\n" + self._fmt_obd_dtcs(d), False
+            return tr("Averías borradas. Estado después de borrar:") + "\n" + self._fmt_obd_dtcs(d), False
         if nombre == "leer_valores":
             return self._tool_valores(e)
-        return f"Herramienta desconocida: {nombre}", True
+        return tr("Herramienta desconocida: {nombre}", nombre=nombre), True
 
     def _tool_valores(self, e):
         els = e.get("elementos")
         if isinstance(els, (str, int)):
             els = [els]
         if not isinstance(els, list) or not els:
-            return "Indica al menos un grupo o PID en 'elementos'.", True
+            return tr("Indica al menos un grupo o PID en 'elementos'."), True
         try:
             muestras = max(1, min(40, int(e.get("muestras") or 1)))
         except (TypeError, ValueError):
@@ -654,13 +667,13 @@ class Worker(threading.Thread):
             if ok and v not in items:
                 items.append(v)
             elif not ok:
-                notas.append(f"'{x}' no es válido o no está soportado por el vehículo; se ignora.")
+                notas.append(tr("'{x}' no es válido o no está soportado por el vehículo; se ignora.", x=x))
         limite = 4 if self.mode == KKL else 10
         if len(items) > limite:
-            notas.append(f"Solo se leen los {limite} primeros.")
+            notas.append(tr("Solo se leen los {n} primeros.", n=limite))
             items = items[:limite]
         if not items:
-            return "Ningún grupo o PID válido.\n" + "\n".join(notas), True
+            return tr("Ningún grupo o PID válido.") + "\n" + "\n".join(notas), True
 
         serie = []
         t0 = time.monotonic()
@@ -671,7 +684,7 @@ class Worker(threading.Thread):
             data = self._muestra(items)
             serie.append((time.monotonic() - t0, data))
             if self.mode == KKL and not self.ecu.connected:
-                notas.append("Se perdió la conexión durante la lectura.")
+                notas.append(tr("Se perdió la conexión durante la lectura."))
                 break
         self.post("tool_live", serie[-1][1])
         return self._fmt_serie(serie, notas), False
@@ -693,7 +706,7 @@ class Worker(threading.Thread):
                 if p in raw:
                     data[p] = [decode_pid(p, raw[p])]
                 else:
-                    data[p] = "Sin respuesta"
+                    data[p] = tr("Sin respuesta")
         return data
 
     def _etiqueta(self, k):
@@ -712,7 +725,7 @@ class Worker(threading.Thread):
                     c = (k, i)
                     if c not in [x[0] for x in cols]:
                         cols.append((c, f"{self._etiqueta(k)} {nombre}" + (f" ({unidad})" if unidad else "")
-                                     + ("" if ok else " [fórmula desconocida]")))
+                                     + ("" if ok else tr(" [fórmula desconocida]"))))
         out = []
         if len(serie) == 1:
             data = serie[0][1]
@@ -731,34 +744,35 @@ class Worker(threading.Thread):
         for k, err in errores.items():
             out.append(f"{self._etiqueta(k)}: {err}")
         if self.mode == KKL and cols:
-            notas.append("Los nombres de los campos VAG son orientativos; la unidad la da la propia centralita.")
+            notas.append(tr("Los nombres de los campos VAG son orientativos; la unidad la da la propia centralita."))
         return "\n".join(out + notas)
 
     def _connect_kkl(self, addr):
         self.ecu = KW1281(self.ser, address=addr, debug=self.debug, logger=self.log)
-        self.log(f"Init a 5 baudios al módulo {addr:02X}...")
+        self.log(tr("Init a 5 baudios al módulo {dir}...", dir=f"{addr:02X}"))
         self.ecu.connect()
         e = self.ecu
         ident = [texto_id(d) for d in e.ident] + ["", "", ""]
-        self.log(f"Conectado a {e.baud} baudios, keywords {e.keywords[0]:02X} {e.keywords[1]:02X}")
+        self.log(tr("Conectado a {baud} baudios, keywords {kw}", baud=e.baud, kw=f"{e.keywords[0]:02X} {e.keywords[1]:02X}"))
         kw = f"{e.keywords[0]:02X} {e.keywords[1]:02X}" + ("  (KW1281)" if e.keywords == (0x01, 0x8A) else "")
         return {
             "mode": KKL,
-            "status": f"Conectado · {MODULOS.get(addr, f'Módulo {addr:02X}')} · {e.baud} bd",
+            "status": tr("Conectado · {modulo} · {baud} bd",
+                         modulo=MODULOS.get(addr, tr("Módulo {dir}", dir=f"{addr:02X}")), baud=e.baud),
             "title": ident[0].strip(),
-            "fields": [("Módulo", f"{addr:02X} · {MODULOS.get(addr, '?')}"),
-                       ("Referencia", ident[0].strip() or "—"),
-                       ("Componente", ident[1].strip() or "—"),
-                       ("Software / taller", ident[2].strip() or "—"),
-                       ("Datos adicionales", "  ".join(x for x in ident[3:] if x) or "—"),
-                       ("Velocidad", f"{e.baud} baudios"),
+            "fields": [(tr("Módulo"), f"{addr:02X} · {MODULOS.get(addr, '?')}"),
+                       (tr("Referencia"), ident[0].strip() or "—"),
+                       (tr("Componente"), ident[1].strip() or "—"),
+                       (tr("Software / taller"), ident[2].strip() or "—"),
+                       (tr("Datos adicionales"), "  ".join(x for x in ident[3:] if x) or "—"),
+                       (tr("Velocidad"), tr("{baud} baudios", baud=e.baud)),
                        ("Keywords", kw),
-                       ("Eco del cable", "Sí" if e.echo else "No")],
+                       (tr("Eco del cable"), tr("Sí") if e.echo else "No")],
         }
 
     def _connect_elm(self):
         self.elm = ELM327(self.ser, debug=self.debug, logger=self.log)
-        self.log("Buscando ELM327 y protocolo OBD2 (puede tardar hasta 25 s, o más si hay que probar la línea K)...")
+        self.log(tr("Buscando ELM327 y protocolo OBD2 (puede tardar hasta 25 s, o más si hay que probar la línea K)..."))
         self.elm.connect()
         e = self.elm
         vin, volt = e.vin(), e.voltage()
@@ -769,27 +783,28 @@ class Worker(threading.Thread):
             ready = e.readiness()
         except ELM327Error:
             ready = None
-        self.log(f"Conectado: {e.version} · {e.proto_name}")
+        self.log(tr("Conectado: {version} · {protocolo}", version=e.version, protocolo=e.proto_name))
         medibles = sorted(p for p in e.supported if p in PIDS)
-        campos = [("Adaptador", e.version),
-                  ("Protocolo", e.proto_name),
-                  ("Bastidor (VIN)", vin or "No disponible")]
+        campos = [(tr("Adaptador"), e.version),
+                  (tr("Protocolo"), e.proto_name),
+                  (tr("Bastidor (VIN)"), vin or tr("No disponible"))]
         if vin:
             campos += [(f"  {k}", v) for k, v in decodificar_vin(vin)]
-        campos += [("Tensión batería", volt or "—"),
-                   ("Estándar OBD", OBD_STANDARDS.get(std, "—") if std else "—"),
-                   ("Testigo de avería (MIL)", "—" if mil is None else
-                    (f"ENCENDIDO · {ndtc} avería(s)" if mil else f"Apagado · {ndtc} avería(s)"))]
+        campos += [(tr("Tensión batería"), volt or "—"),
+                   (tr("Estándar OBD"), OBD_STANDARDS.get(std, "—") if std else "—"),
+                   (tr("Testigo de avería (MIL)"), "—" if mil is None else
+                    (tr("ENCENDIDO · {n} avería(s)", n=ndtc) if mil else tr("Apagado · {n} avería(s)", n=ndtc)))]
         if ident["nombre"]:
-            campos.append(("Centralita", ident["nombre"]))
+            campos.append((tr("Centralita"), ident["nombre"]))
         if ident["calid"]:
-            campos.append(("Calibración (CALID)", "  ".join(ident["calid"])))
+            campos.append((tr("Calibración (CALID)"), "  ".join(ident["calid"])))
         if ident["cvn"]:
-            campos.append(("Verificación (CVN)", "  ".join(ident["cvn"])))
-        campos.append(("PIDs soportados", f"{len(e.supported)} ({len(medibles)} con valor legible)"))
+            campos.append((tr("Verificación (CVN)"), "  ".join(ident["cvn"])))
+        campos.append((tr("PIDs soportados"), tr("{n} ({legibles} con valor legible)",
+                                                n=len(e.supported), legibles=len(medibles))))
         return {
             "mode": ELM,
-            "status": f"Conectado · OBD2 · {e.proto_name.replace('AUTO, ', '')}",
+            "status": tr("Conectado · OBD2 · {protocolo}", protocolo=e.proto_name.replace("AUTO, ", "")),
             "title": vin or e.proto_name,
             "supported": medibles,
             "readiness": ready,
@@ -824,6 +839,11 @@ class Worker(threading.Thread):
 class App:
     def __init__(self, root):
         self.root = root
+        self.cfg = ia.cargar_config()
+        if self.cfg.get("idioma") in idioma.IDIOMAS and not os.environ.get("OBD2DESK_IDIOMA"):
+            idioma.poner(self.cfg["idioma"])
+        _textos_fijos()
+        self.reiniciar = None        # función para reconstruir la ventana (cambio de idioma)
         self.s = root.winfo_fpixels("1i") / 96
         self.q = queue.Queue()
         self.worker = Worker(self.q)
@@ -839,7 +859,6 @@ class App:
         self.csv_n = 0
         self.tree_items = {}
         # Asistente IA
-        self.cfg = ia.cargar_config()
         self.ai_chat = None          # ia.Conversacion
         self.ai_dialog = None        # (ventana, reply) de pedir_accion_usuario
         self.ai_busy = False
@@ -854,7 +873,7 @@ class App:
         self.scan_result = None      # último escaneo de módulos VAG
         self.scanning = False
 
-        root.title(f"Toledo Diagnosis {VERSION} · VAG KW1281 / OBD2")
+        root.title(f"{NOMBRE} {VERSION} · VAG KW1281 / OBD2")
         root.configure(bg=BG)
         _poner_icono(root, defecto=True)
         self._style()
@@ -864,8 +883,8 @@ class App:
         # se mide con los textos de estado más largos que pueden salir al conectar
         ancho = 0
         largo = max(MODULOS.values(), key=len)
-        for texto in (f"Conectado · {largo} · 10400 bd",
-                      "Conectado · OBD2 · ISO 15765-4 (CAN 29/500)"):
+        for texto in (tr("Conectado · {modulo} · {baud} bd", modulo=largo, baud=10400),
+                      tr("Conectado · OBD2 · {protocolo}", protocolo="ISO 15765-4 (CAN 29/500)")):
             self.status_lbl.configure(text=texto)
             root.update_idletasks()
             ancho = max(ancho, root.winfo_reqwidth())
@@ -875,7 +894,7 @@ class App:
         root.protocol("WM_DELETE_WINDOW", self.on_close)
         root.after(50, self.poll)
         root.after(100, lambda: _barra_oscura(root))
-        if not os.environ.get("TOLEDO_SIN_COMPROBAR_VERSION"):
+        if not os.environ.get("OBD2DESK_SIN_COMPROBAR_VERSION"):
             comprobar_version(lambda tag, url: self.q.put(("update", (tag, url))))
 
     # ---------------- estilo ----------------
@@ -944,41 +963,46 @@ class App:
         left = ttk.Frame(head, style="Panel.TFrame")
         tit = ttk.Frame(left, style="Panel.TFrame")
         tit.pack(anchor="w")
-        ttk.Label(tit, text="Toledo Diagnosis", style="Title.TLabel").pack(side="left")
+        ttk.Label(tit, text=NOMBRE, style="Title.TLabel").pack(side="left")
+        self.lang_var = tk.StringVar(value=idioma.IDIOMAS[idioma.actual()])
+        self.lang_cb = ttk.Combobox(tit, textvariable=self.lang_var, values=list(idioma.IDIOMAS.values()),
+                                    state="readonly", width=8, font=(FONT, 9))
+        self.lang_cb.pack(side="left", padx=(12, 0))
+        self.lang_cb.bind("<<ComboboxSelected>>", lambda e: self._cambiar_idioma())
         self.upd_lbl = ttk.Label(tit, text="", style="PanelMuted.TLabel", foreground=ACCENT, cursor="hand2")
         self.upd_lbl.pack(side="left", padx=(10, 0))
         st_row = ttk.Frame(left, style="Panel.TFrame")
         st_row.pack(anchor="w")
         self.status_dot = tk.Canvas(st_row, width=int(12 * s), height=int(12 * s), bg=PANEL, highlightthickness=0)
         self.status_dot.pack(side="left", padx=(0, 6))
-        self.status_lbl = ttk.Label(st_row, text="Desconectado", style="PanelMuted.TLabel")
+        self.status_lbl = ttk.Label(st_row, text=tr("Desconectado"), style="PanelMuted.TLabel")
         self.status_lbl.pack(side="left")
 
         right = ttk.Frame(head, style="Panel.TFrame")
         right.pack(side="right")                    # antes que left: si falta sitio se recorta el estado
         left.pack(side="left", padx=(0, 24))
-        ttk.Label(right, text="Conexión", style="PanelMuted.TLabel").grid(row=0, column=0, padx=(0, 6))
+        ttk.Label(right, text=tr("Conexión"), style="PanelMuted.TLabel").grid(row=0, column=0, padx=(0, 6))
         self.mode_var = tk.StringVar(value=MODOS[KKL])
         self.mode_cb = ttk.Combobox(right, textvariable=self.mode_var, values=list(MODOS.values()),
                                     state="readonly", width=27)
         self.mode_cb.grid(row=0, column=1, padx=(0, 14))
         self.mode_cb.bind("<<ComboboxSelected>>", lambda e: self._apply_mode())
 
-        ttk.Label(right, text="Puerto", style="PanelMuted.TLabel").grid(row=0, column=2, padx=(0, 6))
+        ttk.Label(right, text=tr("Puerto"), style="PanelMuted.TLabel").grid(row=0, column=2, padx=(0, 6))
         self.port_var = tk.StringVar()
         self.port_cb = ttk.Combobox(right, textvariable=self.port_var, state="readonly", width=26)
         self.port_cb.grid(row=0, column=3)
         self.refresh_btn = ttk.Button(right, text="↻", width=3, command=self.refresh_ports)
         self.refresh_btn.grid(row=0, column=4, padx=(4, 14))
 
-        self.mod_lbl = ttk.Label(right, text="Módulo", style="PanelMuted.TLabel")
+        self.mod_lbl = ttk.Label(right, text=tr("Módulo"), style="PanelMuted.TLabel")
         self.mod_lbl.grid(row=0, column=5, padx=(0, 6))
         self.mod_var = tk.StringVar()
         mods = [f"{a:02X} · {n}" for a, n in MODULOS.items()]
         self.mod_cb = ttk.Combobox(right, textvariable=self.mod_var, values=mods, state="readonly", width=22)
         self.mod_cb.current(0)
         self.mod_cb.grid(row=0, column=6, padx=(0, 14))
-        self.conn_btn = ttk.Button(right, text="Conectar", style="Accent.TButton", width=14,
+        self.conn_btn = ttk.Button(right, text=tr("Conectar"), style="Accent.TButton", width=14,
                                    command=self.toggle_connect)
         self.conn_btn.grid(row=0, column=7)
 
@@ -990,10 +1014,10 @@ class App:
         self.tab_ecu = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_log = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_ia = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
-        for t, n in ((self.tab_panel, "  Panel  "), (self.tab_vals, "  Valores medidos  "),
-                     (self.tab_dtc, "  Averías  "), (self.tab_ecu, "  Vehículo  "),
-                     (self.tab_ia, "  ✦ Asistente IA  "), (self.tab_log, "  Registro  ")):
-            self.nb.add(t, text=n)
+        for t, n in ((self.tab_panel, tr("Panel")), (self.tab_vals, tr("Valores medidos")),
+                     (self.tab_dtc, tr("Averías")), (self.tab_ecu, tr("Vehículo")),
+                     (self.tab_ia, tr("✦ Asistente IA")), (self.tab_log, tr("Registro"))):
+            self.nb.add(t, text=f"  {n}  ")
         self._build_panel()
         self._build_vals()
         self._build_dtc()
@@ -1001,7 +1025,7 @@ class App:
         self._build_ia()
         self._build_log()
 
-        self.bar = ttk.Label(self.root, text="Listo. Elige conexión y puerto, y pulsa Conectar.",
+        self.bar = ttk.Label(self.root, text=tr("Listo. Elige conexión y puerto, y pulsa Conectar."),
                              style="PanelMuted.TLabel", padding=(18, 6))
         self.bar.pack(fill="x", side="bottom")
 
@@ -1051,37 +1075,37 @@ class App:
         top.pack(fill="x", pady=(0, 12))
         self.panel_lbl = ttk.Label(top, text="", style="PanelMuted.TLabel")
         self.panel_lbl.pack(side="left")
-        self.panel_btn = ttk.Button(top, text="▶  Iniciar lectura", style="Accent.TButton",
+        self.panel_btn = ttk.Button(top, text=tr("▶  Iniciar lectura"), style="Accent.TButton",
                                     command=lambda: self.toggle_live("panel"))
         self.panel_btn.pack(side="right")
 
         # Panel VAG (KW1281)
         self.panel_vag = ttk.Frame(p, style="Panel.TFrame")
         self.g_rpm, self.g_iq, self.g_boost, self.g_temp = self._gauges_row(self.panel_vag, [
-            ("Régimen", "rpm", 0, 5000, 1000, 4500),
-            ("Caudal inyectado", "mg/H", 0, 60, 10, None, 1),
-            ("Presión turbo", "mbar", 0, 2500, 500, 2300),
-            ("Refrigerante", "°C", 0, 120, 20, 105)])
+            (tr("Régimen"), "rpm", 0, 5000, 1000, 4500),
+            (tr("Caudal inyectado"), "mg/H", 0, 60, 10, None, 1),
+            (tr("Presión turbo"), "mbar", 0, 2500, 500, 2300),
+            (tr("Refrigerante"), "°C", 0, 120, 20, 105)])
         self.vag_stats = self._stats_row(self.panel_vag, [
-            ("n75", "Ciclo N75 (turbo)"), ("egr", "Ciclo válvula EGR"),
-            ("volt", "Tensión dosificador"), ("maf", "Masa de aire real")])
+            ("n75", tr("Ciclo N75 (turbo)")), ("egr", tr("Ciclo válvula EGR")),
+            ("volt", tr("Tensión dosificador")), ("maf", tr("Masa de aire real"))])
         self.ch_boost, self.ch_maf = self._charts_row(self.panel_vag, [
-            ("Presión de turbo · G011", "mbar", [("Teórica", BLUE), ("Real", ACCENT)], 2000),
-            ("Masa de aire · G003", "mg/H", [("Teórica", BLUE), ("Real", ACCENT)], 500)])
+            (tr("Presión de turbo · G011"), "mbar", [(tr("Teórica"), BLUE), (tr("Real"), ACCENT)], 2000),
+            (tr("Masa de aire · G003"), "mg/H", [(tr("Teórica"), BLUE), (tr("Real"), ACCENT)], 500)])
 
         # Panel OBD2 (ELM327)
         self.panel_obd = ttk.Frame(p, style="Panel.TFrame")
         self.o_rpm, self.o_speed, self.o_temp, self.o_load = self._gauges_row(self.panel_obd, [
-            ("Régimen", "rpm", 0, 8000, 1000, 6500),
-            ("Velocidad", "km/h", 0, 240, 40, None),
-            ("Refrigerante", "°C", 0, 120, 20, 105),
-            ("Carga del motor", "%", 0, 100, 20, None)])
+            (tr("Régimen"), "rpm", 0, 8000, 1000, 6500),
+            (tr("Velocidad"), "km/h", 0, 240, 40, None),
+            (tr("Refrigerante"), "°C", 0, 120, 20, 105),
+            (tr("Carga del motor"), "%", 0, 100, 20, None)])
         self.obd_stats = self._stats_row(self.panel_obd, [
-            ("iat", "Temp. aire admisión"), ("maf", "Caudal de aire (MAF)"),
-            ("tps", "Posición mariposa"), ("volt", "Tensión centralita")])
+            ("iat", tr("Temp. aire admisión")), ("maf", tr("Caudal de aire (MAF)")),
+            ("tps", tr("Posición mariposa")), ("volt", tr("Tensión centralita"))])
         self.ch_rpm, self.ch_load = self._charts_row(self.panel_obd, [
-            ("Régimen motor", "rpm", [("RPM", ACCENT)], 3000),
-            ("Carga y mariposa", "%", [("Carga", ACCENT), ("Mariposa", BLUE)], 100)])
+            (tr("Régimen motor"), "rpm", [("RPM", ACCENT)], 3000),
+            (tr("Carga y mariposa"), "%", [(tr("Carga"), ACCENT), (tr("Mariposa"), BLUE)], 100)])
 
     def _build_vals(self):
         p = self.tab_vals
@@ -1097,13 +1121,13 @@ class App:
             v = tk.BooleanVar(value=g in (1, 11))
             ttk.Checkbutton(self.side_vag, text=f"{g:03d}  {t}", variable=v).pack(anchor="w", pady=2)
             self.group_vars[g] = v
-        ttk.Label(self.side_vag, text="Otros grupos (ej. 5, 20)", style="Muted.TLabel").pack(anchor="w", pady=(12, 4))
+        ttk.Label(self.side_vag, text=tr("Otros grupos (ej. 5, 20)"), style="Muted.TLabel").pack(anchor="w", pady=(12, 4))
         self.extra_groups = ttk.Entry(self.side_vag, width=22)
         self.extra_groups.pack(anchor="w", fill="x")
 
         # Selección OBD2
         self.side_obd = ttk.Frame(side, style="Card.TFrame")
-        ttk.Label(self.side_obd, text="Ctrl+clic para elegir varios", style="Muted.TLabel").pack(anchor="w", pady=(0, 4))
+        ttk.Label(self.side_obd, text=tr("Ctrl+clic para elegir varios"), style="Muted.TLabel").pack(anchor="w", pady=(0, 4))
         lb_frame = ttk.Frame(self.side_obd, style="Card.TFrame")
         lb_frame.pack(fill="both", expand=True)
         self.pid_list = tk.Listbox(lb_frame, selectmode="extended", bg=CARD2, fg=FG, bd=0,
@@ -1114,15 +1138,15 @@ class App:
         self.pid_list.configure(yscrollcommand=sb.set)
         self.pid_list.pack(side="left", fill="both", expand=True)
         sb.pack(side="right", fill="y")
-        self.pid_list.insert("end", "  (conecta para ver los PIDs)")
+        self.pid_list.insert("end", "  " + tr("(conecta para ver los PIDs)"))
         self.pid_order = []
 
         self.side_btns = ttk.Frame(side, style="Card.TFrame")
         self.side_btns.pack(side="bottom", fill="x")
-        self.vals_btn = ttk.Button(self.side_btns, text="▶  Iniciar lectura", style="Accent.TButton",
+        self.vals_btn = ttk.Button(self.side_btns, text=tr("▶  Iniciar lectura"), style="Accent.TButton",
                                    command=lambda: self.toggle_live("vals"))
         self.vals_btn.pack(fill="x", pady=(18, 6))
-        self.rec_btn = ttk.Button(self.side_btns, text="●  Grabar CSV", command=self.toggle_rec)
+        self.rec_btn = ttk.Button(self.side_btns, text=tr("●  Grabar CSV"), command=self.toggle_rec)
         self.rec_btn.pack(fill="x")
         self.rec_lbl = ttk.Label(self.side_btns, text="", style="Muted.TLabel", wraplength=int(220 * self.s))
         self.rec_lbl.pack(anchor="w", pady=(8, 0))
@@ -1131,8 +1155,8 @@ class App:
         main.pack(side="left", fill="both", expand=True)
         cols = ("grupo", "campo", "valor", "unidad")
         self.tree = ttk.Treeview(main, columns=cols, show="headings")
-        for c, t, w, a in (("grupo", "GRUPO", 90, "center"), ("campo", "CAMPO", 320, "w"),
-                           ("valor", "VALOR", 140, "e"), ("unidad", "UNIDAD", 110, "w")):
+        for c, t, w, a in (("grupo", tr("GRUPO"), 90, "center"), ("campo", tr("CAMPO"), 320, "w"),
+                           ("valor", tr("VALOR"), 140, "e"), ("unidad", tr("UNIDAD"), 110, "w")):
             self.tree.heading(c, text=t, anchor=a)
             self.tree.column(c, width=int(w * self.s), anchor=a, stretch=(c == "campo"))
         self.tree.tag_configure("err", foreground=ERR)
@@ -1147,13 +1171,13 @@ class App:
         p = self.tab_dtc
         top = ttk.Frame(p, style="Panel.TFrame")
         top.pack(fill="x", pady=(0, 12))
-        self.dtc_read_btn = ttk.Button(top, text="Leer averías", style="Accent.TButton", command=self.read_dtcs)
+        self.dtc_read_btn = ttk.Button(top, text=tr("Leer averías"), style="Accent.TButton", command=self.read_dtcs)
         self.dtc_read_btn.pack(side="left")
-        self.dtc_clear_btn = ttk.Button(top, text="Borrar averías", style="Danger.TButton", command=self.clear_dtcs)
+        self.dtc_clear_btn = ttk.Button(top, text=tr("Borrar averías"), style="Danger.TButton", command=self.clear_dtcs)
         self.dtc_clear_btn.pack(side="left", padx=10)
-        self.scan_btn = ttk.Button(top, text="Escanear todos los módulos", command=self.scan_modules)
+        self.scan_btn = ttk.Button(top, text=tr("Escanear todos los módulos"), command=self.scan_modules)
         self.scan_btn.pack(side="left")
-        self.report_btn = ttk.Button(top, text="Generar informe", command=self.make_report)
+        self.report_btn = ttk.Button(top, text=tr("Generar informe"), command=self.make_report)
         self.report_btn.pack(side="right")
         self.dtc_lbl = ttk.Label(top, text="", style="Panel.TLabel", font=(FONT, 11, "bold"))
         self.dtc_lbl.pack(side="left", padx=10)
@@ -1164,8 +1188,8 @@ class App:
         card.pack(side="left", fill="both", expand=True)
         cols = ("codigo", "comp", "tipo", "estado")
         self.dtc_tree = ttk.Treeview(card, columns=cols, show="headings")
-        for c, t, w, st in (("codigo", "CÓDIGO", 100, False), ("comp", "COMPONENTE", 430, True),
-                            ("tipo", "TIPO DE FALLO", 300, True), ("estado", "ESTADO", 130, False)):
+        for c, t, w, st in (("codigo", tr("CÓDIGO"), 100, False), ("comp", tr("COMPONENTE"), 430, True),
+                            ("tipo", tr("TIPO DE FALLO"), 300, True), ("estado", tr("ESTADO"), 130, False)):
             self.dtc_tree.heading(c, text=t, anchor="w")
             self.dtc_tree.column(c, width=int(w * self.s), stretch=st)
         self.dtc_tree.tag_configure("inter", foreground=WARN)
@@ -1177,13 +1201,13 @@ class App:
         self.dtc_help.pack(anchor="w", pady=(10, 0))
         # Datos congelados (solo OBD2), a la derecha de la lista de averías
         self.ff_frame = self._card(body, padding=(14, 10, 14, 0))
-        self.ff_lbl = ttk.Label(self.ff_frame, text="Datos congelados", style="Card.TLabel",
+        self.ff_lbl = ttk.Label(self.ff_frame, text=tr("Datos congelados"), style="Card.TLabel",
                                 font=(FONT, 11, "bold"), wraplength=int(330 * self.s))
         self.ff_lbl.pack(anchor="w", pady=(0, 2))
-        ttk.Label(self.ff_frame, text="Valores del motor cuando se registró la avería", style="Muted.TLabel",
+        ttk.Label(self.ff_frame, text=tr("Valores del motor cuando se registró la avería"), style="Muted.TLabel",
                   ).pack(anchor="w", pady=(0, 8))
         self.ff_tree = ttk.Treeview(self.ff_frame, columns=("dato", "valor"), show="headings")
-        for c, t, w, st in (("dato", "DATO", 210, True), ("valor", "VALOR", 110, False)):
+        for c, t, w, st in (("dato", tr("DATO"), 210, True), ("valor", tr("VALOR"), 110, False)):
             self.ff_tree.heading(c, text=t, anchor="w")
             self.ff_tree.column(c, width=int(w * self.s), stretch=st)
         self.ff_tree.pack(fill="both", expand=True)
@@ -1203,40 +1227,41 @@ class App:
             c.pack_forget()
             return
         c.pack(side="left", fill="y", anchor="n", padx=(14, 0))
-        ttk.Label(c, text="Monitores de preparación (ITV)", style="Card.TLabel",
+        ttk.Label(c, text=tr("Monitores de preparación (ITV)"), style="Card.TLabel",
                   font=(FONT, 13, "bold")).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
         ancho = int(400 * self.s)
         if not r:
-            ttk.Label(c, text="Conecta para ver qué autodiagnósticos de emisiones están completos.",
+            ttk.Label(c, text=tr("Conecta para ver qué autodiagnósticos de emisiones están completos."),
                       style="Muted.TLabel", wraplength=ancho).grid(row=1, column=0, columnspan=2, sticky="w")
             return
         diesel, mons = r
         sin = sum(1 for _, ok in mons if not ok)
-        ttk.Label(c, text=(f"Motor {'diésel' if diesel else 'de gasolina'} · " +
-                           (f"{sin} de {len(mons)} sin completar" if sin else f"los {len(mons)} completos")),
+        ttk.Label(c, text=((tr("Motor diésel") if diesel else tr("Motor de gasolina")) + " · " +
+                           (tr("{n} de {total} sin completar", n=sin, total=len(mons)) if sin
+                            else tr("los {total} completos", total=len(mons)))),
                   style="Card.TLabel", foreground=WARN if sin else OK).grid(row=1, column=0, columnspan=2,
                                                                           sticky="w", pady=(0, 8))
         for i, (nombre, ok) in enumerate(mons):
             ttk.Label(c, text="✓" if ok else "✗", style="Card.TLabel", foreground=OK if ok else WARN,
                       font=(FONT, 11, "bold")).grid(row=2 + i, column=0, sticky="w", padx=(0, 10), pady=3)
-            ttk.Label(c, text=nombre + ("" if ok else "  (sin completar)"), style="Card.TLabel",
+            ttk.Label(c, text=nombre + ("" if ok else "  " + tr("(sin completar)")), style="Card.TLabel",
                       foreground=FG if ok else WARN).grid(row=2 + i, column=1, sticky="w")
-        ttk.Label(c, text="Tras borrar averías o desconectar la batería vuelven a «sin completar»: hacen falta "
-                          "varios ciclos de conducción. En la ITV pueden rechazar el coche si falta alguno.",
+        ttk.Label(c, text=tr("Tras borrar averías o desconectar la batería vuelven a «sin completar»: hacen falta "
+                             "varios ciclos de conducción. En la ITV pueden rechazar el coche si falta alguno."),
                   style="Muted.TLabel", wraplength=ancho).grid(row=99, column=0, columnspan=2,
                                                               sticky="w", pady=(12, 0))
 
     def _fill_ecu(self, fields):
         for w in self.ecu_card.winfo_children():
             w.destroy()
-        title = "Identificación de la centralita" if self.mode == KKL else "Datos del vehículo (OBD2)"
+        title = tr("Identificación de la centralita") if self.mode == KKL else tr("Datos del vehículo (OBD2)")
         ttk.Label(self.ecu_card, text=title, style="Card.TLabel",
                   font=(FONT, 13, "bold")).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 14))
         if not fields:
-            ttk.Label(self.ecu_card, text="Conecta para ver los datos.", style="Muted.TLabel").grid(row=1, column=0, sticky="w")
+            ttk.Label(self.ecu_card, text=tr("Conecta para ver los datos."), style="Muted.TLabel").grid(row=1, column=0, sticky="w")
             return
         for i, (k, v) in enumerate(fields, 1):
-            ttk.Label(self.ecu_card, text=k, style="Muted.TLabel", width=24).grid(row=i, column=0, sticky="w", pady=5)
+            ttk.Label(self.ecu_card, text=k, style="Muted.TLabel").grid(row=i, column=0, sticky="w", pady=5, padx=(0, 20))
             ttk.Label(self.ecu_card, text=v, style="Card.TLabel", font=(MONO, 11)).grid(row=i, column=1, sticky="w")
 
     def _build_log(self):
@@ -1244,12 +1269,12 @@ class App:
         top = ttk.Frame(p, style="Panel.TFrame")
         top.pack(fill="x", pady=(0, 10))
         self.debug_var = tk.BooleanVar(value=False)
-        cb = tk.Checkbutton(top, text="Mostrar comunicación detallada (depuración)", variable=self.debug_var,
+        cb = tk.Checkbutton(top, text=tr("Mostrar comunicación detallada (depuración)"), variable=self.debug_var,
                             command=lambda: self.worker.submit("debug", self.debug_var.get()),
                             bg=PANEL, fg=FG, selectcolor=CARD2, activebackground=PANEL,
                             activeforeground=FG, font=(FONT, 10), bd=0, highlightthickness=0)
         cb.pack(side="left")
-        ttk.Button(top, text="Limpiar", command=lambda: self.log_txt.delete("1.0", "end")).pack(side="right")
+        ttk.Button(top, text=tr("Limpiar"), command=lambda: self.log_txt.delete("1.0", "end")).pack(side="right")
         card = self._card(p, padding=0)
         card.pack(fill="both", expand=True)
         self.log_txt = tk.Text(card, bg=CARD, fg=FG, insertbackground=FG, font=(MONO, 10),
@@ -1266,52 +1291,53 @@ class App:
         p, s = self.tab_ia, self.s
         side = self._card(p, padding=16)
         side.pack(side="left", fill="y", padx=(0, 14))
-        ttk.Label(side, text="Configuración de la IA", style="Card.TLabel",
+        ttk.Label(side, text=tr("Configuración de la IA"), style="Card.TLabel",
                   font=(FONT, 11, "bold")).pack(anchor="w", pady=(0, 10))
-        ttk.Label(side, text="Proveedor", style="Muted.TLabel").pack(anchor="w")
+        ttk.Label(side, text=tr("Proveedor"), style="Muted.TLabel").pack(anchor="w")
         self.ai_prov_var = tk.StringVar()
         self.ai_prov_cb = ttk.Combobox(side, textvariable=self.ai_prov_var, state="readonly", width=26,
                                        values=[v["nombre"] for v in ia.PROVEEDORES.values()])
         self.ai_prov_cb.pack(anchor="w", fill="x", pady=(2, 10))
         self.ai_prov_cb.bind("<<ComboboxSelected>>", lambda e: self._ai_load_provider())
-        ttk.Label(side, text="Modelo", style="Muted.TLabel").pack(anchor="w")
+        ttk.Label(side, text=tr("Modelo"), style="Muted.TLabel").pack(anchor="w")
         self.ai_model = ttk.Entry(side, width=28)
         self.ai_model.pack(anchor="w", fill="x", pady=(2, 10))
         ttk.Label(side, text="API key", style="Muted.TLabel").pack(anchor="w")
         self.ai_key = ttk.Entry(side, width=28, show="•")
         self.ai_key.pack(anchor="w", fill="x", pady=(2, 4))
         self.ai_show = tk.BooleanVar(value=False)
-        tk.Checkbutton(side, text="Mostrar", variable=self.ai_show,
+        tk.Checkbutton(side, text=tr("Mostrar"), variable=self.ai_show,
                        command=lambda: self.ai_key.configure(show="" if self.ai_show.get() else "•"),
                        bg=CARD, fg=MUTED, selectcolor=CARD2, activebackground=CARD, activeforeground=FG,
                        font=(FONT, 9), bd=0, highlightthickness=0).pack(anchor="w")
-        link = tk.Label(side, text="Conseguir una API key ↗", bg=CARD, fg=BLUE, cursor="hand2", font=(FONT, 9, "underline"))
+        link = tk.Label(side, text=tr("Conseguir una API key ↗"), bg=CARD, fg=BLUE, cursor="hand2", font=(FONT, 9, "underline"))
         link.pack(anchor="w", pady=(4, 12))
         link.bind("<Button-1>", lambda e: webbrowser.open(ia.PROVEEDORES[self._ai_prov()]["url_clave"]))
-        ttk.Button(side, text="Guardar", style="Accent.TButton", command=self._ai_save).pack(fill="x")
+        ttk.Button(side, text=tr("Guardar"), style="Accent.TButton", command=self._ai_save).pack(fill="x")
         self.ai_cfg_lbl = ttk.Label(side, text="", style="Muted.TLabel", wraplength=int(230 * s))
         self.ai_cfg_lbl.pack(anchor="w", pady=(8, 0))
-        ttk.Label(side, text=("La clave se guarda cifrada y solo funciona con tu usuario de Windows "
-                              "en este equipo." if WINDOWS else
-                              "La clave se guarda en ~/.config/ToledoDiagnosis, legible solo por tu usuario.")
-                             + "\n\nAl analizar se envían al proveedor elegido los datos "
-                             "del vehículo (incluido el VIN), las averías, los valores medidos y, si lo "
-                             "pides, el registro del programa.",
+        ttk.Label(side, text=(tr("La clave se guarda cifrada y solo funciona con tu usuario de Windows "
+                                 "en este equipo.") if WINDOWS else
+                              tr("La clave se guarda en ~/.config/{carpeta}, legible solo por tu usuario.",
+                                 carpeta=NOMBRE))
+                             + "\n\n" + tr("Al analizar se envían al proveedor elegido los datos "
+                                            "del vehículo (incluido el VIN), las averías, los valores medidos y, si lo "
+                                            "pides, el registro del programa."),
                   style="Muted.TLabel", wraplength=int(230 * s), font=(FONT, 8)).pack(side="bottom", anchor="w")
 
         main = ttk.Frame(p, style="Panel.TFrame")
         main.pack(side="left", fill="both", expand=True)
         top = ttk.Frame(main, style="Panel.TFrame")
         top.pack(fill="x", pady=(0, 10))
-        self.ai_btn_dtc = ttk.Button(top, text="Analizar averías del vehículo", style="Accent.TButton",
+        self.ai_btn_dtc = ttk.Button(top, text=tr("Analizar averías del vehículo"), style="Accent.TButton",
                                      command=lambda: self._ai_analyze("vehiculo"))
         self.ai_btn_dtc.pack(side="left")
-        self.ai_btn_log = ttk.Button(top, text="Analizar errores del programa",
+        self.ai_btn_log = ttk.Button(top, text=tr("Analizar errores del programa"),
                                      command=lambda: self._ai_analyze("programa"))
         self.ai_btn_log.pack(side="left", padx=8)
-        self.ai_btn_stop = ttk.Button(top, text="■ Detener", command=self._ai_stop, state="disabled")
+        self.ai_btn_stop = ttk.Button(top, text=tr("■ Detener"), command=self._ai_stop, state="disabled")
         self.ai_btn_stop.pack(side="right")
-        ttk.Button(top, text="Nueva conversación", command=self._ai_new).pack(side="right", padx=8)
+        ttk.Button(top, text=tr("Nueva conversación"), command=self._ai_new).pack(side="right", padx=8)
 
         card = self._card(main, padding=0)
         card.pack(fill="both", expand=True)
@@ -1339,7 +1365,7 @@ class App:
         self.ai_entry = ttk.Entry(ask, font=(FONT, 10))
         self.ai_entry.pack(side="left", fill="x", expand=True)
         self.ai_entry.bind("<Return>", lambda e: self._ai_ask())
-        self.ai_btn_send = ttk.Button(ask, text="Enviar", style="Accent.TButton", command=self._ai_ask)
+        self.ai_btn_send = ttk.Button(ask, text=tr("Enviar"), style="Accent.TButton", command=self._ai_ask)
         self.ai_btn_send.pack(side="left", padx=(8, 0))
 
         prov = self.cfg.get("proveedor", "anthropic")
@@ -1357,7 +1383,7 @@ class App:
         self.ai_key.delete(0, "end")
         clave = ia.leer_clave(self.cfg, prov)
         self.ai_key.insert(0, clave)
-        self.ai_cfg_lbl.configure(text="Clave guardada." if clave else "Sin API key para este proveedor.",
+        self.ai_cfg_lbl.configure(text=tr("Clave guardada.") if clave else tr("Sin API key para este proveedor."),
                                   foreground=OK if clave else WARN)
 
     def _ai_save(self):
@@ -1366,42 +1392,44 @@ class App:
         try:
             ia.poner_clave(self.cfg, prov, self.ai_key.get().strip())
         except ia.IAError as e:
-            messagebox.showerror("Asistente IA", str(e))
+            messagebox.showerror(tr("Asistente IA"), str(e))
             return
         self.cfg["proveedor"] = prov
         self.cfg["modelos"][prov] = modelo
         ia.guardar_config(self.cfg)
-        self.ai_cfg_lbl.configure(text=f"Guardado · {ia.PROVEEDORES[prov]['nombre']} · {modelo}", foreground=OK)
+        self.ai_cfg_lbl.configure(text=tr("Guardado · {proveedor} · {modelo}", proveedor=ia.PROVEEDORES[prov]["nombre"],
+                                          modelo=modelo), foreground=OK)
 
     def _ai_context(self, incluir_log):
-        partes = [f"Fecha: {datetime.datetime.now():%Y-%m-%d %H:%M}",
-                  f"Modo de conexión: {MODOS[self.mode]}",
-                  f"Estado: {'conectado' if self.connected else 'no conectado'}"]
+        partes = [tr("Fecha: {fecha}", fecha=f"{datetime.datetime.now():%Y-%m-%d %H:%M}"),
+                  tr("Modo de conexión: {modo}", modo=MODOS[self.mode]),
+                  tr("Estado: {estado}", estado=tr("conectado") if self.connected else tr("no conectado"))]
         if self.vehicle_fields:
-            partes.append("\n## Datos del vehículo / centralita")
+            partes.append("\n## " + tr("Datos del vehículo / centralita"))
             partes += [f"- {k}: {v}" for k, v in self.vehicle_fields]
-        partes.append("\n## Averías")
-        partes.append(self.last_dtc_text or "No se han leído averías en esta sesión.")
-        partes.append("\n## Últimos valores medidos")
-        partes.append(self.last_live_text or "No se han leído valores medidos en esta sesión.")
+        partes.append("\n## " + tr("Averías"))
+        partes.append(self.last_dtc_text or tr("No se han leído averías en esta sesión."))
+        partes.append("\n## " + tr("Últimos valores medidos"))
+        partes.append(self.last_live_text or tr("No se han leído valores medidos en esta sesión."))
         if incluir_log:
             lineas = self.log_txt.get("1.0", "end").strip().splitlines()[-150:]
-            partes.append("\n## Registro del programa (últimas líneas)")
-            partes.append("\n".join(lineas) if lineas else "(vacío)")
+            partes.append("\n## " + tr("Registro del programa (últimas líneas)"))
+            partes.append("\n".join(lineas) if lineas else tr("(vacío)"))
         return "\n".join(partes)
 
     def _ai_analyze(self, tipo):
         if tipo == "vehiculo":
-            visible = "Analiza las averías y los datos del vehículo."
-            peticion = ("Analiza mi vehículo: lee las averías (si no están leídas o son antiguas), haz las "
-                        "comprobaciones de valores medidos que consideres necesarias y dime qué pasa, causas "
-                        "probables y qué hacer.\n\nContexto actual de la aplicación:\n"
+            visible = tr("Analiza las averías y los datos del vehículo.")
+            peticion = (tr("Analiza mi vehículo: lee las averías (si no están leídas o son antiguas), haz las "
+                           "comprobaciones de valores medidos que consideres necesarias y dime qué pasa, causas "
+                           "probables y qué hacer.") + "\n\n" + tr("Contexto actual de la aplicación:") + "\n"
                         + self._ai_context(incluir_log=False))
         else:
-            visible = "Analiza los errores del programa y de la comunicación."
-            peticion = ("Analiza el registro de la aplicación: ¿hay errores de comunicación con el coche o el "
-                        "adaptador? ¿Qué significan y cómo los soluciono?\n\n" + self._ai_context(incluir_log=True))
-        self._ai_send(peticion, visible + "  (datos adjuntos)")
+            visible = tr("Analiza los errores del programa y de la comunicación.")
+            peticion = (tr("Analiza el registro de la aplicación: ¿hay errores de comunicación con el coche o el "
+                           "adaptador? ¿Qué significan y cómo los soluciono?") + "\n\n"
+                        + self._ai_context(incluir_log=True))
+        self._ai_send(peticion, visible + "  " + tr("(datos adjuntos)"))
 
     def _ai_ask(self):
         texto = self.ai_entry.get().strip()
@@ -1409,7 +1437,8 @@ class App:
             return
         self.ai_entry.delete(0, "end")
         if self.ai_chat is None or self.ai_chat.vacia():   # primer mensaje: adjunta el contexto actual
-            peticion = texto + "\n\n---\nContexto actual de la aplicación:\n" + self._ai_context(incluir_log=False)
+            peticion = (texto + "\n\n---\n" + tr("Contexto actual de la aplicación:") + "\n"
+                        + self._ai_context(incluir_log=False))
         else:
             peticion = texto
         self._ai_send(peticion, texto)
@@ -1420,8 +1449,8 @@ class App:
         prov = self._ai_prov()
         clave = self.ai_key.get().strip() or ia.leer_clave(self.cfg, prov)
         if not clave:
-            messagebox.showinfo("Asistente IA", "Introduce y guarda una API key para "
-                                f"{ia.PROVEEDORES[prov]['nombre']}.")
+            messagebox.showinfo(tr("Asistente IA"), tr("Introduce y guarda una API key para {proveedor}.",
+                                                       proveedor=ia.PROVEEDORES[prov]["nombre"]))
             return
         modelo = self.ai_model.get().strip() or ia.PROVEEDORES[prov]["modelo"]
         c = self.ai_chat
@@ -1432,7 +1461,7 @@ class App:
         if self.ai_chat.vacia():
             self.ai_txt.delete("1.0", "end")
         t = self.ai_txt
-        t.insert("end", ("\n" if t.index("end-1c") != "1.0" else "") + "TÚ\n", "who")
+        t.insert("end", ("\n" if t.index("end-1c") != "1.0" else "") + tr("TÚ") + "\n", "who")
         t.insert("end", visible + "\n", "user")
         t.insert("end", f"\n{ia.PROVEEDORES[prov]['nombre'].upper()} · {modelo}\n", "who")
         self._ai_placeholder()
@@ -1459,7 +1488,7 @@ class App:
                 return reply.get(timeout=0.3)
             except queue.Empty:
                 if self.ai_cancel or conv != self.ai_conv:
-                    return ("Cancelado por el usuario.", True)
+                    return (tr("Cancelado por el usuario."), True)
 
     def _ai_main(self, fn, conv, asincrono=False):
         """Ejecuta fn en el hilo de la interfaz y espera su resultado (res, es_error)."""
@@ -1480,21 +1509,21 @@ class App:
             except (TypeError, ValueError):
                 n = 80
             res = self._ai_main(lambda: ("\n".join(self.log_txt.get("1.0", "end").strip().splitlines()[-n:])
-                                         or "(registro vacío)", False), conv)
+                                         or tr("(registro vacío)"), False), conv)
         elif nombre in ("leer_averias", "leer_valores", "borrar_averias"):
             if nombre == "borrar_averias":
                 ok = self._ai_main(lambda: (messagebox.askyesno(
-                    "Asistente IA", "La IA quiere borrar las averías de la centralita para ver si reaparecen.\n\n"
-                    "¿Lo permites? (motor parado, contacto puesto)"), False), conv)
+                    tr("Asistente IA"), tr("La IA quiere borrar las averías de la centralita para ver si reaparecen.")
+                    + "\n\n" + tr("¿Lo permites? (motor parado, contacto puesto)")), False), conv)
                 if ok[0] is not True:
-                    res = ("El usuario no ha permitido borrar las averías.", False)
+                    res = (tr("El usuario no ha permitido borrar las averías."), False)
                     self.q.put(("ai_tool_res", (conv, res[0])))
                     return res
             reply = queue.Queue()
             self.worker.submit("tool", nombre, entrada, reply)
             res = self._ai_wait(reply, conv)
         else:
-            res = (f"Herramienta desconocida: {nombre}", True)
+            res = (tr("Herramienta desconocida: {nombre}", nombre=nombre), True)
         resumen = res[0].strip().splitlines()[0] if res[0].strip() else ""
         if nombre == "pedir_accion_usuario" or res[1]:
             self.q.put(("ai_tool_res", (conv, resumen)))
@@ -1505,29 +1534,30 @@ class App:
             els = e.get("elementos") or []
             if not isinstance(els, list):
                 els = [els]
-            tipo = "grupos" if self.mode == KKL else "PIDs"
             n = e.get("muestras", 1)
-            extra = f" · {n} muestras" if isinstance(n, int) and n > 1 else ""
-            return f"Leyendo {tipo} {', '.join(str(x) for x in els)}{extra}"
-        return {"estado_conexion": "Consultando el estado de la conexión",
-                "leer_averias": "Leyendo averías",
-                "borrar_averias": "Solicitando borrar averías",
-                "leer_registro": "Leyendo el registro del programa",
-                "pedir_accion_usuario": "Esperando al usuario: " + str(e.get("instruccion", ""))}.get(nombre, nombre)
+            extra = tr(" · {n} muestras", n=n) if isinstance(n, int) and n > 1 else ""
+            lista = ", ".join(str(x) for x in els)
+            return (tr("Leyendo grupos {lista}", lista=lista) if self.mode == KKL
+                    else tr("Leyendo PIDs {lista}", lista=lista)) + extra
+        return {"estado_conexion": tr("Consultando el estado de la conexión"),
+                "leer_averias": tr("Leyendo averías"),
+                "borrar_averias": tr("Solicitando borrar averías"),
+                "leer_registro": tr("Leyendo el registro del programa"),
+                "pedir_accion_usuario": tr("Esperando al usuario: ") + str(e.get("instruccion", ""))}.get(nombre, nombre)
 
     def _ai_estado(self):
-        lineas = [f"Modo de conexión: {MODOS[self.mode]}",
-                  f"Conectado: {'sí' if self.connected else 'no'}"]
+        lineas = [tr("Modo de conexión: {modo}", modo=MODOS[self.mode]),
+                  tr("Conectado: {estado}", estado=tr("sí") if self.connected else "no")]
         if self.connected:
             lineas += [f"{k}: {v}" for k, v in self.vehicle_fields]
             if self.mode == KKL:
-                lineas.append("Grupos habituales EDC15: " + ", ".join(
+                lineas.append(tr("Grupos habituales EDC15: ") + ", ".join(
                     f"{g:03d} {t}" for g, (t, _) in GRUPOS_EDC15.items())
-                    + ". Se pueden pedir otros números de grupo (1-255); si no existen, la centralita lo indica.")
+                    + tr(". Se pueden pedir otros números de grupo (1-255); si no existen, la centralita lo indica."))
             else:
-                lineas.append("PIDs soportados: " + ", ".join(f"{p:02X} {PIDS[p][0]}" for p in self.supported))
+                lineas.append(tr("PIDs soportados: ") + ", ".join(f"{p:02X} {PIDS[p][0]}" for p in self.supported))
         else:
-            lineas.append("Para conectar, el usuario debe elegir Conexión y Puerto arriba y pulsar Conectar.")
+            lineas.append(tr("Para conectar, el usuario debe elegir Conexión y Puerto arriba y pulsar Conectar."))
         return "\n".join(lineas), False
 
     def _ai_dialog(self, instruccion, reply):
@@ -1535,17 +1565,17 @@ class App:
         if self.ai_dialog is not None:
             self.ai_dialog[0].destroy()
         w = tk.Toplevel(self.root, bg=CARD)
-        w.title("El asistente necesita tu ayuda")
+        w.title(tr("El asistente necesita tu ayuda"))
         w.attributes("-topmost", True)
         w.resizable(False, False)
         _poner_icono(w)
         f = ttk.Frame(w, style="Card.TFrame", padding=20)
         f.pack(fill="both", expand=True)
-        ttk.Label(f, text="✦ Acción solicitada por la IA", style="Card.TLabel",
+        ttk.Label(f, text=tr("✦ Acción solicitada por la IA"), style="Card.TLabel",
                   font=(FONT, 11, "bold"), foreground=ACCENT).pack(anchor="w")
         ttk.Label(f, text=instruccion, style="Card.TLabel", font=(FONT, 11),
                   wraplength=int(420 * self.s)).pack(anchor="w", pady=(10, 14))
-        ttk.Label(f, text="Comentario opcional (qué has visto, por qué no puedes…)",
+        ttk.Label(f, text=tr("Comentario opcional (qué has visto, por qué no puedes…)"),
                   style="Muted.TLabel").pack(anchor="w")
         com = ttk.Entry(f, width=50)
         com.pack(fill="x", pady=(2, 14))
@@ -1557,13 +1587,13 @@ class App:
                 return
             self.ai_dialog = None
             c = com.get().strip()
-            reply.put((texto + (f". Comentario del usuario: {c}" if c else ""), False))
+            reply.put((texto + (tr(". Comentario del usuario: {c}", c=c) if c else ""), False))
             w.destroy()
-        ttk.Button(btns, text="Hecho", style="Accent.TButton",
-                   command=lambda: responder("Hecho")).pack(side="right")
-        ttk.Button(btns, text="No puedo",
-                   command=lambda: responder("El usuario no puede hacerlo")).pack(side="right", padx=8)
-        w.protocol("WM_DELETE_WINDOW", lambda: responder("El usuario cerró la ventana sin hacerlo"))
+        ttk.Button(btns, text=tr("Hecho"), style="Accent.TButton",
+                   command=lambda: responder(tr("Hecho"))).pack(side="right")
+        ttk.Button(btns, text=tr("No puedo"),
+                   command=lambda: responder(tr("El usuario no puede hacerlo"))).pack(side="right", padx=8)
+        w.protocol("WM_DELETE_WINDOW", lambda: responder(tr("El usuario cerró la ventana sin hacerlo")))
         self.ai_dialog = (w, reply)
         w.update_idletasks()
         x = self.root.winfo_rootx() + (self.root.winfo_width() - w.winfo_width()) // 2
@@ -1576,7 +1606,7 @@ class App:
         if self.ai_dialog is not None:
             w, reply = self.ai_dialog
             self.ai_dialog = None
-            reply.put(("Cancelado por el usuario.", True))
+            reply.put((tr("Cancelado por el usuario."), True))
             w.destroy()
 
     def _ai_set_busy(self, busy):
@@ -1599,11 +1629,12 @@ class App:
         self.ai_chat = None
         t = self.ai_txt
         t.delete("1.0", "end")
-        t.insert("end", "Asistente de diagnóstico\n", "h")
-        t.insert("end", "Describe abajo lo que le pasa al coche (p. ej. «le falta potencia por encima de 3000 rpm "
-                        "y echa humo negro») y la IA hará las comprobaciones que necesite: leer averías, valores "
-                        "medidos y pedirte que arranques, aceleres, etc.\n\nTambién puedes pulsar «Analizar averías "
-                        "del vehículo», o «Analizar errores del programa» si algo falla al conectar.\n", "muted")
+        t.insert("end", tr("Asistente de diagnóstico") + "\n", "h")
+        t.insert("end", tr("Describe abajo lo que le pasa al coche (p. ej. «le falta potencia por encima de 3000 rpm "
+                           "y echa humo negro») y la IA hará las comprobaciones que necesite: leer averías, valores "
+                           "medidos y pedirte que arranques, aceleres, etc.") + "\n\n"
+                 + tr("También puedes pulsar «Analizar averías del vehículo», o «Analizar errores del programa» "
+                      "si algo falla al conectar.") + "\n", "muted")
 
     # --- render Markdown sencillo, linea a linea ---
     def _ai_insert_inline(self, text, base=()):
@@ -1632,7 +1663,7 @@ class App:
         t = self.ai_txt
         t.mark_set("ai_start", "end-1c")
         t.mark_gravity("ai_start", "left")
-        t.insert("end", "Pensando…", "muted")
+        t.insert("end", tr("Pensando…"), "muted")
         t.see("end")
         self.ai_line = ""
         self.ai_first_chunk = True
@@ -1677,9 +1708,9 @@ class App:
         self._ai_flush()
         t = self.ai_txt
         if error:
-            t.insert("end", f"\nError: {error}\n", "err")
+            t.insert("end", "\n" + tr("Error: {e}", e=error) + "\n", "err")
         elif not ok:
-            t.insert("end", "\n(detenido: esta respuesta no se recordará en la conversación)\n", "muted")
+            t.insert("end", "\n" + tr("(detenido: esta respuesta no se recordará en la conversación)") + "\n", "muted")
         t.see("end")
         self._ai_close_dialog()
         self._ai_set_busy(False)
@@ -1692,19 +1723,19 @@ class App:
         self.panel_vag.pack_forget()
         self.panel_obd.pack_forget()
         (self.panel_vag if kkl else self.panel_obd).pack(fill="both", expand=True)
-        self.panel_lbl.configure(text="Lectura en vivo de los grupos 001 · 003 · 011" if kkl
-                                 else "Lectura en vivo de PIDs OBD2 estándar")
+        self.panel_lbl.configure(text=tr("Lectura en vivo de los grupos 001 · 003 · 011") if kkl
+                                 else tr("Lectura en vivo de PIDs OBD2 estándar"))
         self.side_vag.pack_forget()
         self.side_obd.pack_forget()
         (self.side_vag if kkl else self.side_obd).pack(fill="both", expand=True, before=self.side_btns)
-        self.side_title.configure(text="Grupos a leer" if kkl else "PIDs a leer")
-        self.tree.heading("grupo", text="GRUPO" if kkl else "PID")
-        self.dtc_tree.heading("tipo", text="TIPO DE FALLO" if kkl else "TIPO")
+        self.side_title.configure(text=tr("Grupos a leer") if kkl else tr("PIDs a leer"))
+        self.tree.heading("grupo", text=tr("GRUPO") if kkl else "PID")
+        self.dtc_tree.heading("tipo", text=tr("TIPO DE FALLO") if kkl else tr("TIPO"))
         self.dtc_help.configure(
-            text="Intermitente = el fallo apareció pero no está presente ahora. "
-                 "Si tras borrar vuelve a aparecer, la avería sigue activa." if kkl else
-                 "Pendiente = detectado una vez, aún sin confirmar. Al borrar se apaga el testigo MIL "
-                 "y se reinician los monitores de emisiones (la ITV puede rechazarlo hasta completar ciclos).")
+            text=tr("Intermitente = el fallo apareció pero no está presente ahora. "
+                    "Si tras borrar vuelve a aparecer, la avería sigue activa.") if kkl else
+                 tr("Pendiente = detectado una vez, aún sin confirmar. Al borrar se apaga el testigo MIL "
+                    "y se reinician los monitores de emisiones (la ITV puede rechazarlo hasta completar ciclos)."))
         self.dtc_tree.delete(*self.dtc_tree.get_children())
         self.dtc_lbl.configure(text="")
         if kkl:
@@ -1774,13 +1805,13 @@ class App:
         self.refresh_btn.configure(state="disabled" if on else "normal")
         if not on:
             self.scanning = False
-            self.scan_btn.configure(text="Escanear todos los módulos", style="TButton")
-        self.conn_btn.configure(text="Desconectar" if on else "Conectar",
+            self.scan_btn.configure(text=tr("Escanear todos los módulos"), style="TButton")
+        self.conn_btn.configure(text=tr("Desconectar") if on else tr("Conectar"),
                                 style="TButton" if on else "Accent.TButton", state="normal")
         if on:
             self.status(info["status"], OK)
         else:
-            self.status("Desconectado", MUTED)
+            self.status(tr("Desconectado"), MUTED)
             self._stop_live()
             self._stop_rec()
 
@@ -1803,11 +1834,11 @@ class App:
         self.conn_btn.configure(state="disabled")
         self.mode_cb.configure(state="disabled")
         if self.mode == KKL:
-            self.status("Conectando... (init 5 baudios)", WARN)
-            self.bar.configure(text="Conectando: puede tardar hasta 6 s mientras prueba las velocidades.")
+            self.status(tr("Conectando... (init 5 baudios)"), WARN)
+            self.bar.configure(text=tr("Conectando: puede tardar hasta 6 s mientras prueba las velocidades."))
         else:
-            self.status("Conectando con el ELM327...", WARN)
-            self.bar.configure(text="Conectando: la búsqueda del protocolo OBD2 puede tardar hasta 25 s.")
+            self.status(tr("Conectando con el ELM327..."), WARN)
+            self.bar.configure(text=tr("Conectando: la búsqueda del protocolo OBD2 puede tardar hasta 25 s."))
         self.worker.submit("connect", self.mode, port, addr)
 
     def _selected_items(self):
@@ -1829,29 +1860,29 @@ class App:
         else:
             items = self._selected_items()
         if not items:
-            messagebox.showinfo("Valores medidos", "Selecciona al menos un grupo o PID.")
+            messagebox.showinfo(tr("Valores medidos"), tr("Selecciona al menos un grupo o PID."))
             return
         self._stop_rec()
         self.live_source = source
         self.live_gen += 1
         self.worker.submit("live", items, self.live_gen)
-        self.panel_btn.configure(text="■  Detener" if source == "panel" else "▶  Iniciar lectura")
-        self.vals_btn.configure(text="■  Detener" if source == "vals" else "▶  Iniciar lectura")
+        self.panel_btn.configure(text=tr("■  Detener") if source == "panel" else tr("▶  Iniciar lectura"))
+        self.vals_btn.configure(text=tr("■  Detener") if source == "vals" else tr("▶  Iniciar lectura"))
         if source == "panel":
             for c in (self.ch_boost, self.ch_maf, self.ch_rpm, self.ch_load):
                 c.clear()
         else:
             self.tree.delete(*self.tree.get_children())
             self.tree_items = {}
-        self.bar.configure(text=f"Leyendo {', '.join(self._key_label(k) for k in items)}")
+        self.bar.configure(text=tr("Leyendo {lista}", lista=", ".join(self._key_label(k) for k in items)))
 
     def _stop_live(self):
         self.live_gen += 1
         if self.live_source:
             self.worker.submit("live", None, self.live_gen)
         self.live_source = None
-        self.panel_btn.configure(text="▶  Iniciar lectura")
-        self.vals_btn.configure(text="▶  Iniciar lectura")
+        self.panel_btn.configure(text=tr("▶  Iniciar lectura"))
+        self.vals_btn.configure(text=tr("▶  Iniciar lectura"))
         self._stop_rec()
 
     def toggle_rec(self):
@@ -1867,15 +1898,15 @@ class App:
             os.makedirs(CARPETA, exist_ok=True)
             self.csv_file = open(name, "w", newline="", encoding="utf-8-sig")
         except OSError as e:
-            messagebox.showerror("Grabar CSV", f"No se pudo crear el archivo:\n{e}")
+            messagebox.showerror(tr("Grabar CSV"), tr("No se pudo crear el archivo:") + f"\n{e}")
             return
         self.csv_writer = csv.writer(self.csv_file, delimiter=";")
         self.csv_header = None
         self.csv_n = 0
         self.csv_t0 = time.monotonic()
-        self.rec_btn.configure(text="■  Parar grabación", style="Danger.TButton")
-        self.rec_lbl.configure(text=f"Grabando en {os.path.basename(name)}")
-        self.log(f"Grabando CSV: {name}")
+        self.rec_btn.configure(text=tr("■  Parar grabación"), style="Danger.TButton")
+        self.rec_lbl.configure(text=tr("Grabando en {archivo}", archivo=os.path.basename(name)))
+        self.log(tr("Grabando CSV: {archivo}", archivo=name))
 
     def _stop_rec(self):
         if not self.csv_file:
@@ -1883,41 +1914,41 @@ class App:
         name = self.csv_file.name
         self.csv_file.close()
         self.csv_file = self.csv_writer = None
-        self.rec_btn.configure(text="●  Grabar CSV", style="TButton")
-        self.rec_lbl.configure(text=f"Guardadas {self.csv_n} muestras en {os.path.basename(name)}")
-        self.log(f"CSV guardado ({self.csv_n} muestras): {name}")
+        self.rec_btn.configure(text=tr("●  Grabar CSV"), style="TButton")
+        self.rec_lbl.configure(text=tr("Guardadas {n} muestras en {archivo}", n=self.csv_n, archivo=os.path.basename(name)))
+        self.log(tr("CSV guardado ({n} muestras): {archivo}", n=self.csv_n, archivo=name))
 
     def read_dtcs(self):
-        self.dtc_lbl.configure(text="Leyendo...", foreground=FG)
+        self.dtc_lbl.configure(text=tr("Leyendo..."), foreground=FG)
         self.worker.submit("dtcs")
 
     def clear_dtcs(self):
-        if messagebox.askyesno("Borrar averías",
-                               "¿Borrar las averías memorizadas en la centralita?\n\n"
-                               "Hazlo con el motor parado y el contacto puesto."):
-            self.dtc_lbl.configure(text="Borrando...", foreground=FG)
+        if messagebox.askyesno(tr("Borrar averías"),
+                               tr("¿Borrar las averías memorizadas en la centralita?") + "\n\n"
+                               + tr("Hazlo con el motor parado y el contacto puesto.")):
+            self.dtc_lbl.configure(text=tr("Borrando..."), foreground=FG)
             self.worker.submit("clear")
 
     def scan_modules(self, direcciones=None, confirmar=True):
         if self.scanning:
             self.worker.scan_stop.set()
-            self.scan_btn.configure(state="disabled", text="Deteniendo...")
+            self.scan_btn.configure(state="disabled", text=tr("Deteniendo..."))
             return
         direcciones = direcciones or list(MODULOS)
         if confirmar and not messagebox.askyesno(
-                "Escanear todos los módulos",
-                f"Se prueban {len(direcciones)} módulos uno a uno y se leen sus averías (no se borra nada).\n\n"
-                "Tarda de 1 a 4 minutos según cuántos tenga el coche. Pon el contacto con el motor parado. "
-                "Puedes detenerlo en cualquier momento."):
+                tr("Escanear todos los módulos"),
+                tr("Se prueban {n} módulos uno a uno y se leen sus averías (no se borra nada).", n=len(direcciones))
+                + "\n\n" + tr("Tarda de 1 a 4 minutos según cuántos tenga el coche. Pon el contacto con el motor "
+                               "parado. Puedes detenerlo en cualquier momento.")):
             return
         self._stop_live()
         self.scanning = True
         for b in (self.panel_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
                   self.report_btn, self.conn_btn):
             b.configure(state="disabled")
-        self.scan_btn.configure(text="■  Detener escaneo", style="Danger.TButton")
+        self.scan_btn.configure(text=tr("■  Detener escaneo"), style="Danger.TButton")
         self.dtc_tree.delete(*self.dtc_tree.get_children())
-        self.dtc_lbl.configure(text="Escaneando...", foreground=FG)
+        self.dtc_lbl.configure(text=tr("Escaneando..."), foreground=FG)
         self.worker.submit("scan", direcciones)
 
     def _show_scan(self, res):
@@ -1929,56 +1960,56 @@ class App:
             ident = "  ·  ".join(x.strip() for x in m["ident"][:2] if x.strip())
             n = len(m["dtcs"]) if m["dtcs"] is not None else None
             total += n or 0
-            t.insert("", "end", values=(f"[{m['addr']:02X}]", f"{MODULOS.get(m['addr'], 'Módulo')}  —  {ident}",
-                                        "", "Error al leer" if n is None else
-                                        ("Sin averías" if not n else f"{n} avería(s)")), tags=("mod",))
+            t.insert("", "end", values=(f"[{m['addr']:02X}]", f"{MODULOS.get(m['addr'], tr('Módulo'))}  —  {ident}",
+                                        "", tr("Error al leer") if n is None else
+                                        (tr("Sin averías") if not n else tr("{n} avería(s)", n=n))), tags=("mod",))
             for code, ftype, inter in m["dtcs"] or []:
-                tipo = f"{ftype:02d} · {FAULT_TYPES.get(ftype, 'Desconocido') or '—'}"
+                tipo = f"{ftype:02d} · {FAULT_TYPES.get(ftype, tr('Desconocido')) or '—'}"
                 t.insert("", "end", values=(f"   {code:05d}", vag_componente(code), tipo,
-                                            "Intermitente" if inter else "Presente"),
+                                            tr("Intermitente") if inter else tr("Presente")),
                          tags=("inter",) if inter else ())
-        txt = f"Responden {len(resp)} de {len(res)} módulos · {total} avería(s)"
+        txt = tr("Responden {n} de {total} módulos · {averias} avería(s)", n=len(resp), total=len(res), averias=total)
         self.dtc_lbl.configure(text=txt, foreground=WARN if total else OK)
         filas = [" — ".join(str(v).strip() for v in t.item(i, "values") if str(v).strip()) for i in t.get_children()]
         sin = ", ".join(f"{m['addr']:02X}" for m in res if not m["ok"])
-        self.last_dtc_text = (f"Escaneo de módulos VAG a las {datetime.datetime.now():%H:%M:%S}. {txt}\n"
-                              + "\n".join(f"- {f}" for f in filas)
-                              + (f"\nSin respuesta: {sin}" if sin else ""))
+        self.last_dtc_text = (tr("Escaneo de módulos VAG a las {hora}.", hora=f"{datetime.datetime.now():%H:%M:%S}")
+                              + f" {txt}\n" + "\n".join(f"- {f}" for f in filas)
+                              + ("\n" + tr("Sin respuesta: {lista}", lista=sin) if sin else ""))
         self.scan_result = res
 
     def make_report(self):
         self.report_btn.configure(state="disabled")
-        self.bar.configure(text="Leyendo averías para el informe...")
+        self.bar.configure(text=tr("Leyendo averías para el informe..."))
         self.worker.submit("report")
 
     def _save_report(self, d):
         self.report_btn.configure(state="normal" if self.connected else "disabled")
         datos = {"modo": self.mode, "version": VERSION, "vehiculo": self.vehicle_fields,
                  "dtcs": d["dtcs"], "modulo": d.get("modulo", 1), "escaneo": self.scan_result}
-        name = os.path.join(CARPETA, f"informe_{datetime.datetime.now():%Y%m%d_%H%M%S}.html")
+        name = os.path.join(CARPETA, tr("informe") + f"_{datetime.datetime.now():%Y%m%d_%H%M%S}.html")
         try:
             os.makedirs(CARPETA, exist_ok=True)
             with open(name, "w", encoding="utf-8") as f:
                 f.write(informe.generar(datos))
         except OSError as e:
-            messagebox.showerror("Generar informe", f"No se pudo crear el archivo:\n{e}")
+            messagebox.showerror(tr("Generar informe"), tr("No se pudo crear el archivo:") + f"\n{e}")
             return
         self.last_report = name
-        self.log(f"Informe guardado: {name}")
-        self.bar.configure(text=f"Informe guardado en {name} (se abre en el navegador; desde ahí puedes "
-                                "imprimirlo o guardarlo como PDF).")
+        self.log(tr("Informe guardado: {archivo}", archivo=name))
+        self.bar.configure(text=tr("Informe guardado en {archivo} (se abre en el navegador; desde ahí puedes "
+                                   "imprimirlo o guardarlo como PDF).", archivo=name))
         try:
             import pathlib
             webbrowser.open(pathlib.Path(name).resolve().as_uri())
         except Exception as e:
-            self.log(f"Aviso: no se pudo abrir el navegador ({e})")
+            self.log(tr("Aviso: no se pudo abrir el navegador ({e})", e=e))
 
     def _fill_ff(self, ff):
         self.ff_tree.delete(*self.ff_tree.get_children())
         if not ff:
-            self.ff_lbl.configure(text="Datos congelados: ninguno guardado")
+            self.ff_lbl.configure(text=tr("Datos congelados: ninguno guardado"))
             return
-        self.ff_lbl.configure(text=f"Datos congelados · {ff['dtc']} ({describe_obd_dtc(ff['dtc'])})")
+        self.ff_lbl.configure(text=tr("Datos congelados · {dtc} ({desc})", dtc=ff["dtc"], desc=describe_obd_dtc(ff["dtc"])))
         for _, nombre, valor, unidad in ff["values"]:
             self.ff_tree.insert("", "end", values=(nombre, f"{valor} {unidad}".strip()))
 
@@ -1988,39 +2019,42 @@ class App:
         if self.mode == KKL:
             for code, ftype, inter in payload:
                 comp = vag_componente(code)
-                tipo = f"{ftype:02d} · {FAULT_TYPES.get(ftype, 'Desconocido') or '—'}"
+                tipo = f"{ftype:02d} · {FAULT_TYPES.get(ftype, tr('Desconocido')) or '—'}"
                 tag = "inter" if inter else ("fixed" if after_clear else "")
                 t.insert("", "end", values=(f"{code:05d}", comp, tipo,
-                                            "Intermitente" if inter else "Presente"), tags=(tag,))
+                                            tr("Intermitente") if inter else tr("Presente")), tags=(tag,))
             n = len(payload)
             if not n:
-                txt, color = ("Averías borradas · no queda ninguna" if after_clear else "Sin averías memorizadas"), OK
+                txt, color = (tr("Averías borradas · no queda ninguna") if after_clear
+                              else tr("Sin averías memorizadas")), OK
             elif after_clear:
-                txt, color = f"{n} avería(s) siguen presentes tras borrar", ERR
+                txt, color = tr("{n} avería(s) siguen presentes tras borrar", n=n), ERR
             else:
-                txt, color = f"{n} avería(s) memorizada(s)", WARN
+                txt, color = tr("{n} avería(s) memorizada(s)", n=n), WARN
         else:
-            for estado, codes in (("Memorizada", payload["stored"]), ("Pendiente", payload["pending"]),
-                                  ("Permanente", payload.get("permanent") or [])):
+            for clave, estado, codes in (("stored", tr("Memorizada"), payload["stored"]),
+                                         ("pending", tr("Pendiente"), payload["pending"]),
+                                         ("permanent", tr("Permanente"), payload.get("permanent") or [])):
                 for code in codes:
-                    tipo = "Genérico (SAE)" if code[1] in "02" else "Específico del fabricante"
-                    tag = {"Pendiente": "inter", "Permanente": "perm"}.get(estado, "fixed" if after_clear else "")
+                    tipo = tr("Genérico (SAE)") if code[1] in "02" else tr("Específico del fabricante")
+                    tag = {"pending": "inter", "permanent": "perm"}.get(clave, "fixed" if after_clear else "")
                     t.insert("", "end", values=(code, describe_obd_dtc(code), tipo, estado), tags=(tag,))
             self._fill_ff(payload.get("ff"))
             if "readiness" in payload:
                 self._fill_readiness(payload["readiness"])
             ns, npend, mil = len(payload["stored"]), len(payload["pending"]), payload["mil"]
-            mil_txt = "testigo MIL ENCENDIDO" if mil else "testigo MIL apagado"
+            mil_txt = tr("testigo MIL ENCENDIDO") if mil else tr("testigo MIL apagado")
             if not ns and not npend:
-                txt = ("Averías borradas · " if after_clear else "Sin averías · ") + mil_txt
+                txt = (tr("Averías borradas · ") if after_clear else tr("Sin averías · ")) + mil_txt
                 color = OK
             else:
-                txt = f"{ns} memorizada(s) · {npend} pendiente(s) · {mil_txt}"
+                txt = tr("{ns} memorizada(s) · {np} pendiente(s) · {mil}", ns=ns, np=npend, mil=mil_txt)
                 color = ERR if after_clear or mil else WARN
         self.dtc_lbl.configure(text=txt, foreground=color)
         # Contexto para el asistente IA
         filas = [" — ".join(str(v) for v in t.item(i, "values")) for i in t.get_children()]
-        cab = f"Leídas a las {datetime.datetime.now():%H:%M:%S}" + (" (justo después de borrar)" if after_clear else "")
+        cab = (tr("Leídas a las {hora}", hora=f"{datetime.datetime.now():%H:%M:%S}")
+               + (tr(" (justo después de borrar)") if after_clear else ""))
         self.last_dtc_text = cab + ". " + txt + "\n" + "\n".join(f"- {f}" for f in filas)
         if self.mode == ELM:
             self.last_dtc_text += f"\n{texto_ff(payload.get('ff'))}\n{texto_readiness(payload.get('readiness'))}"
@@ -2034,20 +2068,20 @@ class App:
                 lineas.append(f"- {etiqueta}: {rows}")
                 continue
             for nombre, valor, unidad, ok in rows:
-                lineas.append(f"- {etiqueta} {nombre}: {valor} {unidad}".rstrip() + ("" if ok else " (fórmula desconocida)"))
-        return f"Leídos a las {datetime.datetime.now():%H:%M:%S}\n" + "\n".join(lineas)
+                lineas.append(f"- {etiqueta} {nombre}: {valor} {unidad}".rstrip() + ("" if ok else tr(" (fórmula desconocida)")))
+        return tr("Leídos a las {hora}", hora=f"{datetime.datetime.now():%H:%M:%S}") + "\n" + "\n".join(lineas)
 
     # ---------------- datos en vivo ----------------
     def _chart_add(self, t, data):
         if self.mode == KKL:
             g3, g11 = rows_of(data, 3), rows_of(data, 11)
             if g11:
-                self.ch_boost.add(t, {"Teórica": num(g11, 1), "Real": num(g11, 2)})
+                self.ch_boost.add(t, {tr("Teórica"): num(g11, 1), tr("Real"): num(g11, 2)})
             if g3:
-                self.ch_maf.add(t, {"Teórica": num(g3, 1), "Real": num(g3, 2)})
+                self.ch_maf.add(t, {tr("Teórica"): num(g3, 1), tr("Real"): num(g3, 2)})
         else:
             self.ch_rpm.add(t, {"RPM": num(rows_of(data, 0x0C))})
-            self.ch_load.add(t, {"Carga": num(rows_of(data, 0x04)), "Mariposa": num(rows_of(data, 0x11))})
+            self.ch_load.add(t, {tr("Carga"): num(rows_of(data, 0x04)), tr("Mariposa"): num(rows_of(data, 0x11))})
 
     def _update_panel(self, data):
         def fmt(rows, i=0):
@@ -2117,7 +2151,7 @@ class App:
         self.csv_n += 1
         if self.csv_n % 10 == 0:
             self.csv_file.flush()
-            self.rec_lbl.configure(text=f"Grabando · {self.csv_n} muestras")
+            self.rec_lbl.configure(text=tr("Grabando · {n} muestras", n=self.csv_n))
 
     # ---------------- bucle de eventos ----------------
     def poll(self):
@@ -2156,7 +2190,7 @@ class App:
             if p in PANEL_PIDS:
                 self.pid_list.selection_set(i)
         if not pids:
-            self.pid_list.insert("end", "  (el vehículo no ofrece PIDs legibles)")
+            self.pid_list.insert("end", "  " + tr("(el vehículo no ofrece PIDs legibles)"))
 
     def _handle(self, kind, payload):
         if kind == "log":
@@ -2169,58 +2203,61 @@ class App:
             self._fill_ecu(payload["fields"])
             self._fill_readiness(payload.get("readiness"))
             self.vehicle_fields = payload["fields"]
-            self.bar.configure(text=f"Conectado: {payload.get('title', '')}")
+            self.bar.configure(text=tr("Conectado: {titulo}", titulo=payload.get("title", "")))
         elif kind == "disconnected":
             self._set_connected(False)
-            self.bar.configure(text="Desconectado.")
+            self.bar.configure(text=tr("Desconectado."))
+            if self.reiniciar:
+                self.worker.submit("quit")             # cambio de idioma: se reconstruye la ventana
         elif kind == "lost":
             self._set_connected(False)
-            self.status("Conexión perdida", ERR)
-            self.bar.configure(text=f"Conexión perdida: {payload}. Pulsa Conectar para reintentar.")
-            self.log(f"Error: conexión perdida ({payload})")
+            self.status(tr("Conexión perdida"), ERR)
+            self.bar.configure(text=tr("Conexión perdida: {motivo}. Pulsa Conectar para reintentar.", motivo=payload))
+            self.log(tr("Error: conexión perdida ({motivo})", motivo=payload))
         elif kind == "error":
             if not self.connected:
                 self._set_connected(False)
-                self.status("Error de conexión", ERR)
+                self.status(tr("Error de conexión"), ERR)
                 if self.mode == KKL:
-                    ayuda = ("Revisa: contacto puesto, puerto " + ("COM" if WINDOWS else "(/dev/ttyUSB0)")
-                             + ", cable FTDI y que la radio no bloquee la línea K.")
+                    ayuda = tr("Revisa: contacto puesto, puerto {puerto}, cable FTDI y que la radio no bloquee la línea K.",
+                               puerto="COM" if WINDOWS else "(/dev/ttyUSB0)")
                 elif WINDOWS:
-                    ayuda = ("Revisa: contacto puesto y puerto COM. Si el ELM327 es Bluetooth, "
-                             "Windows crea dos puertos COM: prueba el otro.")
+                    ayuda = tr("Revisa: contacto puesto y puerto COM. Si el ELM327 es Bluetooth, "
+                               "Windows crea dos puertos COM: prueba el otro.")
                 else:
-                    ayuda = ("Revisa: contacto puesto y puerto. Un ELM327 Bluetooth debe estar enlazado "
-                             "como /dev/rfcomm0 (sudo rfcomm bind 0 <MAC>).")
+                    ayuda = tr("Revisa: contacto puesto y puerto. Un ELM327 Bluetooth debe estar enlazado "
+                               "como /dev/rfcomm0 (sudo rfcomm bind 0 <MAC>).")
                 if not WINDOWS and "ermission" in str(payload):
                     g = _grupo_puerto(self.port_var.get().split(" · ")[0])
-                    ayuda += (f"\n\nSin permiso para el puerto: añade tu usuario al grupo {g} "
-                              f"(sudo usermod -aG {g} $USER) y vuelve a iniciar sesión.")
-                messagebox.showerror("No se pudo conectar", f"{payload}\n\n{ayuda}")
+                    ayuda += "\n\n" + tr("Sin permiso para el puerto: añade tu usuario al grupo {g} "
+                                          "(sudo usermod -aG {g} $USER) y vuelve a iniciar sesión.", g=g)
+                messagebox.showerror(tr("No se pudo conectar"), f"{payload}\n\n{ayuda}")
             else:
                 self.dtc_lbl.configure(text="", foreground=FG)
                 messagebox.showerror("Error", payload)
-            self.bar.configure(text=f"Error: {payload}")
+            self.bar.configure(text=tr("Error: {e}", e=payload))
         elif kind == "dtcs":
             self._show_dtcs(payload)
         elif kind == "cleared":
             self._show_dtcs(payload, after_clear=True)
         elif kind == "scan_progress":
             i, n, a = payload
-            self.dtc_lbl.configure(text=f"Escaneando {a:02X} · {MODULOS.get(a, '?')} ({i + 1}/{n})...", foreground=FG)
-            self.bar.configure(text="Escaneando módulos: los que no están instalados tardan unos segundos en descartarse.")
+            self.dtc_lbl.configure(text=tr("Escaneando {dir} · {nombre} ({i}/{n})...", dir=f"{a:02X}",
+                                           nombre=MODULOS.get(a, "?"), i=i + 1, n=n), foreground=FG)
+            self.bar.configure(text=tr("Escaneando módulos: los que no están instalados tardan unos segundos en descartarse."))
         elif kind == "scan_done":
             self.scanning = False
-            self.scan_btn.configure(text="Escanear todos los módulos", style="TButton", state="disabled")
+            self.scan_btn.configure(text=tr("Escanear todos los módulos"), style="TButton", state="disabled")
             self._show_scan(payload)
-            self.status(f"Volviendo al módulo {self.mod_var.get().split(' · ')[0]}...", WARN)
-            self.bar.configure(text="Escaneo terminado. Volviendo a conectar con el módulo elegido...")
+            self.status(tr("Volviendo al módulo {dir}...", dir=self.mod_var.get().split(" · ")[0]), WARN)
+            self.bar.configure(text=tr("Escaneo terminado. Volviendo a conectar con el módulo elegido..."))
         elif kind == "report":
             self._save_report(payload)
         elif kind == "update":
             tag, url = payload
-            self.upd_lbl.configure(text=f"↑ Nueva {tag}")
+            self.upd_lbl.configure(text=tr("↑ Nueva {version}", version=tag))
             self.upd_lbl.bind("<Button-1>", lambda e: webbrowser.open(url))
-            self.log(f"Hay una versión nueva: {tag} ({url})")
+            self.log(tr("Hay una versión nueva: {version} ({url})", version=tag, url=url))
         elif kind == "tool_live":
             self.last_live_text = self._live_to_text(payload)
         elif kind == "ai_main":
@@ -2231,7 +2268,7 @@ class App:
                 else:
                     reply.put(fn())
             except Exception as e:
-                reply.put((f"Error: {e}", True))
+                reply.put((tr("Error: {e}", e=e), True))
         elif kind in ("ai_chunk", "ai_done", "ai_error", "ai_tool", "ai_tool_res"):
             conv, data = payload
             if conv != self.ai_conv:
@@ -2247,7 +2284,37 @@ class App:
             else:
                 self._ai_finish(error=data)
         elif kind == "quit":
-            self.root.destroy()
+            if self.reiniciar:
+                self.reiniciar()
+            else:
+                self.root.destroy()
+
+    def _cambiar_idioma(self):
+        """Guarda el idioma elegido y reconstruye la ventana con él (sin cerrar el programa)."""
+        nuevo = next(k for k, v in idioma.IDIOMAS.items() if v == self.lang_var.get())
+        if nuevo == idioma.actual():
+            return
+        if self.scanning or self.ai_busy:
+            self.lang_var.set(idioma.IDIOMAS[idioma.actual()])
+            messagebox.showinfo(NOMBRE, tr("Espera a que termine el escaneo o la respuesta del asistente."))
+            return
+        cfg = ia.cargar_config()                       # la del disco: no pisa nada guardado entretanto
+        cfg["idioma"] = nuevo
+        ia.guardar_config(cfg)
+        idioma.poner(nuevo)
+        root = self.root
+
+        def reconstruir():
+            for w in root.winfo_children():
+                w.destroy()
+            root.app = App(root)
+        self.reiniciar = reconstruir
+        self._stop_rec()
+        self._ai_new()
+        if self.connected:
+            self.worker.submit("disconnect")          # al desconectar se cierra el hilo y se reconstruye
+        else:
+            self.worker.submit("quit")
 
     def on_close(self):
         self._stop_rec()
@@ -2276,9 +2343,9 @@ def main():
         _autotest_ia(sys.argv[2])
         return
     _dpi_aware()
-    root = tk.Tk(className="ToledoDiagnosis")   # WM_CLASS en Linux: «Toledodiagnosis» (ver .desktop)
+    root = tk.Tk(className=NOMBRE)              # WM_CLASS en Linux: «Obd2desk» (ver el .desktop)
     _elegir_fuentes(root)
-    App(root)
+    root.app = App(root)
     root.mainloop()
 
 

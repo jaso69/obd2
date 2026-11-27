@@ -6,9 +6,12 @@ Las tablas cubren los fabricantes más habituales en Europa; lo que no está en
 ellas se muestra sin descifrar.
 """
 import datetime
+import re
+
+from idioma import tr
 
 FABRICANTES = {
-    "WVW": "Volkswagen", "WV1": "Volkswagen Vehículos Comerciales", "WV2": "Volkswagen Vehículos Comerciales",
+    "WVW": "Volkswagen", "WV1": "Volkswagen (vehículos comerciales)", "WV2": "Volkswagen (vehículos comerciales)",
     "WVG": "Volkswagen (SUV)", "WAU": "Audi", "WUA": "Audi Sport", "TRU": "Audi (Hungría)",
     "VSS": "SEAT", "TMB": "Škoda", "WBA": "BMW", "WBS": "BMW M", "WBY": "BMW i", "WMW": "MINI",
     "WDB": "Mercedes-Benz", "WDD": "Mercedes-Benz", "WDC": "Mercedes-Benz (SUV)",
@@ -50,6 +53,11 @@ VAG = ("WVW", "WV1", "WV2", "WVG", "WAU", "WUA", "TRU", "VSS", "TMB")
 LETRAS_ANIO = "ABCDEFGHJKLMNPRSTVWXY123456789"     # ciclo de 30 años (sin I, O, Q, U, Z ni 0)
 
 
+def _parentesis(texto):
+    """Traduce lo que va entre paréntesis («Ford (Alemania)»): el resto son nombres propios."""
+    return re.sub(r"\(([^)]*)\)", lambda m: "(" + tr(m.group(1)) + ")", texto)
+
+
 def anio_modelo(c, hoy=None):
     """Año modelo de la posición 10. Se elige el más reciente que no sea futuro."""
     if c not in LETRAS_ANIO:
@@ -65,7 +73,7 @@ def pais(vin):
     for desde, hasta, nombre in PAISES:
         n = len(desde)
         if desde <= vin[:n] <= hasta:
-            return nombre
+            return tr(nombre)
     return None
 
 
@@ -73,17 +81,18 @@ def decodificar_vin(vin, hoy=None):
     """Lista de (campo, valor) con lo que se puede deducir del VIN."""
     vin = (vin or "").strip().upper()
     if len(vin) != 17 or any(c in "IOQ" for c in vin):
-        return [("VIN", "no válido (deben ser 17 caracteres, sin I, O ni Q)")]
+        return [("VIN", tr("no válido (deben ser 17 caracteres, sin I, O ni Q)"))]
     wmi = vin[:3]
-    out = [("Fabricante", FABRICANTES.get(wmi, f"desconocido (código {wmi})"))]
+    fab = FABRICANTES.get(wmi)
+    out = [(tr("Fabricante"), _parentesis(fab) if fab else tr("desconocido (código {wmi})", wmi=wmi))]
     p = pais(vin)
     if p:
-        out.append(("País de fabricación", p))
+        out.append((tr("País de fabricación"), p))
     anio = anio_modelo(vin[9], hoy)
     if anio:
-        out.append(("Año modelo", f"{anio} (posición 10 del VIN)"))
+        out.append((tr("Año modelo"), tr("{anio} (posición 10 del VIN)", anio=anio)))
     if wmi in VAG:
         modelo = MODELOS_VAG.get(vin[6:8])
-        out.append(("Modelo (código VAG)", f"{vin[6:8]} · {modelo}" if modelo else vin[6:8]))
-    out.append(("Planta y n.º de serie", f"{vin[10]} · {vin[11:]}"))
+        out.append((tr("Modelo (código VAG)"), f"{vin[6:8]} · {_parentesis(modelo)}" if modelo else vin[6:8]))
+    out.append((tr("Planta y n.º de serie"), f"{vin[10]} · {vin[11:]}"))
     return out
