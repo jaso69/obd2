@@ -348,7 +348,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 - ~~Consumo instantáneo y medio y cronómetro 0-100 km/h~~ **hecho el 2026-11-27** (pestaña «Consumo y 0-100», sin publicar; probado solo con simuladores: falta probarlo en coche, sobre todo el consumo de un diésel por OBD2 y el 0-100 con un ELM327 real, que da 5-10 lecturas/s).
 - ~~Gráfica de cualquier valor en vivo y abrir/ver un CSV grabado~~ **hecho el 2026-11-27** (en «Valores medidos»; sin publicar; probado con simuladores).
 - ~~Historial por coche (por VIN): guardar cada diagnóstico y comparar~~ **hecho el 2026-11-27** (sin publicar; probado con simuladores).
-- ~~Más herramientas para la IA~~ **hecho el 2026-11-27**: `grabar_valores`, `consultar_historial`, `generar_informe` (sin publicar; probadas con simuladores llamándolas como el modelo, **sin probar con la API real**).
+- ~~Más herramientas para la IA~~ **hecho el 2026-11-27**: `grabar_valores`, `consultar_historial`, `generar_informe` (sin publicar; probadas con simuladores llamándolas como el modelo y **con la API real de DeepSeek** (`deepseek-chat`, 2026-11-27, ~1 min): usó `consultar_historial`, `grabar_valores` (3 grabaciones de 10 s porque esperaba el motor caliente) y `generar_informe`; informe con su diagnóstico y la comparación, bien. Con Anthropic no se ha probado: el usuario solo tiene clave de DeepSeek guardada).
 
 **3. Más adelante**
 - Seguir ampliando averías VAG (más P1 y módulos de confort/clima); más grupos documentados (ME7 gasolina, TDI inyector-bomba).
