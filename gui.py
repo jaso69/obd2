@@ -18,6 +18,7 @@ import webbrowser
 from collections import deque
 from tkinter import messagebox, ttk
 
+import consumo
 import ia
 import idioma
 import informe
@@ -785,6 +786,12 @@ class Worker(threading.Thread):
             ready = None
         self.log(tr("Conectado: {version} · {protocolo}", version=e.version, protocolo=e.proto_name))
         medibles = sorted(p for p in e.supported if p in PIDS)
+        combustible = None
+        if 0x51 in e.supported:                       # tipo de combustible (para el consumo)
+            try:
+                combustible = consumo.TIPO_PID51.get(e.read_pids([0x51]).get(0x51, b"\0")[0])
+            except (ELM327Error, IndexError):
+                pass
         campos = [(tr("Adaptador"), e.version),
                   (tr("Protocolo"), e.proto_name),
                   (tr("Bastidor (VIN)"), vin or tr("No disponible"))]
@@ -807,6 +814,7 @@ class Worker(threading.Thread):
             "status": tr("Conectado · OBD2 · {protocolo}", protocolo=e.proto_name.replace("AUTO, ", "")),
             "title": vin or e.proto_name,
             "supported": medibles,
+            "combustible": combustible,
             "readiness": ready,
             "fields": campos,
         }
@@ -858,6 +866,11 @@ class App:
         self.csv_t0 = 0
         self.csv_n = 0
         self.tree_items = {}
+        # Consumo y 0-100
+        self.trayecto = consumo.Trayecto()
+        self.crono = consumo.Cronometro()
+        self.combustible_coche = None            # el que dice el PID 51 al conectar
+        self.cons_muestras = deque()             # instantes de las últimas muestras (muestras/s)
         # Asistente IA
         self.ai_chat = None          # ia.Conversacion
         self.ai_dialog = None        # (ventana, reply) de pedir_accion_usuario
@@ -1009,16 +1022,19 @@ class App:
         self.nb = ttk.Notebook(self.root)
         self.nb.pack(fill="both", expand=True)
         self.tab_panel = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
+        self.tab_cons = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_vals = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_dtc = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_ecu = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_log = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_ia = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
-        for t, n in ((self.tab_panel, tr("Panel")), (self.tab_vals, tr("Valores medidos")),
+        for t, n in ((self.tab_panel, tr("Panel")), (self.tab_cons, tr("Consumo y 0-100")),
+                     (self.tab_vals, tr("Valores medidos")),
                      (self.tab_dtc, tr("Averías")), (self.tab_ecu, tr("Vehículo")),
                      (self.tab_ia, tr("✦ Asistente IA")), (self.tab_log, tr("Registro"))):
             self.nb.add(t, text=f"  {n}  ")
         self._build_panel()
+        self._build_cons()
         self._build_vals()
         self._build_dtc()
         self._build_ecu()
@@ -1037,7 +1053,7 @@ class App:
         frame.pack(fill="x", pady=12)
         out = {}
         for i, (key, title) in enumerate(items):
-            frame.columnconfigure(i, weight=1)
+            frame.columnconfigure(i, weight=1, uniform="stats")
             c = self._card(frame)
             c.grid(row=0, column=i, padx=6, sticky="ew")
             ttk.Label(c, text=title, style="Muted.TLabel").pack(anchor="w")
@@ -1106,6 +1122,221 @@ class App:
         self.ch_rpm, self.ch_load = self._charts_row(self.panel_obd, [
             (tr("Régimen motor"), "rpm", [("RPM", ACCENT)], 3000),
             (tr("Carga y mariposa"), "%", [(tr("Carga"), ACCENT), (tr("Mariposa"), BLUE)], 100)])
+
+    def _build_cons(self):
+        p, s = self.tab_cons, self.s
+        top = ttk.Frame(p, style="Panel.TFrame")
+        top.pack(fill="x")
+        self.cons_btn = ttk.Button(top, text=tr("▶  Iniciar lectura"), style="Accent.TButton",
+                                   command=lambda: self.toggle_live("cons"))
+        self.cons_btn.pack(side="right")
+        ttk.Button(top, text=tr("Reiniciar trayecto"), command=self._cons_reiniciar).pack(side="right", padx=(0, 10))
+        aj = ttk.Frame(top, style="Panel.TFrame")
+        aj.pack(side="right", padx=(0, 18))
+        cfg = self.cfg.get("consumo", {})
+        self.comb_lbl = ttk.Label(aj, text=tr("Combustible"), style="PanelMuted.TLabel")
+        self.comb_var = tk.StringVar(value=self._nombre_comb(cfg.get("combustible", consumo.GASOLINA)))
+        self.comb_cb = ttk.Combobox(aj, textvariable=self.comb_var, state="readonly", width=9,
+                                    values=[self._nombre_comb(consumo.GASOLINA), self._nombre_comb(consumo.DIESEL)])
+        self.comb_cb.bind("<<ComboboxSelected>>", lambda e: self._cons_ajuste())
+        self.cil_lbl = ttk.Label(aj, text=tr("Cilindrada (L)"), style="PanelMuted.TLabel")
+        self.cil_var = tk.StringVar(value=str(cfg.get("cilindrada", 1.6)))
+        self.cil_entry = ttk.Entry(aj, textvariable=self.cil_var, width=5)
+        self.ncil_lbl = ttk.Label(aj, text=tr("Cilindros"), style="PanelMuted.TLabel")
+        self.ncil_var = tk.StringVar(value=str(cfg.get("cilindros", 4)))
+        self.ncil_entry = ttk.Entry(aj, textvariable=self.ncil_var, width=3)
+        for e in (self.cil_entry, self.ncil_entry):
+            e.bind("<FocusOut>", lambda ev: self._cons_ajuste())
+            e.bind("<Return>", lambda ev: self._cons_ajuste())
+        self.cons_lbl = ttk.Label(p, text="", style="PanelMuted.TLabel", wraplength=int(1100 * s))
+        self.cons_lbl.pack(fill="x", pady=(8, 0))
+
+        self.cons_stats = self._stats_row(p, [
+            ("inst", tr("Consumo instantáneo")), ("medio", tr("Consumo medio")),
+            ("litros", tr("Combustible gastado")), ("km", tr("Distancia")), ("tiempo", tr("Tiempo"))])
+
+        fila = ttk.Frame(p, style="Panel.TFrame")
+        fila.pack(fill="x", pady=(0, 12))
+        fila.columnconfigure(0, weight=3)
+        fila.columnconfigure(1, weight=2)
+        c = self._card(fila, padding=16)
+        c.grid(row=0, column=0, padx=6, sticky="nsew")
+        ttk.Label(c, text=tr("Cronómetro 0-100 km/h"), style="Card.TLabel", font=(FONT, 11, "bold")).pack(anchor="w")
+        self.crono_var = tk.StringVar(value="--")
+        ttk.Label(c, textvariable=self.crono_var, style="Card.TLabel", foreground=ACCENT,
+                  font=(FONT, 34, "bold")).pack(anchor="w", pady=(4, 0))
+        self.crono_est = ttk.Label(c, text="", style="Card.TLabel", wraplength=int(600 * s))
+        self.crono_est.pack(anchor="w")
+        self.crono_nota = ttk.Label(c, text="", style="Muted.TLabel", wraplength=int(600 * s))
+        self.crono_nota.pack(anchor="w", pady=(6, 0))
+        c = self._card(fila, padding=16)
+        c.grid(row=0, column=1, padx=6, sticky="nsew")
+        ttk.Label(c, text=tr("Últimas medidas"), style="Card.TLabel", font=(FONT, 11, "bold")).pack(anchor="w")
+        self.crono_lista = ttk.Label(c, text="", style="Card.TLabel", font=(MONO, 10), justify="left")
+        self.crono_lista.pack(anchor="w", pady=(6, 0))
+        self.crono_mejor = ttk.Label(c, text="", style="Card.TLabel", foreground=OK, font=(FONT, 11, "bold"))
+        self.crono_mejor.pack(anchor="w", pady=(8, 0))
+
+        self.ch_cons, = self._charts_row(p, [(tr("Consumo instantáneo"), "L/h", [(tr("Consumo"), ACCENT)], 10)])
+
+    @staticmethod
+    def _nombre_comb(c):
+        return tr("Diésel") if c == consumo.DIESEL else tr("Gasolina")
+
+    def _cons_valores(self):
+        """(combustible, cilindrada en L o None, cilindros) según los ajustes de la pestaña."""
+        comb = consumo.DIESEL if self.comb_var.get() == tr("Diésel") else consumo.GASOLINA
+        try:
+            cil = float(self.cil_var.get().replace(",", "."))
+            cil = cil if 0.3 <= cil <= 10 else None
+        except ValueError:
+            cil = None
+        try:
+            ncil = int(self.ncil_var.get())
+            ncil = ncil if 1 <= ncil <= 16 else 4
+        except ValueError:
+            ncil = 4
+        return comb, cil, ncil
+
+    def _cons_guardar(self):
+        comb, cil, ncil = self._cons_valores()
+        nuevo = {"combustible": comb, "cilindrada": cil or 1.6, "cilindros": ncil}
+        if self.cfg.get("consumo") != nuevo:
+            self.cfg["consumo"] = nuevo
+            try:
+                ia.guardar_config(self.cfg)
+            except OSError:
+                pass
+
+    def _cons_ajuste(self):
+        self._cons_guardar()
+        if self.live_source == "cons":            # pueden hacer falta otros PIDs: se vuelve a empezar
+            self.toggle_live("cons")
+            self.toggle_live("cons")
+        self._cons_texto()
+
+    def _cons_texto(self):
+        """Cómo se calcula el consumo (debajo de los ajustes)."""
+        comb, cil, _ = self._cons_valores()
+        if not self.connected:
+            t = tr("Conecta y pulsa Iniciar lectura. El consumo es una estimación (±10 %), como en cualquier programa OBD.")
+        elif self.mode == KKL:
+            t = tr("Calculado con el caudal inyectado y el régimen (grupo 001). La centralita no da la velocidad: "
+                   "consumo en L/h y litros gastados.")
+        else:
+            m = consumo.metodo(self.supported, comb)
+            if m == "5E":
+                t = tr("Consumo que da la propia centralita (PID 5E).")
+            elif m == "MAF":
+                t = tr("Calculado con el caudalímetro (PID 10) y la mezcla aire/combustible.")
+            elif m == "MAP" and cil:
+                t = tr("Estimado con la presión del colector, el régimen y la cilindrada (el coche no tiene "
+                       "caudalímetro): comprueba que la cilindrada es la de tu motor.")
+            elif m == "MAP":
+                t = tr("Escribe la cilindrada del motor: sin caudalímetro el consumo se estima con ella.")
+            elif comb == consumo.DIESEL:
+                t = tr("Este diésel no da el consumo (PID 5E) ni la sonda lambda de banda ancha: sin ellos no "
+                       "se puede calcular con fiabilidad.")
+            else:
+                t = tr("El coche no da los valores necesarios para calcular el consumo.")
+            if self.combustible_coche:
+                t += " " + tr("Combustible según el coche: {comb}.", comb=self._nombre_comb(self.combustible_coche))
+        self.cons_lbl.configure(text=t)
+
+    def _cons_items(self):
+        if self.mode == KKL:
+            return [1]
+        comb, cil, _ = self._cons_valores()
+        m = consumo.metodo(self.supported, comb)
+        if (m is None or (m == "MAP" and not cil)) and 0x0D not in self.supported:
+            return []                              # ni consumo ni 0-100
+        return consumo.pids_necesarios(self.supported, comb)
+
+    def _cons_reiniciar(self):
+        self.trayecto.reiniciar()
+        self.ch_cons.clear()
+        self._cons_pintar()
+
+    def _cons_muestra(self, t, data):
+        self.cons_muestras.append(t)
+        while self.cons_muestras and self.cons_muestras[0] < t - 3:
+            self.cons_muestras.popleft()
+        comb, cil, ncil = self._cons_valores()
+        kmh = None
+        if self.mode == KKL:
+            g1 = rows_of(data, 1)
+            lh = (consumo.litros_hora_vag(num(g1, 1), num(g1, 0), ncil)
+                  if len(g1) > 1 and g1[1][2] == "mg/H" else None)
+        else:
+            v = {p: num(rows) for p, rows in data.items() if isinstance(rows, list)}
+            lh = consumo.litros_hora_obd(v, comb, cil)
+            kmh = v.get(consumo.P_VELOCIDAD)
+            res = self.crono.muestra(t, kmh)
+            if res is not None:
+                parcial = self.crono.tiempos[0][1]
+                self.log(tr("0-100 km/h: {s} s", s=f"{res:.2f}")
+                         + (f" (0-50: {parcial:.2f} s)" if parcial else ""))
+        self.trayecto.muestra(t, lh, kmh)
+        if lh is not None:
+            self.ch_cons.add(t, {tr("Consumo"): lh})
+
+    def _cons_pintar(self):
+        st, tray = self.cons_stats, self.trayecto
+        kkl = self.mode == KKL
+        lh, _ = tray.instantaneo()
+        l100 = tray.l100_instantaneo()
+        st["inst"].set(f"{l100:.1f} L/100 km" if l100 is not None else f"{lh:.1f} L/h" if lh is not None else "--")
+        medio = tray.l100_medio()
+        if medio is not None:
+            st["medio"].set(f"{medio:.1f} L/100 km")
+        elif tray.segundos >= 10:
+            st["medio"].set(f"{tray.litros / tray.segundos * 3600:.1f} L/h")
+        else:
+            st["medio"].set("--")
+        st["litros"].set(f"{tray.litros:.{2 if tray.litros >= 1 else 3}f} L" if tray.segundos else "--")
+        st["km"].set("--" if kkl or not tray.segundos else f"{tray.km:.1f} km")
+        seg = int(tray.segundos)
+        st["tiempo"].set(f"{seg // 3600}:{seg // 60 % 60:02d}:{seg % 60:02d}" if seg else "--")
+        self.ch_cons.redraw()
+
+        cr = self.crono
+        avisos = {"frenada": tr("Medida anulada: la velocidad bajó antes de llegar a 100."),
+                  "parada": tr("Medida anulada: el coche se paró."),
+                  "hueco": tr("Medida anulada: se cortaron las lecturas.")}
+        nota = ""
+        if kkl:
+            grande, est = "--", tr("La centralita EDC15 no da la velocidad: el 0-100 necesita un ELM327 · OBD2.")
+        elif self.connected and 0x0D not in self.supported:
+            grande, est = "--", tr("El coche no da la velocidad (PID 0D): no se puede medir el 0-100.")
+        elif cr.estado == cr.MIDIENDO:
+            grande = f"{cr.transcurrido():.1f} s"
+            est = tr("Midiendo... {v} km/h", v=f"{cr.anterior[1]:.0f}")
+        else:
+            grande = f"{cr.tiempos[0][0]:.2f} s" if cr.tiempos else "0.00 s"
+            if self.live_source != "cons":
+                est = tr("Pulsa Iniciar lectura y para el coche: el cronómetro arranca solo al salir.")
+            elif cr.estado == cr.LISTO:
+                est = tr("Listo: el cronómetro arranca al empezar a moverte.")
+            else:
+                est = tr("Para el coche para empezar una medida.")
+            if cr.aviso in avisos:
+                est = avisos[cr.aviso] + " " + est
+            elif cr.tiempos and cr.tiempos[0][1]:
+                est = tr("0-50 km/h: {s} s.", s=f"{cr.tiempos[0][1]:.2f}") + " " + est
+        if not kkl:
+            if self.live_source == "cons" and len(self.cons_muestras) > 1:
+                ritmo = (len(self.cons_muestras) - 1) / ((self.cons_muestras[-1] - self.cons_muestras[0]) or 1)
+                nota = tr("Precisión de ±0,1-0,2 s: depende de las lecturas por segundo del adaptador "
+                          "(ahora {n}/s). Mídelo solo en un circuito o lugar cerrado al tráfico.", n=f"{ritmo:.0f}")
+            else:
+                nota = tr("Mídelo solo en un circuito o lugar cerrado al tráfico.")
+        self.crono_var.set(grande)
+        self.crono_est.configure(text=est)
+        self.crono_nota.configure(text=nota)
+        self.crono_lista.configure(text="\n".join(
+            f"{i + 1}.  {t:5.2f} s" + (f"   (0-50: {p:.2f} s)" if p else "")
+            for i, (t, p) in enumerate(cr.tiempos)) or tr("(ninguna todavía)"))
+        self.crono_mejor.configure(text=tr("Mejor: {s} s", s=f"{cr.mejor:.2f}") if cr.mejor else "")
 
     def _build_vals(self):
         p = self.tab_vals
@@ -1738,6 +1969,17 @@ class App:
                     "y se reinician los monitores de emisiones (la ITV puede rechazarlo hasta completar ciclos)."))
         self.dtc_tree.delete(*self.dtc_tree.get_children())
         self.dtc_lbl.configure(text="")
+        for w in (self.comb_lbl, self.comb_cb, self.cil_lbl, self.cil_entry, self.ncil_lbl, self.ncil_entry):
+            w.pack_forget()
+        for w in ((self.ncil_lbl, self.ncil_entry) if kkl else
+                  (self.comb_lbl, self.comb_cb, self.cil_lbl, self.cil_entry)):
+            w.pack(side="left", padx=(0, 6) if isinstance(w, ttk.Label) else (0, 14))
+        self.trayecto.reiniciar()
+        self.crono = consumo.Cronometro()
+        self.combustible_coche = None
+        self.ch_cons.clear()
+        self._cons_pintar()
+        self._cons_texto()
         if kkl:
             self.scan_btn.pack(side="left", after=self.dtc_clear_btn)
             self.ff_frame.pack_forget()
@@ -1796,7 +2038,7 @@ class App:
     def _set_connected(self, on, info=None):
         self.connected = on
         state = "normal" if on else "disabled"
-        for b in (self.panel_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
+        for b in (self.panel_btn, self.cons_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
                   self.scan_btn, self.report_btn):
             b.configure(state=state)
         self.port_cb.configure(state="disabled" if on else self._port_state())
@@ -1814,6 +2056,7 @@ class App:
             self.status(tr("Desconectado"), MUTED)
             self._stop_live()
             self._stop_rec()
+        self._cons_texto()
 
     def _key_label(self, k):
         if isinstance(k, str):
@@ -1857,6 +2100,12 @@ class App:
             return
         if source == "panel":
             items = PANEL_GROUPS if self.mode == KKL else [p for p in PANEL_PIDS if p in self.supported]
+        elif source == "cons":
+            self._cons_guardar()
+            items = self._cons_items()
+            if not items:
+                messagebox.showinfo(tr("Consumo y 0-100"), self.cons_lbl.cget("text"))
+                return
         else:
             items = self._selected_items()
         if not items:
@@ -1868,7 +2117,11 @@ class App:
         self.worker.submit("live", items, self.live_gen)
         self.panel_btn.configure(text=tr("■  Detener") if source == "panel" else tr("▶  Iniciar lectura"))
         self.vals_btn.configure(text=tr("■  Detener") if source == "vals" else tr("▶  Iniciar lectura"))
-        if source == "panel":
+        self.cons_btn.configure(text=tr("■  Detener") if source == "cons" else tr("▶  Iniciar lectura"))
+        if source == "cons":
+            self.cons_muestras.clear()
+            self._cons_pintar()
+        elif source == "panel":
             for c in (self.ch_boost, self.ch_maf, self.ch_rpm, self.ch_load):
                 c.clear()
         else:
@@ -1883,7 +2136,9 @@ class App:
         self.live_source = None
         self.panel_btn.configure(text=tr("▶  Iniciar lectura"))
         self.vals_btn.configure(text=tr("▶  Iniciar lectura"))
+        self.cons_btn.configure(text=tr("▶  Iniciar lectura"))
         self._stop_rec()
+        self._cons_pintar()
 
     def toggle_rec(self):
         if self.csv_file:
@@ -1943,7 +2198,7 @@ class App:
             return
         self._stop_live()
         self.scanning = True
-        for b in (self.panel_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
+        for b in (self.panel_btn, self.cons_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
                   self.report_btn, self.conn_btn):
             b.configure(state="disabled")
         self.scan_btn.configure(text=tr("■  Detener escaneo"), style="Danger.TButton")
@@ -2168,6 +2423,8 @@ class App:
                         self._write_csv(data)
                     elif self.live_source == "panel":
                         self._chart_add(t, data)
+                    elif self.live_source == "cons":
+                        self._cons_muestra(t, data)
                     continue
                 self._handle(kind, payload)
                 if kind == "quit":
@@ -2180,6 +2437,8 @@ class App:
                 self._update_panel(last)
             elif self.live_source == "vals":
                 self._update_tree(last)
+            elif self.live_source == "cons":
+                self._cons_pintar()
         self.root.after(50, self.poll)
 
     def _fill_pid_list(self, pids):
@@ -2197,6 +2456,9 @@ class App:
             self.log(payload)
         elif kind == "connected":
             self.supported = payload.get("supported", [])
+            self.combustible_coche = payload.get("combustible")
+            if self.combustible_coche:
+                self.comb_var.set(self._nombre_comb(self.combustible_coche))
             if payload["mode"] == ELM:
                 self._fill_pid_list(self.supported)
             self._set_connected(True, payload)

@@ -20,6 +20,7 @@ Se llamaba *Toledo Diagnosis* hasta la v0.3.0; desde el 2026-11-27 es **OBD2Desk
 ## Comandos
 - Ejecutar: `python gui.py` (Linux: `python3 gui.py`, requiere `python3-tkinter`).
 - Pruebas de protocolo: `python tests/prueba_simuladores.py` (≈20 s, debe decir «TODO CORRECTO»).
+- Consumo y 0-100: `python tests/prueba_consumo.py` (<1 s).
 - Traducciones: `python tests/prueba_idioma.py` (≈1 s). **Todo texto visible va con `tr("texto en español")` y su traducción en `textos_en.py`** (ver `docs/PROYECTO.md` §7.6).
 - Prueba de la GUI: `python tests/prueba_gui.py` (Linux: `xvfb-run -a .venv/bin/python tests/prueba_gui.py`, ≈90 s; el Python del sistema en Fedora no trae `pyserial`). En inglés: `OBD2DESK_IDIOMA=en ...` (busca restos de español). No lanzar las dos a la vez.
 - Ejecutable: Windows `build.bat` → `dist\OBD2Desk.exe`; Linux `./build.sh` → `dist/OBD2Desk` (solo uso local). Recompilar tras cambiar código.
@@ -40,5 +41,7 @@ Se llamaba *Toledo Diagnosis* hasta la v0.3.0; desde el 2026-11-27 es **OBD2Desk
 **v0.3.0 publicada y cerrada** en GitHub («Latest», etiqueta `v0.3.0` → `5c83aa6`) con el `.exe` de Windows y el paquete Linux: escaneo de módulos VAG, tabla de averías VAG ampliada, datos congelados, monitores de preparación, averías permanentes, CALID/CVN, VIN decodificado, informe HTML, ELM327 WiFi y aviso de versión nueva. **Probada en coche: funciona bien**; falta probar un ELM327 WiFi real. Web al día (descargas de la v0.3.0, estado actualizado). Antes: v0.2.0 probada en un par de coches, Linux comprobado en Fedora 44 y en 7 distros, IA probada con la API real. Licencia MIT.
 
 **v0.4.0 publicada y cerrada (2026-11-27, «Latest», etiqueta `v0.4.0` → `c10c53f`)**: renombrado a OBD2Desk e interfaz en inglés. Release con `OBD2Desk.exe` de Windows y el paquete Linux `OBD2Desk-v0.4.0-linux-x86_64.tar.gz`, ambos probados (instalan, migran la configuración de Toledo Diagnosis y abren). Web https://www.obd2desk.com publicada con las instrucciones nuevas (el dominio sin `www` redirige); los botones ya descargan la v0.4.0.
+
+**En curso (v0.5.0, sin publicar)**: Bloque 2. Hecha la pestaña «Consumo y 0-100» (`consumo.py`), probada con simuladores.
 
 **Próximos pasos**: `docs/PROYECTO.md` §10 (pequeños pendientes → Bloque 2 de funciones para la v0.5.0 → más adelante). Pasos para sacar una versión: §8.3. La versión para Mac está aparcada.

@@ -28,6 +28,7 @@ os.environ["OBD2DESK_SIN_COMPROBAR_VERSION"] = "1"   # sin consultar GitHub dura
 os.environ.setdefault("OBD2DESK_IDIOMA", "es")
 IDIOMA = os.environ["OBD2DESK_IDIOMA"]
 
+import math                         # noqa: E402
 import socket                       # noqa: E402
 import threading                    # noqa: E402
 import tkinter as tk                # noqa: E402
@@ -194,6 +195,27 @@ for modo in (gui.KKL, gui.ELM):
     ok(esperar(lambda: n() >= 3, 20), f"lectura en vivo del panel ({n()} puntos en la gráfica)")
     app.nb.select(app.tab_panel)
     revisar_idioma(f"panel {modo}")
+    app._stop_live()
+
+    # consumo y 0-100: el simulador ELM327 es un gasolina con caudalímetro que para y acelera
+    # hasta 130 km/h (130·sen(t/4)); se le adelanta el reloj para que salga de 0 en 1,5 s
+    if modo == gui.ELM:
+        app.worker.ser.t0 = time.monotonic() - (8 * math.pi - 1.5)
+    app.nb.select(app.tab_cons)
+    app.toggle_live("cons")
+    ok(esperar(lambda: app.trayecto.litros > 0 and app.ch_cons.data[tr("Consumo")], 20),
+       f"consumo en vivo ({app.cons_stats['inst'].get()}, {app.trayecto.litros * 1000:.1f} mL)")
+    if modo == gui.ELM:
+        ok(esperar(lambda: app.crono.tiempos, 25), "el cronómetro mide un 0-100")
+        t100 = app.crono.tiempos[0][0] if app.crono.tiempos else 0
+        ok(2.8 < t100 < 3.8, f"0-100 del simulador: {t100:.2f} s (curva: 3,31 s)")
+        esperar(lambda: app.trayecto.km >= 0.1 and "L/100" in app.cons_stats["medio"].get(), 15)
+        ok("L/100 km" in app.cons_stats["medio"].get(),
+           f"distancia y consumo medio ({app.trayecto.km:.3f} km, {app.cons_stats['medio'].get()})")
+        ok(app.cfg.get("consumo", {}).get("combustible") == "gasolina", "combustible detectado (PID 51) y guardado")
+    else:
+        ok("L/h" in app.cons_stats["inst"].get(), "KKL: consumo en L/h (la EDC15 no da la velocidad)")
+    revisar_idioma(f"consumo {modo}")
     app._stop_live()
 
     if modo == gui.ELM:

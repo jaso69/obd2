@@ -732,6 +732,8 @@ EN = {
     "Tensión módulo de control": "Control module voltage",
     "Carga absoluta": "Absolute load",
     "Lambda comandada": "Commanded lambda",
+    "Lambda sonda B1S1 (banda ancha)": "Lambda sensor B1S1 (wideband)",
+    "Lambda sonda B1S1 (corriente)": "Lambda sensor B1S1 (current)",
     "Mariposa relativa": "Relative throttle",
     "Temp. ambiente": "Ambient temp.",
     "Mariposa absoluta B": "Absolute throttle B",
@@ -923,4 +925,60 @@ EN = {
     "8P": "8P",
     "B5": "B5",
     "B6-B7": "B6-B7",
+
+    # ---------------------------------------------------------------- consumo y 0-100
+    "Consumo y 0-100": "Fuel & 0-100",
+    "Reiniciar trayecto": "Reset trip",
+    "Combustible": "Fuel",
+    "Gasolina": "Petrol",
+    "Diésel": "Diesel",
+    "Cilindrada (L)": "Displacement (L)",
+    "Cilindros": "Cylinders",
+    "Consumo instantáneo": "Instant consumption",
+    "Consumo medio": "Average consumption",
+    "Combustible gastado": "Fuel used",
+    "Distancia": "Distance",
+    "Tiempo": "Time",
+    "Consumo": "Consumption",
+    "Cronómetro 0-100 km/h": "0-100 km/h timer",
+    "Últimas medidas": "Latest runs",
+    "(ninguna todavía)": "(none yet)",
+    "Mejor: {s} s": "Best: {s} s",
+    "0-100 km/h: {s} s": "0-100 km/h: {s} s",
+    "0-50 km/h: {s} s.": "0-50 km/h: {s} s.",
+    "Conecta y pulsa Iniciar lectura. El consumo es una estimación (±10 %), como en cualquier programa OBD.":
+        "Connect and press Start reading. Fuel consumption is an estimate (±10%), as in any OBD program.",
+    "Calculado con el caudal inyectado y el régimen (grupo 001). La centralita no da la velocidad: consumo en L/h y litros gastados.":
+        "Calculated from the injected quantity and the engine speed (group 001). The control unit does not "
+        "report road speed: consumption in L/h and litres used.",
+    "Consumo que da la propia centralita (PID 5E).": "Fuel rate reported by the control unit itself (PID 5E).",
+    "Calculado con el caudalímetro (PID 10) y la mezcla aire/combustible.":
+        "Calculated from the mass air flow sensor (PID 10) and the air/fuel ratio.",
+    "Estimado con la presión del colector, el régimen y la cilindrada (el coche no tiene caudalímetro): comprueba que la cilindrada es la de tu motor.":
+        "Estimated from manifold pressure, engine speed and displacement (the car has no mass air flow "
+        "sensor): check that the displacement matches your engine.",
+    "Escribe la cilindrada del motor: sin caudalímetro el consumo se estima con ella.":
+        "Enter the engine displacement: without a mass air flow sensor, consumption is estimated from it.",
+    "Este diésel no da el consumo (PID 5E) ni la sonda lambda de banda ancha: sin ellos no se puede calcular con fiabilidad.":
+        "This diesel reports neither the fuel rate (PID 5E) nor the wideband lambda sensor: without them "
+        "consumption cannot be calculated reliably.",
+    "El coche no da los valores necesarios para calcular el consumo.":
+        "The car does not report the values needed to calculate fuel consumption.",
+    "Combustible según el coche: {comb}.": "Fuel type reported by the car: {comb}.",
+    "Medida anulada: la velocidad bajó antes de llegar a 100.": "Run cancelled: speed dropped before reaching 100.",
+    "Medida anulada: el coche se paró.": "Run cancelled: the car stopped.",
+    "Medida anulada: se cortaron las lecturas.": "Run cancelled: the readings were interrupted.",
+    "La centralita EDC15 no da la velocidad: el 0-100 necesita un ELM327 · OBD2.":
+        "The EDC15 control unit does not report road speed: 0-100 needs an ELM327 · OBD2.",
+    "El coche no da la velocidad (PID 0D): no se puede medir el 0-100.":
+        "The car does not report road speed (PID 0D): 0-100 cannot be measured.",
+    "Midiendo... {v} km/h": "Measuring... {v} km/h",
+    "Pulsa Iniciar lectura y para el coche: el cronómetro arranca solo al salir.":
+        "Press Start reading and stop the car: the timer starts by itself when you pull away.",
+    "Listo: el cronómetro arranca al empezar a moverte.": "Ready: the timer starts as soon as you move.",
+    "Para el coche para empezar una medida.": "Stop the car to start a run.",
+    "Precisión de ±0,1-0,2 s: depende de las lecturas por segundo del adaptador (ahora {n}/s). Mídelo solo en un circuito o lugar cerrado al tráfico.":
+        "Accuracy ±0.1-0.2 s: it depends on the adapter's readings per second (now {n}/s). Only measure "
+        "on a track or a place closed to traffic.",
+    "Mídelo solo en un circuito o lugar cerrado al tráfico.": "Only measure on a track or a place closed to traffic.",
 }

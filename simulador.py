@@ -240,7 +240,7 @@ class FakeELMSerial:
 
     SUPPORTED = {0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10,
                  0x11, 0x13, 0x14, 0x15, 0x1C, 0x1F, 0x20, 0x21, 0x2F, 0x30, 0x31, 0x33,
-                 0x40, 0x42, 0x44, 0x45, 0x46, 0x49, 0x4A, 0x4C}
+                 0x40, 0x42, 0x44, 0x45, 0x46, 0x49, 0x4A, 0x4C, 0x51}
     VIN = "VSSZZZ6KZYR000001"
 
     NOMBRES = {"3": "ISO 9141-2", "4": "ISO 14230-4 (KWP 5BAUD)", "5": "ISO 14230-4 (KWP FAST)",
@@ -440,7 +440,7 @@ class FakeELMSerial:
             0x07: [clamp(128 + 9)],
             0x0B: [clamp(32 + 60 * f)],
             0x0C: u16(rpm * 4),
-            0x0D: [clamp(rpm / 35 if f > 0.05 else 0)],
+            0x0D: [clamp(130 * f if f > 0.05 else 0)],     # para 0 s, pasa de 100 (cronómetro 0-100)
             0x0E: [clamp((8 + 18 * f + 64) * 2)],
             0x0F: [clamp(24 + 40)],
             0x10: u16((3 + 38 * f) * 100),
@@ -462,5 +462,6 @@ class FakeELMSerial:
             0x49: [clamp(255 * (0.15 + 0.6 * f))],
             0x4A: [clamp(255 * (0.08 + 0.3 * f))],
             0x4C: [clamp(255 * 0.55 * f)],
+            0x51: [1],                                      # gasolina
         }
         return valores.get(p, [0])
