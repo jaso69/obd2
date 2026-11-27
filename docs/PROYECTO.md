@@ -288,12 +288,20 @@ Hecho el 2026-11-22 (después): el usuario probó la v0.3.0 en un coche y funcio
 
 **La v0.3.0 está cerrada.** Lo siguiente está en §10.
 
-### 8.2b Release v0.4.0 (publicada el 2026-11-27, falta el `.exe`)
+### 8.2b Release v0.4.0 (publicada y cerrada el 2026-11-27)
 - Nuevo nombre **OBD2Desk** e interfaz en inglés (§7.6). Etiqueta `v0.4.0` → `c10c53f`.
 - Paquete `OBD2Desk-v0.4.0-linux-x86_64.tar.gz` (40 426 446 bytes, SHA-256 `dae343ad10380c7cd401c7e8a0baf0db4bafed9d5a9e0e168aac79c72c746bee`) con `./linux/build-portable.sh v0.4.0`: autoprueba IA bien; extraído e instalado en un HOME temporal con una instalación antigua simulada: la retira, copia la configuración y abre en inglés (`WM_CLASS` `Obd2desk`). Descargado de GitHub con el mismo SHA-256.
-- Release «OBD2Desk v0.4.0» publicada como «Latest» con notas en español e inglés; dicen que el `.exe` llega en breve.
-- Web publicada a la vez (instrucciones de Linux con `OBD2Desk-*.tar.gz`). Hasta que se suba `OBD2Desk.exe`, `web.js` ofrece el `.exe` más reciente que encuentra (el `ToledoDiagnosis.exe` de la v0.3.0).
-- **Pendiente**: compilar `OBD2Desk.exe` en Windows desde `v0.4.0` y subirlo (§8.3 pasos 5-6); quitar de las notas la frase «se subirá en breve».
+- Release «OBD2Desk v0.4.0» publicada como «Latest» con notas en español e inglés.
+- Web publicada a la vez (instrucciones de Linux con `OBD2Desk-*.tar.gz`).
+
+Hecho en Windows el 2026-11-27: `git pull` + `git fetch --tags`, compilado desde `v0.4.0` (`c10c53f`) con Python 3.14.3 y PyInstaller 6.22.3 en Windows 10 Pro.
+- `OBD2Desk.exe`: 27 607 531 bytes, SHA-256 `6ad893aa01a3c70209ccd0864bd9719bc427a3b89805ae59f73832bfbeef55f9`.
+- Probado: `prueba_idioma.py`, `prueba_simuladores.py` y `prueba_gui.py` (español) → «TODO CORRECTO»; `--autotest-ia` → los 3 proveedores «API key … no válida»; migración de `%APPDATA%\ToledoDiagnosis` a `%APPDATA%\OBD2Desk` bien; el usuario abrió el `.exe` (simulador, panel, cambio de idioma): bien.
+- `prueba_gui.py` en inglés daba un falso positivo en un Windows en español: la descripción del puerto real «Puerto de comunicaciones (COM1)» la pone el sistema. Arreglado en el test (quita las descripciones de `serial.tools.list_ports`); el `.exe` no cambia.
+
+Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windows con el mismo SHA-256, subido con `gh release upload v0.4.0`, quitada de las notas la frase «se subirá en breve» / «coming shortly», descargado de GitHub con el mismo SHA-256. La web ofrece ya la v0.4.0 en los dos sistemas (`web.js` toma el `.exe` de la release más reciente).
+
+**La v0.4.0 está cerrada.**
 
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
@@ -323,7 +331,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 - Probar con un **ELM327 WiFi real** (IP/puerto por defecto 192.168.0.10:35000); si va bien, quitar la línea de la web «La conexión WiFi está probada con el simulador…» (sección `#estado` de `web/index.html`).
 - En Linux, probar los adaptadores físicos (cable FTDI con `dialout`, Bluetooth con `rfcomm`) y el lanzador en un escritorio real.
 
-**2. Bloque 2 de funciones (propuesto el 2026-11-22, candidato a v0.4.0)**
+**2. Bloque 2 de funciones (propuesto el 2026-11-22, candidato a v0.5.0)**
 - Consumo instantáneo y medio (a partir de MAF o carga + régimen) y cronómetro 0-100 km/h.
 - Gráfica de cualquier valor en vivo y abrir/ver un CSV grabado.
 - Historial por coche (por VIN): guardar cada diagnóstico y comparar.
@@ -335,7 +343,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
 
-**Hecho el 2026-11-27 (pendiente de publicar en una versión):** renombrado a **OBD2Desk** (dominio obd2desk.com) e interfaz en inglés.
+**Hecho el 2026-11-27 (publicado en la v0.4.0):** renombrado a **OBD2Desk** (dominio obd2desk.com) e interfaz en inglés.
 
 **Aparcado (no sacarlo por iniciativa propia):** versión para Mac (sin Mac para probar; plan con GitHub Actions).
 

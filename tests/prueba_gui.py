@@ -73,6 +73,19 @@ ESPANOL = re.compile(r"[áéíóúñ¿¡]|\b(de|del|la|el|los|las|para|con|sin|u
 NOMBRES_PROPIOS = re.compile(r"Córdoba|Škoda|Citroën")      # modelos y marcas: no se traducen
 
 
+def descripciones_puertos():
+    """Descripciones de los puertos serie reales del PC: las da el sistema operativo en su
+    idioma (p. ej. «Puerto de comunicaciones (COM1)» en un Windows en español)."""
+    try:
+        from serial.tools import list_ports
+        return {p.description for p in list_ports.comports() if p.description}
+    except Exception:
+        return set()
+
+
+PUERTOS_SISTEMA = descripciones_puertos()
+
+
 def textos_ventana(w):
     """Todos los textos visibles de la ventana (etiquetas, botones, pestañas, tablas, cuadros de texto)."""
     out = []
@@ -104,6 +117,8 @@ def revisar_idioma(donde):
     for t in textos_ventana(root):
         for linea in t.splitlines():
             linea = re.sub(r"\d\d:\d\d:\d\d  \[.*", "", linea)        # depuración del registro
+            for desc in PUERTOS_SISTEMA:                                # no son textos del programa
+                linea = linea.replace(desc, "")
             if ESPANOL.search(NOMBRES_PROPIOS.sub("", linea)) and "Español" not in linea:
                 restos.add(linea.strip())
     ok(not restos, f"sin textos en español ({donde})")
