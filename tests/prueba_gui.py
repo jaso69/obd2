@@ -150,6 +150,10 @@ for modo in (gui.KKL, gui.ELM):
     app.read_dtcs()
     ok(esperar(lambda: app.dtc_tree.get_children(), 15),
        f"averías en la tabla ({len(app.dtc_tree.get_children())})")
+    esperado = ("VSSZZZ6KZYR000001", "SEAT") if modo == gui.ELM else ("VAG-038906018FQ", "038906018FQ")
+    ok(app.coche and app.coche[0] == esperado[0] and esperado[1] in app.coche[1], f"coche identificado: {app.coche}")
+    ok(tr("Guardado en el historial de {coche}. Aún no hay un diagnóstico anterior con el que compararlo.",
+          coche=app.coche[1] if app.coche else "") == str(app.hist_lbl.cget("text")), "primera lectura guardada en el historial")
     if modo == gui.ELM:
         estados = [app.dtc_tree.item(i, "values")[3] for i in app.dtc_tree.get_children()]
         ok(estados.count(tr("Permanente")) == 1, f"averías memorizadas, pendientes y permanentes {estados}")
@@ -188,6 +192,18 @@ for modo in (gui.KKL, gui.ELM):
     app.clear_dtcs()
     esperar(lambda: tr("Borrando...") != str(app.dtc_lbl.cget("text")), 15)
     ok(not dialogos, "borrado sin errores")
+    hist_txt = str(app.hist_lbl.cget("text"))
+    ok(hist_txt.startswith(tr("Comparado con el diagnóstico del {fecha} ({tipo}):", fecha="", tipo="")[:20]),
+       f"tras borrar, compara con el diagnóstico anterior: «{hist_txt[:100]}»")
+    vh = app.ver_historial()
+    root.update()
+    tipos = [r["tipo"] for r in vh.datos["registros"]] if vh.datos else []
+    ok(tipos == (["lectura", "borrado"] if modo == gui.ELM else ["lectura", "escaneo", "lectura", "borrado"]),
+       f"ventana del historial: {tipos} (la lectura repetida del informe no se duplica)")
+    detalle = vh.texto.get("1.0", "end")
+    ok(tr("Nuevas") in detalle and tr("Ya no aparecen") in detalle, "detalle con la comparación")
+    revisar_idioma(f"historial {modo}")
+    vh.win.destroy()
 
     app.toggle_live("panel")
     ch = app.ch_boost if modo == gui.KKL else app.ch_rpm

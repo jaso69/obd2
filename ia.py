@@ -239,6 +239,11 @@ def _ruta_config():
     return ruta
 
 
+def carpeta_config():
+    """Carpeta de configuración de OBD2Desk (%APPDATA%\\OBD2Desk o ~/.config/OBD2Desk)."""
+    return os.path.dirname(_ruta_config())
+
+
 def cargar_config():
     try:
         with open(_ruta_config(), encoding="utf-8") as f:

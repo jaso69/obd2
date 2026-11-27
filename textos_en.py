@@ -1010,4 +1010,41 @@ EN = {
     "media": "avg",
     "máx": "max",
     "Tramo: {a} - {b}": "Section: {a} - {b}",
+
+    # ---------------------------------------------------------------- historial por coche
+    "%d/%m/%Y %H:%M": "%Y-%m-%d %H:%M",
+    "Historial...": "History...",
+    "Historial de diagnósticos": "Diagnosis history",
+    "Coche": "Car",
+    "FECHA": "DATE",
+    "AVERÍAS": "FAULTS",
+    "Averías ({n})": "Fault codes ({n})",
+    "Ninguna": "None",
+    "Lectura de averías": "Fault code reading",
+    "Borrado de averías": "Fault code clearing",
+    "Borrar este diagnóstico": "Delete this diagnosis",
+    "¿Borrar del historial el diagnóstico del {fecha}?": "Delete the diagnosis of {fecha} from the history?",
+    "Coche sin VIN (calibración {cal})": "Car without VIN (calibration {cal})",
+    "Comparado con el diagnóstico del {fecha} ({tipo})": "Compared with the diagnosis of {fecha} ({tipo})",
+    "Comparado con el diagnóstico del {fecha} ({tipo}):": "Compared with the diagnosis of {fecha} ({tipo}):",
+    "Guardado en el historial de {coche}. Aún no hay un diagnóstico anterior con el que compararlo.":
+        "Saved in the history of {coche}. There is no earlier diagnosis to compare it with yet.",
+    "Historial: el coche no da el VIN ni otra identificación, así que esta lectura no se guarda.":
+        "History: the car reports no VIN or other identification, so this reading is not saved.",
+    "Aviso: no se pudo guardar en el historial ({e})": "Warning: could not save to the history ({e})",
+    "Módulos: {lista}": "Modules: {lista}",
+    "No hay un diagnóstico anterior de estos módulos con el que compararlo.":
+        "There is no earlier diagnosis of these modules to compare it with.",
+    "Nuevas": "New",
+    "Ya no aparecen": "No longer present",
+    "Se repiten": "Still present",
+    "Cada lectura, borrado y escaneo de averías se guarda automáticamente en {carpeta}":
+        "Every fault code reading, clearing and scan is saved automatically in {carpeta}",
+    "Todavía no hay diagnósticos guardados. Se guardan solos al leer, borrar o escanear averías con el coche conectado.":
+        "No diagnoses saved yet. They are saved automatically when you read, clear or scan fault codes with the car connected.",
+    "sin averías entonces ni ahora.": "no fault codes then or now.",
+    "{n} diagnóstico(s)": "{n} diagnosis(es)",
+    "{n} nueva(s): {lista}": "{n} new: {lista}",
+    "{n} ya no aparece(n): {lista}": "{n} no longer present: {lista}",
+    "{n} se repite(n): {lista}": "{n} still present: {lista}",
 }

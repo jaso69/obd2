@@ -21,6 +21,7 @@ from tkinter import filedialog, messagebox, ttk
 
 import consumo
 import csv_datos
+import historial
 import ia
 import idioma
 import informe
@@ -948,6 +949,8 @@ class Worker(threading.Thread):
             "status": tr("Conectado · {modulo} · {baud} bd",
                          modulo=MODULOS.get(addr, tr("Módulo {dir}", dir=f"{addr:02X}")), baud=e.baud),
             "title": ident[0].strip(),
+            "addr": addr,
+            "ident": [x.strip() for x in ident if x.strip()],
             "fields": [(tr("Módulo"), f"{addr:02X} · {MODULOS.get(addr, '?')}"),
                        (tr("Referencia"), ident[0].strip() or "—"),
                        (tr("Componente"), ident[1].strip() or "—"),
@@ -1002,6 +1005,8 @@ class Worker(threading.Thread):
             "title": vin or e.proto_name,
             "supported": medibles,
             "combustible": combustible,
+            "vin": vin,
+            "calid": ident["calid"],
             "readiness": ready,
             "fields": campos,
         }
@@ -1108,6 +1113,153 @@ class VisorCSV:
         self.resumen.configure(text="\n".join(lineas))
 
 
+class VentanaHistorial:
+    """Diagnósticos guardados de cada coche y comparación de cada uno con el anterior."""
+
+    def __init__(self, app):
+        self.app = app
+        s = app.s
+        self.win = win = tk.Toplevel(app.root)
+        win.title(tr("Historial de diagnósticos"))
+        win.configure(bg=PANEL)
+        _poner_icono(win)
+        win.geometry(f"{int(1080 * s)}x{int(620 * s)}")
+        win.minsize(int(760 * s), int(420 * s))
+        self.coches = []
+        self.datos = None
+
+        cab = ttk.Frame(win, style="Panel.TFrame", padding=(16, 12, 16, 0))
+        cab.pack(fill="x")
+        ttk.Label(cab, text=tr("Coche"), style="PanelMuted.TLabel").pack(side="left", padx=(0, 8))
+        self.coche_var = tk.StringVar()
+        self.coche_cb = ttk.Combobox(cab, textvariable=self.coche_var, state="readonly", width=72)
+        self.coche_cb.pack(side="left")
+        self.coche_cb.bind("<<ComboboxSelected>>", lambda e: self._mostrar_coche())
+        self.borrar_btn = ttk.Button(cab, text=tr("Borrar este diagnóstico"), command=self._borrar)
+        self.borrar_btn.pack(side="right")
+
+        cuerpo = ttk.Frame(win, style="Panel.TFrame", padding=16)
+        cuerpo.pack(fill="both", expand=True)
+        izq = app._card(cuerpo, padding=0)
+        izq.pack(side="left", fill="y", padx=(0, 14))
+        self.lista = ttk.Treeview(izq, columns=("fecha", "tipo", "n"), show="headings", selectmode="browse")
+        for c, t, w, a in (("fecha", tr("FECHA"), 140, "w"), ("tipo", tr("TIPO"), 170, "w"), ("n", tr("AVERÍAS"), 80, "e")):
+            self.lista.heading(c, text=t, anchor=a)
+            self.lista.column(c, width=int(w * s), anchor=a, stretch=False)
+        self.lista.pack(fill="y", expand=True)
+        self.lista.bind("<<TreeviewSelect>>", lambda e: self._mostrar_registro())
+        der = app._card(cuerpo, padding=0)
+        der.pack(side="left", fill="both", expand=True)
+        self.texto = tk.Text(der, bg=CARD, fg=FG, bd=0, highlightthickness=0, wrap="word", padx=16, pady=12,
+                             font=(FONT, 10), cursor="arrow")
+        sb = ttk.Scrollbar(der, orient="vertical", command=self.texto.yview)
+        self.texto.configure(yscrollcommand=sb.set)
+        self.texto.pack(side="left", fill="both", expand=True)
+        sb.pack(side="right", fill="y")
+        for tag, kw in (("h1", {"font": (FONT, 12, "bold")}), ("h2", {"font": (FONT, 10, "bold"), "spacing1": 10}),
+                        ("muted", {"foreground": MUTED}), ("nueva", {"foreground": ERR}),
+                        ("resuelta", {"foreground": OK}), ("repetida", {"foreground": WARN}),
+                        ("cod", {"font": (MONO, 10)})):
+            self.texto.tag_configure(tag, **kw)
+        ttk.Label(win, text=tr("Cada lectura, borrado y escaneo de averías se guarda automáticamente en {carpeta}",
+                               carpeta=app.historial.carpeta),
+                  style="PanelMuted.TLabel", padding=(16, 0, 16, 10)).pack(fill="x")
+        self.recargar(app.coche[0] if app.coche else None)
+
+    def recargar(self, preferido=None):
+        self.coches = self.app.historial.coches()
+        self.coche_cb.configure(values=[f"{n}  ·  {i}" + "  ·  " + tr("{n} diagnóstico(s)", n=k) if n != i else
+                                        f"{n}  ·  " + tr("{n} diagnóstico(s)", n=k) for i, n, k, _ in self.coches])
+        ids = [c[0] for c in self.coches]
+        if not ids:
+            self.coche_var.set("")
+            self.datos = None
+            self.lista.delete(*self.lista.get_children())
+            self._escribir([(tr("Todavía no hay diagnósticos guardados. Se guardan solos al leer, borrar o "
+                                "escanear averías con el coche conectado."), "muted")])
+            self.borrar_btn.configure(state="disabled")
+            return
+        actual = ids.index(preferido) if preferido in ids else (
+            ids.index(self.datos["id"]) if self.datos and self.datos["id"] in ids else 0)
+        self.coche_cb.current(actual)
+        self._mostrar_coche()
+
+    def _mostrar_coche(self):
+        i = self.coche_cb.current()
+        if i < 0:
+            return
+        self.datos = self.app.historial.cargar(self.coches[i][0])
+        self.lista.delete(*self.lista.get_children())
+        regs = self.datos["registros"]
+        for j in range(len(regs) - 1, -1, -1):
+            r = regs[j]
+            self.lista.insert("", "end", iid=str(j), values=(self.app._fecha_txt(r["fecha"]),
+                                                             self.app._tipo_txt(r["tipo"]), len(r["averias"])))
+        if regs:
+            self.lista.selection_set(str(len(regs) - 1))
+            self.lista.focus(str(len(regs) - 1))
+        self._mostrar_registro()
+
+    def _escribir(self, trozos):
+        self.texto.configure(state="normal")
+        self.texto.delete("1.0", "end")
+        for t, tag in trozos:
+            self.texto.insert("end", t, tag)
+        self.texto.configure(state="disabled")
+
+    def _linea(self, a, tag=""):
+        mod = f"[{a['modulo']:02X}] " if a.get("modulo") else ""
+        return [(f"  {mod}{a['codigo']}  ", ("cod", tag) if tag else "cod"),
+                (f"{a['texto']}", tag), (f"  · {self.app._estado_txt(a['estado'])}\n", "muted")]
+
+    def _mostrar_registro(self):
+        sel = self.lista.selection()
+        if not self.datos or not sel:
+            self.borrar_btn.configure(state="disabled")
+            return
+        self.borrar_btn.configure(state="normal")
+        regs = self.datos["registros"]
+        j = int(sel[0])
+        r = regs[j]
+        a = self.app
+        mods = ", ".join(f"{m:02X} · {MODULOS.get(m, '?')}" for m in r["modulos"] if m)
+        out = [(f"{a._tipo_txt(r['tipo'])} · {a._fecha_txt(r['fecha'])}\n", "h1")]
+        if mods:
+            out.append((tr("Módulos: {lista}", lista=mods) + "\n", "muted"))
+        if r.get("mil") is not None:
+            out.append(((tr("testigo MIL ENCENDIDO") if r["mil"] else tr("testigo MIL apagado")) + "\n", "muted"))
+        out.append((tr("Averías ({n})", n=len(r["averias"])) + "\n", "h2"))
+        for x in r["averias"]:
+            out += self._linea(x)
+        if not r["averias"]:
+            out.append(("  " + tr("Ninguna") + "\n", "muted"))
+        ant = historial.anterior(regs, j)
+        if ant is None:
+            out.append(("\n" + tr("No hay un diagnóstico anterior de estos módulos con el que compararlo.") + "\n", "muted"))
+        else:
+            c = historial.comparar(ant, r)
+            out.append(("\n" + tr("Comparado con el diagnóstico del {fecha} ({tipo})", fecha=a._fecha_txt(ant["fecha"]),
+                                  tipo=a._tipo_txt(ant["tipo"]).lower()) + "\n", "h2"))
+            for clave, titulo, tag in (("nuevas", tr("Nuevas"), "nueva"), ("resueltas", tr("Ya no aparecen"), "resuelta"),
+                                       ("repetidas", tr("Se repiten"), "repetida")):
+                out.append((f"{titulo} ({len(c[clave])})\n", ("h2", tag)))
+                for x in c[clave]:
+                    out += self._linea(x, tag)
+        self._escribir(out)
+
+    def _borrar(self):
+        sel = self.lista.selection()
+        if not self.datos or not sel:
+            return
+        r = self.datos["registros"][int(sel[0])]
+        if not messagebox.askyesno(tr("Historial de diagnósticos"),
+                                   tr("¿Borrar del historial el diagnóstico del {fecha}?",
+                                      fecha=self.app._fecha_txt(r["fecha"])), parent=self.win):
+            return
+        self.app.historial.borrar_registro(self.datos["id"], int(sel[0]))
+        self.recargar(self.datos["id"])
+
+
 # ---------------------------------------------------------------------------
 # Ventana principal
 # ---------------------------------------------------------------------------
@@ -1137,6 +1289,10 @@ class App:
         self.vals_nombres = {}                   # (clave, fila): (nombre, unidad)
         self.vals_serie = {}                     # (clave, fila): nombre de su serie en la gráfica
         self.visores = []                        # ventanas del visor de CSV abiertas
+        self.historial = historial.Historial(os.path.join(ia.carpeta_config(), "historial"))
+        self.coche = None                        # (id, nombre) del coche conectado, para el historial
+        self.vag_motor = None                    # (id, nombre) por la centralita de motor VAG (sin VIN)
+        self.ventana_historial = None
         # Consumo y 0-100
         self.trayecto = consumo.Trayecto()
         self.crono = consumo.Cronometro()
@@ -1688,8 +1844,11 @@ class App:
         self.scan_btn.pack(side="left")
         self.report_btn = ttk.Button(top, text=tr("Generar informe"), command=self.make_report)
         self.report_btn.pack(side="right")
+        ttk.Button(top, text=tr("Historial..."), command=self.ver_historial).pack(side="right", padx=(0, 10))
         self.dtc_lbl = ttk.Label(top, text="", style="Panel.TLabel", font=(FONT, 11, "bold"))
         self.dtc_lbl.pack(side="left", padx=10)
+        self.hist_lbl = ttk.Label(p, text="", style="PanelMuted.TLabel", wraplength=int(1150 * self.s))
+        self.hist_lbl.pack(fill="x", pady=(0, 10))
 
         body = ttk.Frame(p, style="Panel.TFrame")
         body.pack(fill="both", expand=True)
@@ -2265,6 +2424,8 @@ class App:
             self.scan_btn.pack_forget()
             self.ff_frame.pack(side="right", fill="y", padx=(14, 0))
         self._fill_ff(None)
+        self.hist_lbl.configure(text="")
+        self.coche = self.vag_motor = None
         self._fill_ecu([])
         self._fill_readiness(None)
         self.vehicle_fields, self.last_dtc_text, self.last_live_text = [], None, None
@@ -2511,6 +2672,114 @@ class App:
                               + f" {txt}\n" + "\n".join(f"- {f}" for f in filas)
                               + ("\n" + tr("Sin respuesta: {lista}", lista=sin) if sin else ""))
         self.scan_result = res
+
+    # ---------------- historial por coche ----------------
+    def _identificar_coche(self, info):
+        """(id, nombre) del coche para el historial: VIN, calibración o centralita de motor VAG."""
+        if info.get("mode") == ELM:
+            vin = info.get("vin")
+            if vin:
+                d = dict(decodificar_vin(vin))
+                modelo = (d.get(tr("Modelo (código VAG)")) or "").split(" · ")[-1]
+                fab = d.get(tr("Fabricante")) or ""
+                anio = (d.get(tr("Año modelo")) or "").split(" ")[0]
+                partes = [modelo if fab and modelo.startswith(fab) else " ".join(x for x in (fab, modelo) if x), anio]
+                return vin, " · ".join(x for x in partes if x) or vin
+            if info.get("calid"):
+                cal = info["calid"][0]
+                return f"CALID-{cal}", tr("Coche sin VIN (calibración {cal})", cal=cal)
+            return None
+        ident = info.get("ident") or []
+        vin = historial.buscar_vin(ident)
+        if vin:
+            return vin, f"VAG · {vin}"
+        addr = info.get("addr")
+        if addr == 0x01 and ident:
+            self.vag_motor = (f"VAG-{ident[0]}", "VAG · " + "  ".join(ident[:2]))
+            return self.vag_motor
+        if self.vag_motor:
+            return self.vag_motor
+        if ident:
+            return f"VAG-{addr:02X}-{ident[0]}", f"VAG · {MODULOS.get(addr, addr)} · {ident[0]}"
+        return None
+
+    @staticmethod
+    def _fecha_txt(iso):
+        try:
+            return datetime.datetime.fromisoformat(iso).strftime(tr("%d/%m/%Y %H:%M"))
+        except (TypeError, ValueError):
+            return iso or ""
+
+    @staticmethod
+    def _estado_txt(e):
+        return {"presente": tr("Presente"), "intermitente": tr("Intermitente"), "memorizada": tr("Memorizada"),
+                "pendiente": tr("Pendiente"), "permanente": tr("Permanente")}.get(e, e)
+
+    @staticmethod
+    def _tipo_txt(t):
+        return {"lectura": tr("Lectura de averías"), "borrado": tr("Borrado de averías"),
+                "escaneo": tr("Escaneo de módulos")}.get(t, t)
+
+    def _registro(self, tipo, payload):
+        """Registro del historial a partir de lo que devuelve el hilo de comunicación."""
+        vag = lambda addr, code, inter: {"modulo": addr, "codigo": f"{code:05d}", "texto": vag_componente(code),
+                                         "estado": "intermitente" if inter else "presente"}
+        if tipo == "escaneo":
+            leidos = [m for m in payload if m["ok"] and m["dtcs"] is not None]
+            return {"tipo": tipo, "modulos": [m["addr"] for m in leidos], "mil": None,
+                    "averias": [vag(m["addr"], c, i) for m in leidos for c, _, i in m["dtcs"]]}
+        if self.mode == KKL:
+            addr = int(self.mod_var.get().split(" · ")[0], 16)
+            return {"tipo": tipo, "modulos": [addr], "mil": None, "averias": [vag(addr, c, i) for c, _, i in payload]}
+        averias = [{"modulo": 0, "codigo": c, "texto": describe_obd_dtc(c), "estado": estado}
+                   for clave, estado in (("stored", "memorizada"), ("pending", "pendiente"), ("permanent", "permanente"))
+                   for c in payload.get(clave) or []]
+        return {"tipo": tipo, "modulos": [0], "mil": payload.get("mil"), "averias": averias}
+
+    def _hist_guardar(self, tipo, payload):
+        if tipo == "escaneo" and not historial.buscar_vin([x for m in payload if m["ok"] for x in m["ident"]]):
+            motor = next((m for m in payload if m["ok"] and m["addr"] == 0x01 and m["ident"]), None)
+            if motor:                              # el escaneo dice cuál es la centralita de motor
+                ident = [x.strip() for x in motor["ident"] if x.strip()]
+                self.vag_motor = self.coche = (f"VAG-{ident[0]}", "VAG · " + "  ".join(ident[:2]))
+        if not self.coche:
+            self.hist_lbl.configure(text=tr("Historial: el coche no da el VIN ni otra identificación, así que "
+                                            "esta lectura no se guarda."))
+            return
+        try:
+            reg, ant = self.historial.guardar(*self.coche, self._registro(tipo, payload))
+        except OSError as e:
+            self.log(tr("Aviso: no se pudo guardar en el historial ({e})", e=e))
+            return
+        if ant is None:
+            txt = tr("Guardado en el historial de {coche}. Aún no hay un diagnóstico anterior con el que compararlo.",
+                     coche=self.coche[1])
+        else:
+            c = historial.comparar(ant, reg)
+            lista = lambda xs: ", ".join(x["codigo"] for x in xs[:6]) + (" …" if len(xs) > 6 else "")
+            partes = []
+            if c["nuevas"]:
+                partes.append(tr("{n} nueva(s): {lista}", n=len(c["nuevas"]), lista=lista(c["nuevas"])))
+            if c["resueltas"]:
+                partes.append(tr("{n} ya no aparece(n): {lista}", n=len(c["resueltas"]), lista=lista(c["resueltas"])))
+            if c["repetidas"]:
+                partes.append(tr("{n} se repite(n): {lista}", n=len(c["repetidas"]), lista=lista(c["repetidas"])))
+            txt = (tr("Comparado con el diagnóstico del {fecha} ({tipo}):", fecha=self._fecha_txt(ant["fecha"]),
+                      tipo=self._tipo_txt(ant["tipo"]).lower()) + " "
+                   + (" · ".join(partes) if partes else tr("sin averías entonces ni ahora.")))
+        self.hist_lbl.configure(text=txt)
+        if self.last_dtc_text and ant is not None:
+            self.last_dtc_text += "\n" + txt
+        if self.ventana_historial and self.ventana_historial.win.winfo_exists():
+            self.ventana_historial.recargar(self.coche[0])
+
+    def ver_historial(self):
+        if self.ventana_historial and self.ventana_historial.win.winfo_exists():
+            self.ventana_historial.recargar(self.coche[0] if self.coche else None)
+            self.ventana_historial.win.lift()
+        else:
+            self.ventana_historial = VentanaHistorial(self)
+        return self.ventana_historial
 
     def make_report(self):
         self.report_btn.configure(state="disabled")
@@ -2796,6 +3065,7 @@ class App:
             self.log(payload)
         elif kind == "connected":
             self.supported = payload.get("supported", [])
+            self.coche = self._identificar_coche(payload)
             self.combustible_coche = payload.get("combustible")
             if self.combustible_coche:
                 self.comb_var.set(self._nombre_comb(self.combustible_coche))
@@ -2840,8 +3110,10 @@ class App:
             self.bar.configure(text=tr("Error: {e}", e=payload))
         elif kind == "dtcs":
             self._show_dtcs(payload)
+            self._hist_guardar("lectura", payload)
         elif kind == "cleared":
             self._show_dtcs(payload, after_clear=True)
+            self._hist_guardar("borrado", payload)
         elif kind == "scan_progress":
             i, n, a = payload
             self.dtc_lbl.configure(text=tr("Escaneando {dir} · {nombre} ({i}/{n})...", dir=f"{a:02X}",
@@ -2851,6 +3123,7 @@ class App:
             self.scanning = False
             self.scan_btn.configure(text=tr("Escanear todos los módulos"), style="TButton", state="disabled")
             self._show_scan(payload)
+            self._hist_guardar("escaneo", payload)
             self.status(tr("Volviendo al módulo {dir}...", dir=self.mod_var.get().split(" · ")[0]), WARN)
             self.bar.configure(text=tr("Escaneo terminado. Volviendo a conectar con el módulo elegido..."))
         elif kind == "report":
