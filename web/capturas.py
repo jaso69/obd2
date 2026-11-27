@@ -1,9 +1,11 @@
 """
 Genera las capturas de la web con los simuladores, en una pantalla virtual.
 
-    xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py
+    xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py        (español)
+    xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py en     (inglés)
 
-Necesita ImageMagick (import, magick). Deja las imágenes en web/img/ (*.webp y og.jpg).
+Necesita ImageMagick (import, magick). Deja las imágenes en web/img/ (*.webp y og.jpg)
+o, en inglés, en web/img/en/.
 La conversación del asistente IA es un guion de ejemplo (no gasta saldo): solo
 se sustituye la llamada al modelo; las herramientas se ejecutan de verdad
 contra el simulador, así que las lecturas y el diálogo son los reales.
@@ -17,7 +19,10 @@ import time
 RAIZ = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 sys.path.insert(0, RAIZ)
 os.environ["XDG_CONFIG_HOME"] = os.environ["APPDATA"] = tempfile.mkdtemp()
-os.environ["TOLEDO_SIN_COMPROBAR_VERSION"] = "1"
+os.environ["OBD2DESK_SIN_COMPROBAR_VERSION"] = "1"
+IDIOMA = sys.argv[1] if len(sys.argv) > 1 else "es"
+os.environ["OBD2DESK_IDIOMA"] = IDIOMA
+EN = IDIOMA == "en"
 
 import tkinter as tk                # noqa: E402
 from tkinter import messagebox      # noqa: E402
@@ -25,7 +30,7 @@ from tkinter import messagebox      # noqa: E402
 import gui                          # noqa: E402
 import ia                           # noqa: E402
 
-SALIDA = os.path.join(RAIZ, "web", "img")
+SALIDA = os.path.join(RAIZ, "web", "img", "en") if EN else os.path.join(RAIZ, "web", "img")
 os.makedirs(SALIDA, exist_ok=True)
 messagebox.askyesno = lambda *a, **k: True
 
@@ -42,6 +47,21 @@ Ahora mismo el aire y el turbo responden bien: en el acelerón la masa de aire r
 - Borra las averías y vuelve a leerlas tras una prueba: si reaparece la 00553, cambia el caudalímetro.
 
 Puedes circular mientras tanto, sin forzar el motor.
+"""
+
+TEXTO_IA_EN = """## Conclusion
+Right now the air and the turbo respond well: during the rev the actual air mass (block 003) and the actual boost pressure (block 011) follow the specified values. The two stored faults point to a problem **that comes and goes**.
+
+## Most likely causes
+- **Air mass meter (G70) or its connector**: fault 00553, implausible signal. If it drops out intermittently, the ECU goes into limp mode and cuts power.
+- **Boost control (N75 and vacuum hoses)**: intermittent fault 01262, control limit exceeded.
+
+## What to do
+- Clean the air mass meter connector and wiggle the wiring at idle while watching block 003.
+- Check the vacuum hoses of the N75 and the turbo actuator.
+- Clear the faults and read them again after a test drive: if 00553 comes back, replace the air mass meter.
+
+You can keep driving in the meantime, without pushing the engine.
 """
 
 
@@ -87,34 +107,25 @@ def guion_ia(self, peticion, on_text, on_tool, cancelado):
     """Sustituye a Conversacion.enviar: herramientas reales, texto de ejemplo."""
     on_tool("estado_conexion", {})
     on_tool("leer_averias", {})
-    on_text("Hay dos averías memorizadas. Voy a comprobar el aire y el turbo con el motor en marcha.\n")
-    on_tool("pedir_accion_usuario", {"instruccion": "Arranca el motor y déjalo al ralentí. Al pulsar "
-                                     "Hecho, da un acelerón a fondo en vacío y suelta. Cuidado con la "
-                                     "correa y el ventilador."})
+    on_text("There are two stored faults. I'll check the air and the turbo with the engine running.\n" if EN else
+            "Hay dos averías memorizadas. Voy a comprobar el aire y el turbo con el motor en marcha.\n")
+    on_tool("pedir_accion_usuario", {"instruccion": (
+        "Start the engine and let it idle. When you press Done, floor the throttle in neutral and release it. "
+        "Mind the belt and the fan." if EN else
+        "Arranca el motor y déjalo al ralentí. Al pulsar Hecho, da un acelerón a fondo en vacío y suelta. "
+        "Cuidado con la correa y el ventilador.")})
     on_tool("leer_valores", {"elementos": ["3", "11"], "muestras": 10, "intervalo_s": 0})
-    for parte in TEXTO_IA.split(" "):
+    for parte in (TEXTO_IA_EN if EN else TEXTO_IA).split(" "):
         on_text(parte + " ")
         time.sleep(0.005)
     return True
 
 
-root = tk.Tk(className="ToledoDiagnosis")
+root = tk.Tk(className=gui.NOMBRE)
 gui._elegir_fuentes(root)
 app = gui.App(root)
 
 
-def renombrar(w):
-    """La web ya usa el nombre OBD2Desk; el programa aún no (pendiente de renombrar)."""
-    try:
-        if w.cget("text") == "Toledo Diagnosis":
-            w.configure(text="OBD2Desk")
-    except tk.TclError:
-        pass
-    for h in w.winfo_children():
-        renombrar(h)
-
-
-renombrar(root)
 root.geometry("+0+0")
 pausa(1)
 
@@ -157,7 +168,8 @@ ia.Conversacion.enviar = guion_ia
 app.nb.select(app.tab_ia)
 app.ai_key.insert(0, "clave-de-ejemplo")
 app._ai_save()                              # en la config temporal
-app.ai_entry.insert(0, "Le falta potencia al acelerar y echa algo de humo negro")
+app.ai_entry.insert(0, "It lacks power when accelerating and blows some black smoke" if EN else
+                    "Le falta potencia al acelerar y echa algo de humo negro")
 app._ai_ask()
 if not esperar(lambda: app.ai_dialog is not None, 30):
     sys.exit("No aparece el diálogo de la IA")
@@ -165,7 +177,7 @@ pausa(1)
 capturar("ia-accion")
 w, reply = app.ai_dialog
 app.ai_dialog = None
-reply.put(("Hecho", False))
+reply.put((gui.tr("Hecho"), False))
 w.destroy()
 esperar(lambda: not app.ai_busy, 60)
 pausa(1)

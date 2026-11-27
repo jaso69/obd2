@@ -137,6 +137,7 @@
       <li><strong>Sesión estable</strong>: mantiene viva la conexión KW1281 y avisa si se pierde.</li>
       <li><strong>Informe de diagnóstico</strong> en HTML, listo para imprimir o guardar como PDF.</li>
       <li><strong>Avisa de versiones nuevas</strong> al arrancar.</li>
+      <li><strong>En español e inglés</strong>: el idioma se cambia en el selector junto al nombre del programa.</li>
     </ul>
   </div>
 </section>
@@ -270,12 +271,12 @@
         <h3>Linux (64 bits)</h3>
         <a class="boton boton-principal" data-descarga="linux" href="https://github.com/jaso69/obd2/releases">⬇ Paquete .tar.gz</a>
         <p class="pequeno">Ubuntu 20.04+, Debian 11+, Linux Mint 20+, Fedora, openSUSE, Arch…</p>
-<pre><code>tar xzf ToledoDiagnosis-*-linux-x86_64.tar.gz
-cd ToledoDiagnosis
+<pre><code>tar xzf OBD2Desk-*-linux-x86_64.tar.gz
+cd OBD2Desk
 ./instalar.sh
 sudo usermod -aG dialout $USER</code></pre>
         <ol class="lista-pasos">
-          <li>El instalador lo añade al menú de aplicaciones, sin sudo. <code>./instalar.sh --desinstalar</code> lo quita.</li>
+          <li>El instalador lo añade al menú de aplicaciones, sin sudo. <code>./instalar.sh --desinstalar</code> lo quita. Si tenías la versión anterior (Toledo Diagnosis), la sustituye y conserva tu configuración.</li>
           <li>Con el último comando das permiso para usar el cable (en Arch el grupo es <code>uucp</code>). Cierra sesión y vuelve a entrar.</li>
           <li>ELM327 Bluetooth: emparéjalo y enlázalo con <code>sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF</code>.</li>
         </ol>
