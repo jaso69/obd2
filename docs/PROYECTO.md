@@ -288,6 +288,13 @@ Hecho el 2026-11-22 (después): el usuario probó la v0.3.0 en un coche y funcio
 
 **La v0.3.0 está cerrada.** Lo siguiente está en §10.
 
+### 8.2b Release v0.4.0 (publicada el 2026-11-27, falta el `.exe`)
+- Nuevo nombre **OBD2Desk** e interfaz en inglés (§7.6). Etiqueta `v0.4.0` → `c10c53f`.
+- Paquete `OBD2Desk-v0.4.0-linux-x86_64.tar.gz` (40 426 446 bytes, SHA-256 `dae343ad10380c7cd401c7e8a0baf0db4bafed9d5a9e0e168aac79c72c746bee`) con `./linux/build-portable.sh v0.4.0`: autoprueba IA bien; extraído e instalado en un HOME temporal con una instalación antigua simulada: la retira, copia la configuración y abre en inglés (`WM_CLASS` `Obd2desk`). Descargado de GitHub con el mismo SHA-256.
+- Release «OBD2Desk v0.4.0» publicada como «Latest» con notas en español e inglés; dicen que el `.exe` llega en breve.
+- Web publicada a la vez (instrucciones de Linux con `OBD2Desk-*.tar.gz`). Hasta que se suba `OBD2Desk.exe`, `web.js` ofrece el `.exe` más reciente que encuentra (el `ToledoDiagnosis.exe` de la v0.3.0).
+- **Pendiente**: compilar `OBD2Desk.exe` en Windows desde `v0.4.0` y subirlo (§8.3 pasos 5-6); quitar de las notas la frase «se subirá en breve».
+
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py`, `.venv/bin/python tests/prueba_idioma.py`, `xvfb-run -a .venv/bin/python tests/prueba_gui.py` y `OBD2DESK_IDIOMA=en xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO» (las dos de GUI una detrás de otra: a la vez chocan en el nombre del CSV).
