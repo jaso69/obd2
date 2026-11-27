@@ -67,6 +67,9 @@ Diagnóstico guiado:
 - Sé eficiente: agrupa lo que puedas en una misma lectura, no repitas lecturas sin motivo y no pases de unas 10 comprobaciones salvo que de verdad haga falta.
 - Si no hay conexión con el coche, pide al usuario con pedir_accion_usuario que conecte (selector «Conexión», «Puerto» y botón «Conectar» arriba) y comprueba después con estado_conexion.
 - Borra averías solo si aporta al diagnóstico (ver si reaparecen) y después de haberlas leído.
+- Para saber si una avería es nueva, si ha vuelto después de borrarla o si viene de lejos, consulta el historial del coche con consultar_historial (el programa guarda cada lectura, borrado y escaneo).
+- Para algo que dura más de unos segundos (calentamiento, ralentí inestable, una prueba de uno o dos minutos) usa grabar_valores: graba un CSV que el usuario puede ver luego en el programa y te devuelve mínimo, media y máximo de cada valor y una muestra de la serie. Para capturas cortas basta leer_valores con varias muestras.
+- Si el usuario pide un informe, termina el diagnóstico y llama a generar_informe con tu diagnóstico (en Markdown sencillo, como la respuesta final): se guarda junto con el vehículo y las averías y se abre en el navegador.
 
 Seguridad (obligatorio):
 - Nunca pidas al usuario que mire la pantalla ni maneje el portátil mientras conduce. Las pruebas en circulación solo con un acompañante que maneje el portátil, en un lugar seguro y respetando las normas. Prefiere pruebas en parado.
@@ -94,6 +97,9 @@ Guided diagnosis:
 - Be efficient: group what you can into a single reading, don't repeat readings without a reason and don't go beyond about 10 checks unless it is really needed.
 - If there is no connection to the car, ask the user with pedir_accion_usuario to connect (the «Connection» and «Port» selectors and the «Connect» button at the top) and then check with estado_conexion.
 - Clear fault codes only if it helps the diagnosis (to see whether they come back) and only after reading them.
+- To find out whether a fault code is new, came back after being cleared or has been there for a long time, check the car's history with consultar_historial (the program saves every reading, clearing and scan).
+- For something that lasts more than a few seconds (warm-up, unstable idle, a test of a minute or two) use grabar_valores: it records a CSV the user can view later in the program and returns the minimum, average and maximum of each value plus a sample of the series. For short captures, leer_valores with several samples is enough.
+- If the user asks for a report, finish the diagnosis and call generar_informe with your diagnosis (in simple Markdown, like the final answer): it is saved together with the vehicle and the fault codes and opened in the browser.
 
 Safety (mandatory):
 - Never ask the user to look at the screen or operate the laptop while driving. Road tests only with a passenger operating the laptop, in a safe place and following traffic rules. Prefer stationary tests.
@@ -166,6 +172,50 @@ HERRAMIENTAS = [
         "description": "Borra los códigos de avería de la centralita (el usuario tiene que confirmarlo). "
                        "Devuelve las averías que siguen presentes después de borrar.",
         "input_schema": _SIN_PARAMS,
+    },
+    {
+        "name": "grabar_valores",
+        "description": "Graba valores en directo durante unos segundos (2 a 120) tan rápido como permita la "
+                       "conexión y los guarda en un CSV que el usuario puede abrir con «Abrir CSV...» en Valores "
+                       "medidos. Devuelve el número de muestras, mínimo, media y máximo de cada valor y una muestra "
+                       "de la serie. Mismos elementos que leer_valores (grupos VAG o PIDs OBD2).",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "elementos": {"type": "array", "items": {"type": "string"},
+                              "description": "Grupos VAG (decimal) o PIDs OBD2 (hexadecimal)."},
+                "segundos": {"type": "number", "description": "Duración de la grabación, 2 a 120 s. Por defecto 10."},
+            },
+            "required": ["elementos"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "consultar_historial",
+        "description": "Devuelve los diagnósticos guardados del coche (lecturas, borrados y escaneos de averías, "
+                       "con fecha) y qué cambió en cada uno respecto al anterior: averías nuevas, que ya no "
+                       "aparecen y que se repiten. Sin coche conectado, lista los coches guardados.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "registros": {"type": "integer", "description": "Cuántos diagnósticos (los más recientes), 1 a 30. Por defecto 10."},
+                "coche": {"type": "string", "description": "Identificador de otro coche guardado (opcional; por defecto, el conectado)."},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "generar_informe",
+        "description": "Lee las averías y genera el informe de diagnóstico en HTML (vehículo, averías, comparación "
+                       "con el diagnóstico anterior y tu diagnóstico), lo guarda y lo abre en el navegador, desde "
+                       "donde se puede imprimir o guardar como PDF. Úsalo cuando el usuario pida un informe.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"diagnostico": {"type": "string",
+                                           "description": "Tu diagnóstico en Markdown sencillo (## títulos, listas con -, **negrita**), en el idioma del usuario."}},
+            "required": ["diagnostico"],
+            "additionalProperties": False,
+        },
     },
     {
         "name": "leer_registro",

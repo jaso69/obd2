@@ -154,6 +154,10 @@ fórmula que envía la propia centralita.
   - `pedir_accion_usuario` — ventana no modal con la instrucción y botones **Hecho** / **No puedo** + comentario.
   - `borrar_averias` — siempre con confirmación del usuario.
   - `leer_registro` — últimas líneas del registro (diagnóstico de problemas de conexión).
+  - `grabar_valores` — graba 2-120 s (como mucho 50 muestras/s) a `ia_AAAAMMDD_HHMMSS.csv` en la carpeta de documentos (se abre en el visor de CSV) y devuelve mín/media/máx de cada valor y ~25 muestras de la serie.
+  - `consultar_historial` — diagnósticos guardados del coche conectado (o de otro con `coche`) con nuevas/ya no aparecen/se repiten frente al anterior; sin coche, lista los coches guardados.
+  - `generar_informe` — lee las averías y genera el informe HTML con la sección «Diagnóstico del asistente IA» (Markdown sencillo convertido y escapado en `informe._markdown`) y lo abre en el navegador.
+- Todos los informes (también los manuales) llevan la comparación con el diagnóstico anterior si el coche está identificado.
 - Botones: «Analizar averías del vehículo», «Analizar errores del programa», «Nueva conversación», «Detener». Preguntas de seguimiento en el chat.
 - En el chat se ve cada paso (⚙ Leyendo grupos 3, 11 · 15 muestras…) y la respuesta en streaming con formato.
 - Límite: **15 rondas de herramientas por mensaje**; después debe concluir (en la última ronda se fuerza `tool_choice: none`).
@@ -200,7 +204,7 @@ fórmula que envía la propia centralita.
 | `tests/prueba_csv.py` | Lector de CSV (del programa y de otros, errores, reducir puntos) (<1 s). |
 | `tests/prueba_historial.py` | Historial: guardar, no duplicar, comparar (también escaneo frente a lectura de un módulo), varios coches, archivos dañados, VIN en la identificación VAG (<1 s). |
 | `tests/prueba_idioma.py` | Comprueba (≈1 s) que todo `tr("...")` del código y todas las tablas tienen traducción, que coinciden los huecos `{nombre}`, que no hay claves repetidas ni español en las traducciones. |
-| `tests/prueba_gui.py` | Maneja la ventana real con los dos simuladores: conectar, averías, escaneo de módulos, datos congelados, monitores, informe, panel, consumo y 0-100 (en ELM327 adelanta el reloj del simulador para medir un 0-100 de 3,3 s), valores + CSV + gráfica en vivo de filas elegidas + visor del CSV grabado (ratón, zoom, resumen), historial (coche identificado, primera lectura, comparación tras borrar, ventana con los registros), ELM327 WiFi (servidor TCP local), configuración IA y cambio de idioma con el selector (`xvfb-run -a .venv/bin/python tests/prueba_gui.py` en Linux, ≈90 s; con `OBD2DESK_IDIOMA=en` corre en inglés y además busca restos de español en todos los textos de la ventana y en el informe). Necesita `pyserial` (el Python del sistema en Fedora no lo trae: usar `.venv`). |
+| `tests/prueba_gui.py` | Maneja la ventana real con los dos simuladores: conectar, averías, escaneo de módulos, datos congelados, monitores, informe, panel, consumo y 0-100 (en ELM327 adelanta el reloj del simulador para medir un 0-100 de 3,3 s), valores + CSV + gráfica en vivo de filas elegidas + visor del CSV grabado (ratón, zoom, resumen), historial (coche identificado, primera lectura, comparación tras borrar, ventana con los registros), herramientas de la IA llamadas como lo haría el modelo sin API (`leer_valores`, `consultar_historial`, `grabar_valores`, `generar_informe`), ELM327 WiFi (servidor TCP local), configuración IA y cambio de idioma con el selector (`xvfb-run -a .venv/bin/python tests/prueba_gui.py` en Linux, ≈90 s; con `OBD2DESK_IDIOMA=en` corre en inglés y además busca restos de español en todos los textos de la ventana y en el informe). Necesita `pyserial` (el Python del sistema en Fedora no lo trae: usar `.venv`). |
 | `build.bat` / `build.sh` | Ejecutable único con PyInstaller (Windows / Linux). |
 | `linux/build-portable.sh` | Binario Linux portable (contenedor Debian 11) y paquete `.tar.gz` para distribuir. |
 | `linux/instalar.sh`, `linux/obd2desk.desktop`, `linux/LEEME.txt`, `linux/README.txt` | Instalación de usuario en Linux y LÉEME del paquete (español e inglés). |
@@ -344,7 +348,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 - ~~Consumo instantáneo y medio y cronómetro 0-100 km/h~~ **hecho el 2026-11-27** (pestaña «Consumo y 0-100», sin publicar; probado solo con simuladores: falta probarlo en coche, sobre todo el consumo de un diésel por OBD2 y el 0-100 con un ELM327 real, que da 5-10 lecturas/s).
 - ~~Gráfica de cualquier valor en vivo y abrir/ver un CSV grabado~~ **hecho el 2026-11-27** (en «Valores medidos»; sin publicar; probado con simuladores).
 - ~~Historial por coche (por VIN): guardar cada diagnóstico y comparar~~ **hecho el 2026-11-27** (sin publicar; probado con simuladores).
-- Más herramientas para la IA (p. ej. que redacte el informe de diagnóstico).
+- ~~Más herramientas para la IA~~ **hecho el 2026-11-27**: `grabar_valores`, `consultar_historial`, `generar_informe` (sin publicar; probadas con simuladores llamándolas como el modelo, **sin probar con la API real**).
 
 **3. Más adelante**
 - Seguir ampliando averías VAG (más P1 y módulos de confort/clima); más grupos documentados (ME7 gasolina, TDI inyector-bomba).

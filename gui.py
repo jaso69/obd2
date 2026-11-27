@@ -559,6 +559,15 @@ def comprobar_version(avisar):
     threading.Thread(target=run, daemon=True).start()
 
 
+def cabecera_csv(modo, data):
+    pref = (lambda k: f"G{k:03d} ") if modo == KKL else (lambda k: "")
+    return ["t (s)"] + [f"{pref(k)}{n} ({u})" for k, rows in data.items() for n, _, u, _ in rows]
+
+
+def fila_csv(t, data):
+    return [f"{t:.2f}".replace(".", ",")] + [v.replace(".", ",") for rows in data.values() for _, v, _, _ in rows]
+
+
 # ---------------------------------------------------------------------------
 # Hilo de comunicacion
 # ---------------------------------------------------------------------------
@@ -823,24 +832,16 @@ class Worker(threading.Thread):
             return tr("Averías borradas. Estado después de borrar:") + "\n" + self._fmt_obd_dtcs(d), False
         if nombre == "leer_valores":
             return self._tool_valores(e)
+        if nombre == "grabar_valores":
+            return self._tool_grabar(e)
         return tr("Herramienta desconocida: {nombre}", nombre=nombre), True
 
-    def _tool_valores(self, e):
-        els = e.get("elementos")
+    def _tool_items(self, els):
+        """Grupos o PIDs válidos pedidos por la IA: (lista, notas) o (None, error)."""
         if isinstance(els, (str, int)):
             els = [els]
         if not isinstance(els, list) or not els:
-            return tr("Indica al menos un grupo o PID en 'elementos'."), True
-        try:
-            muestras = max(1, min(40, int(e.get("muestras") or 1)))
-        except (TypeError, ValueError):
-            muestras = 1
-        try:
-            intervalo = max(0.0, min(5.0, float(e.get("intervalo_s") or 0)))
-        except (TypeError, ValueError):
-            intervalo = 0.0
-        if muestras * intervalo > 120:
-            intervalo = 120 / muestras
+            return None, (tr("Indica al menos un grupo o PID en 'elementos'."), True)
         items, notas = [], []
         for x in els:
             s = str(x).strip().upper()
@@ -862,7 +863,96 @@ class Worker(threading.Thread):
             notas.append(tr("Solo se leen los {n} primeros.", n=limite))
             items = items[:limite]
         if not items:
-            return tr("Ningún grupo o PID válido.") + "\n" + "\n".join(notas), True
+            return None, (tr("Ningún grupo o PID válido.") + "\n" + "\n".join(notas), True)
+        return items, notas
+
+    def _tool_grabar(self, e):
+        items, notas = self._tool_items(e.get("elementos"))
+        if items is None:
+            return notas
+        try:
+            segundos = max(2.0, min(120.0, float(e.get("segundos") or 10)))
+        except (TypeError, ValueError):
+            segundos = 10.0
+        ruta = os.path.join(CARPETA, f"ia_{datetime.datetime.now():%Y%m%d_%H%M%S}.csv")
+        try:
+            os.makedirs(CARPETA, exist_ok=True)
+            f = open(ruta, "w", newline="", encoding="utf-8-sig")
+        except OSError as ex:
+            return tr("No se pudo crear el archivo:") + f" {ex}", True
+        self.log(tr("La IA graba {s} s en {archivo}", s=f"{segundos:g}", archivo=ruta))
+        serie, cabecera, errores = [], None, {}
+        with f:
+            w = csv.writer(f, delimiter=";")
+            t0 = time.monotonic()
+            siguiente = t0
+            while time.monotonic() - t0 < segundos:
+                espera = siguiente - time.monotonic()
+                if espera > 0:
+                    time.sleep(espera)            # como mucho 50 muestras/s (un ELM327 real da unas 10)
+                siguiente = time.monotonic() + 0.02
+                data = self._muestra(items)
+                t = time.monotonic() - t0
+                malos = {k: v for k, v in data.items() if isinstance(v, str)}
+                errores.update(malos)
+                if not malos:
+                    if cabecera is None:
+                        cabecera = cabecera_csv(self.mode, data)
+                        w.writerow(cabecera)
+                    w.writerow(fila_csv(t, data))
+                    serie.append((t, data))
+                if self.mode == KKL and not self.ecu.connected:
+                    notas.append(tr("Se perdió la conexión durante la lectura."))
+                    break
+        if not serie:
+            try:
+                os.remove(ruta)
+            except OSError:
+                pass
+            return (tr("No se pudo grabar ninguna muestra.") + "\n"
+                    + "\n".join(f"{self._etiqueta(k)}: {v}" for k, v in errores.items())), True
+        self.post("tool_live", serie[-1][1])
+        dur = serie[-1][0] or 1
+        lineas = [tr("Grabadas {n} muestras en {s} s ({ritmo} por segundo). Archivo: {archivo} (el usuario puede "
+                     "abrirlo con «Abrir CSV...» en Valores medidos).", n=len(serie), s=f"{dur:.1f}",
+                     ritmo=f"{len(serie) / dur:.1f}", archivo=ruta),
+                  tr("Resumen (mínimo / media / máximo):")]
+        for k, rows in serie[0][1].items():
+            for i, (nombre, _, unidad, _) in enumerate(rows):
+                vs = []
+                for _, d in serie:
+                    try:
+                        vs.append(float(d[k][i][1]))
+                    except (ValueError, IndexError, KeyError, TypeError):
+                        pass
+                if vs:
+                    f3 = lambda v: f"{round(v, 3):g}"
+                    lineas.append(f"- {self._etiqueta(k)} {nombre}: {f3(min(vs))} / {f3(sum(vs) / len(vs))} / "
+                                  f"{f3(max(vs))} {unidad}".rstrip())
+        paso = max(1, -(-len(serie) // 25))
+        muestra = serie[::paso]
+        if muestra[-1] is not serie[-1]:
+            muestra.append(serie[-1])
+        lineas.append(tr("Serie (una de cada {k} muestras):", k=paso))
+        if errores:
+            notas.append(tr("Algunas lecturas fallaron y no se grabaron: {lista}",
+                            lista="; ".join(f"{self._etiqueta(k)}: {v}" for k, v in errores.items())))
+        return "\n".join(lineas) + "\n" + self._fmt_serie(muestra, notas), False
+
+    def _tool_valores(self, e):
+        items, notas = self._tool_items(e.get("elementos"))
+        if items is None:
+            return notas
+        try:
+            muestras = max(1, min(40, int(e.get("muestras") or 1)))
+        except (TypeError, ValueError):
+            muestras = 1
+        try:
+            intervalo = max(0.0, min(5.0, float(e.get("intervalo_s") or 0)))
+        except (TypeError, ValueError):
+            intervalo = 0.0
+        if muestras * intervalo > 120:
+            intervalo = 120 / muestras
 
         serie = []
         t0 = time.monotonic()
@@ -1293,6 +1383,7 @@ class App:
         self.coche = None                        # (id, nombre) del coche conectado, para el historial
         self.vag_motor = None                    # (id, nombre) por la centralita de motor VAG (sin VIN)
         self.ventana_historial = None
+        self.informe_ia = None                   # informe pedido por la IA: {"texto", "reply"}
         # Consumo y 0-100
         self.trayecto = consumo.Trayecto()
         self.crono = consumo.Cronometro()
@@ -2178,7 +2269,11 @@ class App:
                 n = 80
             res = self._ai_main(lambda: ("\n".join(self.log_txt.get("1.0", "end").strip().splitlines()[-n:])
                                          or tr("(registro vacío)"), False), conv)
-        elif nombre in ("leer_averias", "leer_valores", "borrar_averias"):
+        elif nombre == "consultar_historial":
+            res = self._ai_main(lambda: self._ai_historial(entrada), conv)
+        elif nombre == "generar_informe":
+            res = self._ai_main(lambda reply: self._ai_informe(entrada, reply), conv, asincrono=True)
+        elif nombre in ("leer_averias", "leer_valores", "borrar_averias", "grabar_valores"):
             if nombre == "borrar_averias":
                 ok = self._ai_main(lambda: (messagebox.askyesno(
                     tr("Asistente IA"), tr("La IA quiere borrar las averías de la centralita para ver si reaparecen.")
@@ -2207,7 +2302,13 @@ class App:
             lista = ", ".join(str(x) for x in els)
             return (tr("Leyendo grupos {lista}", lista=lista) if self.mode == KKL
                     else tr("Leyendo PIDs {lista}", lista=lista)) + extra
+        if nombre == "grabar_valores":
+            els = e.get("elementos") or []
+            lista = ", ".join(str(x) for x in (els if isinstance(els, list) else [els]))
+            return tr("Grabando {lista} durante {s} s", lista=lista, s=e.get("segundos", 10))
         return {"estado_conexion": tr("Consultando el estado de la conexión"),
+                "consultar_historial": tr("Consultando el historial del coche"),
+                "generar_informe": tr("Generando el informe"),
                 "leer_averias": tr("Leyendo averías"),
                 "borrar_averias": tr("Solicitando borrar averías"),
                 "leer_registro": tr("Leyendo el registro del programa"),
@@ -2224,6 +2325,8 @@ class App:
                     + tr(". Se pueden pedir otros números de grupo (1-255); si no existen, la centralita lo indica."))
             else:
                 lineas.append(tr("PIDs soportados: ") + ", ".join(f"{p:02X} {PIDS[p][0]}" for p in self.supported))
+            lineas.append(tr("Coche en el historial: {coche}", coche=f"{self.coche[1]} ({self.coche[0]})")
+                          if self.coche else tr("Coche en el historial: sin identificar (no da VIN)"))
         else:
             lineas.append(tr("Para conectar, el usuario debe elegir Conexión y Puerto arriba y pulsar Conectar."))
         return "\n".join(lineas), False
@@ -2781,6 +2884,54 @@ class App:
             self.ventana_historial = VentanaHistorial(self)
         return self.ventana_historial
 
+    def _ai_historial(self, e):
+        try:
+            n = max(1, min(30, int(e.get("registros") or 10)))
+        except (TypeError, ValueError):
+            n = 10
+        coches = self.historial.coches()
+        ident = str(e.get("coche") or "").strip() or (self.coche[0] if self.coche else "")
+        lista = "\n".join(f"- {i} · {nom} · " + tr("{n} diagnóstico(s)", n=k) + " · " + tr("último: {fecha}",
+                          fecha=self._fecha_txt(f)) for i, nom, k, f in coches) or tr("(ninguno)")
+        if not ident:
+            return (tr("No hay un coche conectado e identificado. Coches con historial:") + "\n" + lista
+                    + "\n" + tr("Puedes pedir uno con el parámetro 'coche'."), False)
+        d = self.historial.cargar(ident)
+        regs = d["registros"]
+        if not regs:
+            return (tr("Todavía no hay diagnósticos guardados de este coche ({coche}).", coche=ident)
+                    + "\n" + tr("Coches con historial:") + "\n" + lista, False)
+        inicio = max(0, len(regs) - n)
+        out = [tr("Historial de {nombre} ({id}): {total} diagnóstico(s) guardado(s); se muestran los {n} últimos, "
+                  "del más antiguo al más reciente.", nombre=d.get("nombre", ident), id=ident, total=len(regs),
+                  n=len(regs) - inicio)]
+        for j in range(inicio, len(regs)):
+            r = regs[j]
+            mods = ", ".join(f"{m:02X}" for m in r["modulos"] if m)
+            cab = f"- {self._fecha_txt(r['fecha'])} · {self._tipo_txt(r['tipo'])}"
+            if mods:
+                cab += " · " + tr("módulos {lista}", lista=mods)
+            if r.get("mil") is not None:
+                cab += " · " + (tr("testigo MIL ENCENDIDO") if r["mil"] else tr("testigo MIL apagado"))
+            averias = "; ".join((f"[{a['modulo']:02X}] " if a.get("modulo") else "") + f"{a['codigo']} "
+                                f"({self._estado_txt(a['estado'])}) {a['texto']}" for a in r["averias"])
+            out.append(cab + ": " + (averias or tr("sin averías")))
+            ant = historial.anterior(regs, j)
+            if ant is not None:
+                c = historial.comparar(ant, r)
+                cods = lambda xs: ", ".join(x["codigo"] for x in xs) or "—"
+                out.append("  " + tr("Frente al anterior: nuevas {a}; ya no aparecen {b}; se repiten {c}",
+                                     a=cods(c["nuevas"]), b=cods(c["resueltas"]), c=cods(c["repetidas"])))
+        return "\n".join(out), False
+
+    def _ai_informe(self, e, reply):
+        if not self.connected:
+            reply.put((tr("No hay conexión con el vehículo. Pide al usuario que conecte "
+                          "(selector Conexión, Puerto y botón Conectar)."), True))
+            return
+        self.informe_ia = {"texto": str(e.get("diagnostico") or "").strip(), "reply": reply}
+        self.make_report()
+
     def make_report(self):
         self.report_btn.configure(state="disabled")
         self.bar.configure(text=tr("Leyendo averías para el informe..."))
@@ -2788,17 +2939,26 @@ class App:
 
     def _save_report(self, d):
         self.report_btn.configure(state="normal" if self.connected else "disabled")
+        ia_pend, self.informe_ia = self.informe_ia, None
+        hist = str(self.hist_lbl.cget("text"))
         datos = {"modo": self.mode, "version": VERSION, "vehiculo": self.vehicle_fields,
-                 "dtcs": d["dtcs"], "modulo": d.get("modulo", 1), "escaneo": self.scan_result}
+                 "dtcs": d["dtcs"], "modulo": d.get("modulo", 1), "escaneo": self.scan_result,
+                 "historial": hist if self.coche and hist else None,
+                 "diagnostico_ia": ia_pend["texto"] if ia_pend else None}
         name = os.path.join(CARPETA, tr("informe") + f"_{datetime.datetime.now():%Y%m%d_%H%M%S}.html")
         try:
             os.makedirs(CARPETA, exist_ok=True)
             with open(name, "w", encoding="utf-8") as f:
                 f.write(informe.generar(datos))
         except OSError as e:
+            if ia_pend:
+                ia_pend["reply"].put((tr("No se pudo crear el archivo:") + f" {e}", True))
+                return
             messagebox.showerror(tr("Generar informe"), tr("No se pudo crear el archivo:") + f"\n{e}")
             return
         self.last_report = name
+        if ia_pend:
+            ia_pend["reply"].put((tr("Informe guardado en {archivo} y abierto en el navegador.", archivo=name), False))
         self.log(tr("Informe guardado: {archivo}", archivo=name))
         self.bar.configure(text=tr("Informe guardado en {archivo} (se abre en el navegador; desde ahí puedes "
                                    "imprimirlo o guardarlo como PDF).", archivo=name))
@@ -3002,13 +3162,9 @@ class App:
         if any(isinstance(v, str) for v in data.values()):
             return
         if self.csv_header is None:
-            pref = (lambda k: f"G{k:03d} ") if self.mode == KKL else (lambda k: "")
-            self.csv_header = ["t (s)"] + [f"{pref(k)}{n} ({u})" for k, rows in data.items()
-                                           for n, _, u, _ in rows]
+            self.csv_header = cabecera_csv(self.mode, data)
             self.csv_writer.writerow(self.csv_header)
-        fila = [f"{time.monotonic() - self.csv_t0:.2f}".replace(".", ",")]
-        fila += [v.replace(".", ",") for rows in data.values() for _, v, _, _ in rows]
-        self.csv_writer.writerow(fila)
+        self.csv_writer.writerow(fila_csv(time.monotonic() - self.csv_t0, data))
         self.csv_n += 1
         if self.csv_n % 10 == 0:
             self.csv_file.flush()
@@ -3087,6 +3243,10 @@ class App:
             self.bar.configure(text=tr("Conexión perdida: {motivo}. Pulsa Conectar para reintentar.", motivo=payload))
             self.log(tr("Error: conexión perdida ({motivo})", motivo=payload))
         elif kind == "error":
+            if self.informe_ia:                         # el informe que pidió la IA no se pudo hacer
+                self.informe_ia["reply"].put((tr("Error: {e}", e=payload), True))
+                self.informe_ia = None
+                self.report_btn.configure(state="normal" if self.connected else "disabled")
             if not self.connected:
                 self._set_connected(False)
                 self.status(tr("Error de conexión"), ERR)

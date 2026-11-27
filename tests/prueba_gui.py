@@ -87,6 +87,15 @@ def descripciones_puertos():
 PUERTOS_SISTEMA = descripciones_puertos()
 
 
+def herramienta(nombre, entrada, seg=60):
+    """Ejecuta una herramienta de la IA como lo haría el modelo (en otro hilo) y devuelve (texto, error)."""
+    res = []
+    app._ai_tool_line = lambda *a, **k: None      # sin conversación abierta no hay chat donde escribir la línea
+    threading.Thread(target=lambda: res.append(app._ai_tool(app.ai_conv, nombre, entrada)), daemon=True).start()
+    esperar(lambda: res, seg)
+    return res[0] if res else ("(sin respuesta)", True)
+
+
 def textos_ventana(w):
     """Todos los textos visibles de la ventana (etiquetas, botones, pestañas, tablas, cuadros de texto)."""
     out = []
@@ -204,6 +213,32 @@ for modo in (gui.KKL, gui.ELM):
     ok(tr("Nuevas") in detalle and tr("Ya no aparecen") in detalle, "detalle con la comparación")
     revisar_idioma(f"historial {modo}")
     vh.win.destroy()
+
+    # herramientas de la IA (se llaman como lo haría el modelo, sin consultar ninguna API)
+    r = herramienta("leer_valores", {"elementos": ["1"] if modo == gui.KKL else ["0C", "0D"], "muestras": 2})
+    ok(not r[1] and "t(s)" in r[0], "IA · leer_valores con 2 muestras")
+    r = herramienta("consultar_historial", {})
+    ok(not r[1] and tr("Frente al anterior: nuevas {a}; ya no aparecen {b}; se repiten {c}", a="", b="", c="")[:12] in r[0]
+       and app.coche[0] in r[0], "IA · consultar_historial con la comparación")
+    r = herramienta("grabar_valores", {"elementos": ["1", "3"] if modo == gui.KKL else ["0C", "0D", "10"], "segundos": 3})
+    m = re.search(r"(\S+ia_\d+_\d+\.csv)", r[0])
+    ok(not r[1] and m and os.path.isfile(m.group(1)), f"IA · grabar_valores 3 s: {r[0].splitlines()[0][:60]}")
+    if m and os.path.isfile(m.group(1)):
+        import csv_datos
+        cols = csv_datos.leer(m.group(1))["columnas"]
+        ok(len(cols) == (8 if modo == gui.KKL else 3) and tr("Resumen (mínimo / media / máximo):") in r[0],
+           f"el CSV de la IA se abre en el visor ({len(cols)} columnas) y hay resumen")
+        os.remove(m.group(1))
+    r = herramienta("generar_informe", {"diagnostico": "## Conclusión\n- El **caudalímetro** <da> lecturas bajas"})
+    ok(not r[1] and getattr(app, "last_report", None) and abiertos, f"IA · generar_informe: {r[0][:50]}")
+    if getattr(app, "last_report", None):
+        with open(app.last_report, encoding="utf-8") as f:
+            h = f.read()
+        ok(tr("Diagnóstico del asistente IA") in h and "<strong>caudalímetro</strong> &lt;da&gt;" in h
+           and tr("Comparación con el diagnóstico anterior") in h, "el informe lleva el diagnóstico de la IA y la comparación")
+        os.remove(app.last_report)
+        app.last_report = None
+        abiertos.clear()
 
     app.toggle_live("panel")
     ch = app.ch_boost if modo == gui.KKL else app.ch_rpm

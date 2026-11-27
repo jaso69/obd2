@@ -1047,4 +1047,55 @@ EN = {
     "{n} nueva(s): {lista}": "{n} new: {lista}",
     "{n} ya no aparece(n): {lista}": "{n} no longer present: {lista}",
     "{n} se repite(n): {lista}": "{n} still present: {lista}",
+
+    # ---------------------------------------------------------------- herramientas nuevas de la IA
+    "Graba valores en directo durante unos segundos (2 a 120) tan rápido como permita la conexión y los guarda en un CSV que el usuario puede abrir con «Abrir CSV...» en Valores medidos. Devuelve el número de muestras, mínimo, media y máximo de cada valor y una muestra de la serie. Mismos elementos que leer_valores (grupos VAG o PIDs OBD2).":
+        "Records live values for a few seconds (2 to 120) as fast as the connection allows and saves them to a CSV "
+        "the user can open with \"Open CSV...\" in Measured values. Returns the number of samples, the minimum, "
+        "average and maximum of each value and a sample of the series. Same elements as leer_valores (VAG blocks "
+        "or OBD2 PIDs).",
+    "Duración de la grabación, 2 a 120 s. Por defecto 10.": "Recording length, 2 to 120 s. Default 10.",
+    "Devuelve los diagnósticos guardados del coche (lecturas, borrados y escaneos de averías, con fecha) y qué cambió en cada uno respecto al anterior: averías nuevas, que ya no aparecen y que se repiten. Sin coche conectado, lista los coches guardados.":
+        "Returns the car's saved diagnoses (fault code readings, clearings and scans, with dates) and what changed "
+        "in each one compared with the previous one: new faults, faults no longer present and faults still "
+        "present. With no car connected, lists the saved cars.",
+    "Cuántos diagnósticos (los más recientes), 1 a 30. Por defecto 10.": "How many diagnoses (the most recent), 1 to 30. Default 10.",
+    "Identificador de otro coche guardado (opcional; por defecto, el conectado).":
+        "Identifier of another saved car (optional; by default, the connected one).",
+    "Lee las averías y genera el informe de diagnóstico en HTML (vehículo, averías, comparación con el diagnóstico anterior y tu diagnóstico), lo guarda y lo abre en el navegador, desde donde se puede imprimir o guardar como PDF. Úsalo cuando el usuario pida un informe.":
+        "Reads the fault codes and generates the HTML diagnosis report (vehicle, fault codes, comparison with the "
+        "previous diagnosis and your diagnosis), saves it and opens it in the browser, from where it can be printed "
+        "or saved as PDF. Use it when the user asks for a report.",
+    "Tu diagnóstico en Markdown sencillo (## títulos, listas con -, **negrita**), en el idioma del usuario.":
+        "Your diagnosis in simple Markdown (## headings, lists with -, **bold**), in the user's language.",
+    "(ninguno)": "(none)",
+    "Algunas lecturas fallaron y no se grabaron: {lista}": "Some readings failed and were not recorded: {lista}",
+    "Coche en el historial: sin identificar (no da VIN)": "Car in the history: not identified (no VIN)",
+    "Coche en el historial: {coche}": "Car in the history: {coche}",
+    "Coches con historial:": "Cars with a history:",
+    "Comparación con el diagnóstico anterior": "Comparison with the previous diagnosis",
+    "Consultando el historial del coche": "Checking the car's history",
+    "Diagnóstico del asistente IA": "AI assistant diagnosis",
+    "Frente al anterior: nuevas {a}; ya no aparecen {b}; se repiten {c}":
+        "Compared with the previous one: new {a}; no longer present {b}; still present {c}",
+    "Generando el informe": "Generating the report",
+    "Grabadas {n} muestras en {s} s ({ritmo} por segundo). Archivo: {archivo} (el usuario puede abrirlo con «Abrir CSV...» en Valores medidos).":
+        "Recorded {n} samples in {s} s ({ritmo} per second). File: {archivo} (the user can open it with "
+        "\"Open CSV...\" in Measured values).",
+    "Grabando {lista} durante {s} s": "Recording {lista} for {s} s",
+    "Historial de {nombre} ({id}): {total} diagnóstico(s) guardado(s); se muestran los {n} últimos, del más antiguo al más reciente.":
+        "History of {nombre} ({id}): {total} saved diagnosis(es); showing the last {n}, oldest first.",
+    "Informe guardado en {archivo} y abierto en el navegador.": "Report saved in {archivo} and opened in the browser.",
+    "La IA graba {s} s en {archivo}": "The AI is recording {s} s to {archivo}",
+    "No hay un coche conectado e identificado. Coches con historial:": "No car is connected and identified. Cars with a history:",
+    "No se pudo grabar ninguna muestra.": "No samples could be recorded.",
+    "Puedes pedir uno con el parámetro 'coche'.": "You can ask for one with the 'coche' parameter.",
+    "Redactado por la IA a partir de los datos leídos del coche. Es orientativo: confírmalo antes de cambiar piezas.":
+        "Written by the AI from the data read from the car. It is a guide: confirm it before replacing parts.",
+    "Resumen (mínimo / media / máximo):": "Summary (minimum / average / maximum):",
+    "Serie (una de cada {k} muestras):": "Series (one in every {k} samples):",
+    "Todavía no hay diagnósticos guardados de este coche ({coche}).": "No diagnoses saved for this car yet ({coche}).",
+    "módulos {lista}": "modules {lista}",
+    "sin averías": "no fault codes",
+    "último: {fecha}": "last: {fecha}",
 }

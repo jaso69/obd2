@@ -5,6 +5,7 @@ Se abre en el navegador y desde ahí se puede imprimir o guardar como PDF.
 """
 import datetime
 import html
+import re
 
 import idioma
 from idioma import tr
@@ -27,6 +28,30 @@ th{background:#f3f5f7;font-weight:600}td.k{color:#5b6573;width:32%}
 
 def _e(x):
     return html.escape(str(x))
+
+
+def _markdown(texto):
+    """Markdown sencillo (## títulos, listas con -, **negrita**) a HTML, escapando todo lo demás."""
+    out, lista = [], False
+    for linea in str(texto).splitlines():
+        t = linea.strip()
+        neg = lambda x: re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", _e(x))
+        es_item = t.startswith(("- ", "* "))
+        if lista and not es_item:
+            out.append("</ul>")
+            lista = False
+        if t.startswith("#"):
+            out.append(f"<h3>{neg(t.lstrip('#').strip())}</h3>")
+        elif es_item:
+            if not lista:
+                out.append("<ul>")
+                lista = True
+            out.append(f"<li>{neg(t[2:].strip())}</li>")
+        elif t:
+            out.append(f"<p>{neg(t)}</p>")
+    if lista:
+        out.append("</ul>")
+    return "".join(out)
 
 
 def _tabla(cabecera, filas):
@@ -138,6 +163,11 @@ def generar(datos):
     else:
         out.append(f"<h2>{_e(tr('Averías'))}</h2>")
         out.append(_seccion_obd(datos.get("dtcs") or {}))
+    if datos.get("historial"):
+        out.append(f"<h2>{_e(tr('Comparación con el diagnóstico anterior'))}</h2><p>{_e(datos['historial'])}</p>")
+    if datos.get("diagnostico_ia"):
+        out.append(f"<h2>{_e(tr('Diagnóstico del asistente IA'))}</h2>" + _markdown(datos["diagnostico_ia"])
+                   + f"<p class='nota'>{_e(tr('Redactado por la IA a partir de los datos leídos del coche. Es orientativo: confírmalo antes de cambiar piezas.'))}</p>")
     out.append(f"<h2>{_e(tr('Notas'))}</h2><ul class='nota'>"
                f"<li>{_e(tr('Borrar un código no repara la avería: si la causa sigue, vuelve a aparecer.'))}</li>"
                f"<li>{_e(tr('Las descripciones de los códigos son orientativas; confírmalas con la documentación del fabricante.'))}</li></ul>"
