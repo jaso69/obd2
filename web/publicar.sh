@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publica la web en https://obd2desk.com: sustituye el contenido del repositorio
+# Publica la web en https://www.obd2desk.com: sustituye el contenido del repositorio
 # jaso69/obd2desk (enlazado con Vercel) por esta carpeta y lo sube con un commit normal
 # (el contenido anterior queda en el historial). Uso: ./web/publicar.sh ["mensaje"]
 set -euo pipefail
@@ -24,4 +24,4 @@ fi
 git status --short
 git commit -q -m "$MENSAJE"
 git push -q origin HEAD:main
-echo "Subido a $REPO; Vercel la publicará en https://obd2desk.com en un minuto."
+echo "Subido a $REPO; Vercel la publicará en https://www.obd2desk.com en un minuto."

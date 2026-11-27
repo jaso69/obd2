@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://obd2desk.com/sitemap.xml
+Sitemap: https://www.obd2desk.com/sitemap.xml
