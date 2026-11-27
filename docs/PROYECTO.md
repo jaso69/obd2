@@ -316,12 +316,14 @@ Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windo
 
 **La v0.4.0 está cerrada.**
 
-### 8.2c Release v0.5.0 (publicada el 2026-11-27, falta el `.exe`)
+### 8.2c Release v0.5.0 (publicada y cerrada el 2026-11-27)
 - Bloque 2: consumo y 0-100, gráfica en vivo y visor de CSV, historial por coche, herramientas nuevas de la IA. **Probado en coche por el usuario** («ya está todo probado en el coche»). Etiqueta `v0.5.0` → `1c10616`.
 - Pruebas antes de etiquetar: consumo, csv, historial, idioma, simuladores y GUI en español e inglés → «TODO CORRECTO».
 - Paquete `OBD2Desk-v0.5.0-linux-x86_64.tar.gz` (40 512 316 bytes, SHA-256 `27a4113ac35ff6c80a4df6967f8adc3d13cf6e8c57d60663b94ea69e35fd2fde`): autoprueba IA bien; instalado en un HOME temporal y abierto (pestaña nueva presente). Descargado de GitHub con el mismo SHA-256.
-- Release «OBD2Desk v0.5.0» publicada como «Latest» con notas en español e inglés; dicen que el `.exe` llega en breve.
-- **Pendiente**: compilar `OBD2Desk.exe` en Windows desde `v0.5.0` (instrucciones en `COMPILAR_v0.5.0.md` de la carpeta de Windows, con `obd2-v0.5.0.bundle`), subirlo, quitar «se subirá en breve» de las notas y **publicar la web** (`./web/publicar.sh`; ya dice que las novedades están probadas en coche).
+- Release «OBD2Desk v0.5.0» publicada como «Latest» con notas en español e inglés; al principio decían que el `.exe` llegaba en breve (ya quitado).
+- `OBD2Desk.exe` compilado en Windows 10 desde `v0.5.0` (Python 3.14.3, PyInstaller 6.22.3): 27 696 915 bytes, SHA-256 `36b79796d04b2f8e39cee1f42692b63f8883df4ae9414d0bbbd5c25780eca6eb`. Antes, todas las pruebas «TODO CORRECTO» (GUI en español e inglés); autoprueba IA: los 3 proveedores «no válida», ningún «FALLO»; el usuario probó el `.exe` con el simulador: «todo funciona bien». Subido a la release y descargado de GitHub con el mismo SHA-256; quitado «en breve» de las notas.
+- `tests/prueba_csv.py` se caía en la consola de Windows (cp1252) al imprimir «→»; cambiado por «->».
+- Web publicada el 2026-11-27 (`./web/publicar.sh "Web v0.5.0"`); los botones descargan la v0.5.0.
 
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
@@ -392,7 +394,7 @@ Hecha el 2026-11-21 en Fedora 44 (Python 3.14, Tk 9.0, Wayland): pruebas de prot
 - `web/vercel.json`: `trailingSlash`, cabeceras de seguridad (CSP sin scripts ni estilos en línea; `connect-src` permite `https://api.github.com` para los botones de descarga) y caché de `img/`. Si se añade un script o estilo en línea al HTML, la CSP lo bloqueará. `robots.txt` y `sitemap.xml` apuntan a `obd2desk.com`.
 
 
-**Web de la v0.5.0 preparada (2026-11-27), SIN PUBLICAR**: bloques nuevos «Consumo y cronómetro 0-100» e «Historial de cada coche», «Valores medidos, gráficas y grabación» con selector «Gráfica en vivo / Visor de CSV», pasos del asistente con historial e informe, estado con las novedades «probadas con los simuladores; pendientes de verificar en coche». Capturas regeneradas (miden 2025×1200 en español y 2015×1200 en inglés: la pestaña nueva ensancha la ventana; los `width` del HTML lo reflejan). **Publicarla solo cuando exista la release v0.5.0** (si no, anuncia funciones que la descarga no trae); si se prueba en coche antes, quitar la línea «pendientes de verificar en coche».
+**Web de la v0.5.0 publicada (2026-11-27)**: bloques nuevos «Consumo y cronómetro 0-100» e «Historial de cada coche», «Valores medidos, gráficas y grabación» con selector «Gráfica en vivo / Visor de CSV», pasos del asistente con historial e informe, estado con las novedades «probadas con los simuladores; pendientes de verificar en coche». Capturas regeneradas (miden 2025×1200 en español y 2015×1200 en inglés: la pestaña nueva ensancha la ventana; los `width` del HTML lo reflejan). **Publicarla solo cuando exista la release v0.5.0** (si no, anuncia funciones que la descarga no trae); si se prueba en coche antes, quitar la línea «pendientes de verificar en coche».
 
 ### 12.1 Público y tono
 Aficionados a la mecánica y dueños de coches VAG antiguos (y de cualquier coche con

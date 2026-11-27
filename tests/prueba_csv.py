@@ -60,7 +60,7 @@ print("Reducir puntos para dibujar")
 muchos = [(i * 0.1, (i % 100) * 1.0) for i in range(36000)]
 muchos[12345] = (1234.5, 999.0)                       # un pico aislado
 red = c.reducir(muchos, 2000)
-ok(len(red) <= 2100 and max(v for _, v in red) == 999.0, f"36000 → {len(red)} puntos sin perder el pico")
+ok(len(red) <= 2100 and max(v for _, v in red) == 999.0, f"36000 -> {len(red)} puntos sin perder el pico")
 ok(all(red[i][0] <= red[i + 1][0] for i in range(len(red) - 1)), "siguen en orden")
 ok(c.reducir(muchos[:50], 2000) == muchos[:50], "pocos puntos: sin cambios")
 

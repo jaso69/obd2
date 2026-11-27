@@ -44,6 +44,6 @@ Se llamaba *Toledo Diagnosis* hasta la v0.3.0; desde el 2026-11-27 es **OBD2Desk
 
 **v0.4.0 publicada y cerrada (2026-11-27, «Latest», etiqueta `v0.4.0` → `c10c53f`)**: renombrado a OBD2Desk e interfaz en inglés. Release con `OBD2Desk.exe` de Windows y el paquete Linux `OBD2Desk-v0.4.0-linux-x86_64.tar.gz`, ambos probados (instalan, migran la configuración de Toledo Diagnosis y abren). Web https://www.obd2desk.com publicada con las instrucciones nuevas (el dominio sin `www` redirige); los botones ya descargan la v0.4.0.
 
-**v0.5.0 publicada (2026-11-27, «Latest», etiqueta `v0.5.0` → `1c10616`)**: Bloque 2 (consumo y 0-100, gráfica en vivo y visor de CSV, historial por coche, herramientas nuevas de la IA), probado en coche por el usuario e IA probada con la API real de DeepSeek. Release con el paquete Linux. **Falta el `OBD2Desk.exe`** (compilar en Windows desde `v0.5.0`, ver `docs/PROYECTO.md` §8.2c) y **publicar la web** (preparada en `web/`).
+**v0.5.0 publicada y cerrada (2026-11-27, «Latest», etiqueta `v0.5.0` → `1c10616`)**: Bloque 2 (consumo y 0-100, gráfica en vivo y visor de CSV, historial por coche, herramientas nuevas de la IA), probado en coche por el usuario e IA probada con la API real de DeepSeek. Release con `OBD2Desk.exe` (probado en Windows) y el paquete Linux; web publicada con las novedades y las descargas de la v0.5.0.
 
-**Próximos pasos**: `docs/PROYECTO.md` §10 (pequeños pendientes → Bloque 2 de funciones para la v0.5.0 → más adelante). Pasos para sacar una versión: §8.3. La versión para Mac está aparcada.
+**Próximos pasos**: `docs/PROYECTO.md` §10 (Bloque 2 hecho en la v0.5.0; quedan los pendientes y lo de «más adelante»). Pasos para sacar una versión: §8.3. La versión para Mac está aparcada.
