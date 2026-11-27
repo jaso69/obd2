@@ -351,6 +351,8 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 
 **1. Pequeños pendientes (para la próxima versión, sea cual sea)**
 - Probar con un **ELM327 WiFi real** (IP/puerto por defecto 192.168.0.10:35000); si va bien, quitar la línea de la web «La conexión WiFi está probada con el simulador…» (sección `#estado` de `web/index.html`).
+- **Para el 2026-11-28 (pedido por el usuario)**: mover la pestaña «Consumo y 0-100» justo **después de «Vehículo»**.
+- **Para el 2026-11-28 (pedido por el usuario)**: añadir **al final una pestaña «Ayuda»** (manual de la aplicación) que explique cómo funciona el programa.
 - En Linux, probar los adaptadores físicos (cable FTDI con `dialout`, Bluetooth con `rfcomm`) y el lanzador en un escritorio real.
 
 **2. Bloque 2 de funciones (propuesto el 2026-11-22, candidato a v0.5.0)**
