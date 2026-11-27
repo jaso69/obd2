@@ -222,6 +222,16 @@ for modo in (gui.KKL, gui.ELM):
         app.pid_list.selection_set(0, 3)
     app.toggle_rec()
     ok(esperar(lambda: app.csv_n >= 3, 20), f"lectura de valores y grabación CSV ({app.csv_n} muestras)")
+    filas = app.tree.get_children()
+    app.tree.selection_set(filas[:2])
+    root.update()
+    ok(len(app.ch_vals.series) == 2, f"gráfica en vivo de 2 filas elegidas {[n for n, _ in app.ch_vals.series]}")
+    n0 = sum(len(d) for d in app.ch_vals.data.values())
+    ok(esperar(lambda: sum(len(d) for d in app.ch_vals.data.values()) > n0 + 2, 15),
+       f"la gráfica recibe valores ({sum(len(d) for d in app.ch_vals.data.values())} puntos, con el historial)")
+    app.tree.selection_set(filas[:6])
+    root.update()
+    ok(len(app.ch_vals.series) == 4, "como mucho 4 valores en la gráfica")
     nombre = app.csv_file.name if app.csv_file else None
     app._stop_rec()
     app._stop_live()
@@ -229,6 +239,26 @@ for modo in (gui.KKL, gui.ELM):
         with open(nombre, encoding="utf-8-sig") as f:
             lineas = f.read().splitlines()
         ok(len(lineas) >= 4, f"CSV con cabecera y datos: {lineas[0][:70]}")
+        v = app.abrir_csv(nombre)
+        ok(v is not None and v.lista.size() == len(lineas[0].split(";")) - 1 and len(v.grafica.series) == 1,
+           f"visor de CSV: {v.lista.size() if v else 0} columnas, la primera dibujada")
+        if v:
+            v.lista.selection_set(0, 2)
+            v._elegir()
+            root.update()
+            g = v.grafica
+            w = g.winfo_width()
+            g._mover(type("E", (), {"x": w // 2})())
+            textos = [g.itemcget(i, "text") for i in g.find_all() if g.type(i) == "text"]
+            ok(any(t.startswith("t = ") for t in textos), "valores bajo el ratón")
+            x0, x1 = g.total
+            g.ampliar(x0 + (x1 - x0) * 0.3, x1)
+            ok(g.rango is not None and tr("Tramo: {a} - {b}", a="", b="")[:5] in v.resumen.cget("text")
+               and tr("media") in v.resumen.cget("text"), "zoom de un tramo con su resumen")
+            g.ver_todo()
+            ok(g.rango is None, "ver todo")
+            revisar_idioma(f"visor de CSV {modo}")
+            v.win.destroy()
         os.remove(nombre)
     revisar_idioma(f"valores medidos {modo}")
 

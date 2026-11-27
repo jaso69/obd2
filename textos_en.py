@@ -981,4 +981,33 @@ EN = {
         "Accuracy ±0.1-0.2 s: it depends on the adapter's readings per second (now {n}/s). Only measure "
         "on a track or a place closed to traffic.",
     "Mídelo solo en un circuito o lugar cerrado al tráfico.": "Only measure on a track or a place closed to traffic.",
+
+    # ---------------------------------------------------------------- gráfica y visor de CSV
+    "Haz clic en una fila de la tabla para ver su gráfica (Ctrl+clic: hasta 4 valores).":
+        "Click a row in the table to see its graph (Ctrl+click: up to 4 values).",
+    "{n} valores": "{n} values",
+    "Abrir CSV...": "Open CSV...",
+    "Abrir CSV": "Open CSV",
+    "Abrir grabación CSV": "Open CSV recording",
+    "Archivos CSV": "CSV files",
+    "Todos los archivos": "All files",
+    "No se pudo abrir {archivo}:": "Could not open {archivo}:",
+    "Abierto en el visor: {archivo}": "Opened in the viewer: {archivo}",
+    "El archivo no tiene datos (hace falta una fila de cabecera y al menos una de valores).":
+        "The file has no data (it needs a header row and at least one row of values).",
+    "El archivo no tiene columnas con números.": "The file has no columns with numbers.",
+    "Columna {n}": "Column {n}",
+    "Visor de CSV · {archivo}": "CSV viewer · {archivo}",
+    "sin columna de tiempo": "no time column",
+    "{n} muestras · {columnas} columnas · {duracion}": "{n} samples · {columnas} columns · {duracion}",
+    "Ver todo": "Show all",
+    "Columnas (Ctrl+clic: hasta 4)": "Columns (Ctrl+click: up to 4)",
+    "Elige una o varias columnas a la izquierda.": "Choose one or more columns on the left.",
+    "Pasa el ratón por la gráfica para ver los valores · arrastra para ampliar un tramo · doble clic o «Ver todo» para volver.":
+        "Hover over the graph to see the values · drag to zoom into a section · double-click or \"Show all\" to go back.",
+    "muestra {n}": "sample {n}",
+    "mín": "min",
+    "media": "avg",
+    "máx": "max",
+    "Tramo: {a} - {b}": "Section: {a} - {b}",
 }

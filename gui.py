@@ -5,6 +5,7 @@ Interfaz grafica de diagnostico: VAG KW1281 (cable KKL) y OBD2 generico (ELM327)
 
 Elige el tipo de conexion, el puerto COM (o "Simulador") y pulsa Conectar.
 """
+import bisect
 import csv
 import datetime
 import math
@@ -16,9 +17,10 @@ import time
 import tkinter as tk
 import webbrowser
 from collections import deque
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
 import consumo
+import csv_datos
 import ia
 import idioma
 import informe
@@ -259,7 +261,14 @@ class Chart(tk.Canvas):
         self.title, self.unit, self.series = title, unit, series
         self.window, self.ymin_top, self.s = window, ymin_top, s
         self.data = {name: deque() for name, _ in series}
+        self.mensaje = ""                    # se muestra si no hay series
         self.bind("<Configure>", lambda e: self.redraw())
+
+    def configurar(self, title, unit, series, datos=None):
+        """Cambia las series (y opcionalmente sus datos previos: {nombre: [(t, v)]})."""
+        self.title, self.unit, self.series = title, unit, series
+        self.data = {name: deque((datos or {}).get(name, ())) for name, _ in series}
+        self.redraw()
 
     def clear(self):
         for d in self.data.values():
@@ -292,17 +301,14 @@ class Chart(tk.Canvas):
             self.create_rectangle(x - 10 * s, 13 * s, x, 19 * s, fill=color, outline="")
             x -= 18 * s
 
+        if not self.series:
+            self.create_text(w / 2, h / 2, text=self.mensaje, fill=MUTED, font=(FONT, 10),
+                             width=max(100, w - 60 * s), justify="center")
+            return
         vals = [v for d in self.data.values() for _, v in d]
-        top = max(max(vals) * 1.1 if vals else 0, self.ymin_top)
-        step = nice_step(top / 4)
-        top = step * math.ceil(top / step)
+        lo, top = escala_y(vals, self.ymin_top)
         pw, ph = w - L - R, h - T - B
-        v = 0
-        while v <= top + 1e-9:
-            y = T + ph - v / top * ph
-            self.create_line(L, y, w - R, y, fill=TRACK)
-            self.create_text(L - 6 * s, y, text=f"{v:g}", anchor="e", fill=MUTED, font=(FONT, 8))
-            v += step
+        dibujar_eje_y(self, lo, top, L, T, w - R, ph, s)
         for i, lbl in ((0, f"-{self.window}s"), (0.5, f"-{self.window // 2}s"), (1, tr("ahora"))):
             self.create_text(L + pw * i, h - B + 12 * s, text=lbl, fill=MUTED, font=(FONT, 8))
 
@@ -310,9 +316,190 @@ class Chart(tk.Canvas):
         for name, color in self.series:
             pts = []
             for t, v in self.data[name]:
-                pts += [L + pw * (1 - (now - t) / self.window), T + ph - max(0, min(v, top)) / top * ph]
+                pts += [L + pw * (1 - (now - t) / self.window), T + ph - (max(lo, min(v, top)) - lo) / (top - lo) * ph]
             if len(pts) >= 4:
                 self.create_line(*pts, fill=color, width=2 * s)
+
+
+def escala_y(vals, ymin_top=1):
+    """(abajo, arriba) del eje Y con números redondos; incluye el 0 y los negativos."""
+    lo = min(0.0, min(vals) * 1.1) if vals else 0.0
+    top = max(max(vals) * 1.1 if vals else 0, ymin_top if lo == 0 else 0, lo + 1e-6)
+    if top <= 0:
+        top = 0.0
+    step = nice_step((top - lo) / 4)
+    top = step * math.ceil(top / step - 1e-9)
+    lo = step * math.floor(lo / step + 1e-9)
+    if top - lo < step:
+        top = lo + step
+    return lo, top
+
+
+def dibujar_eje_y(cv, lo, top, x0, y0, x1, ph, s):
+    step = nice_step((top - lo) / 4)
+    v = lo
+    while v <= top + step * 1e-6:
+        y = y0 + ph - (v - lo) / (top - lo) * ph
+        cv.create_line(x0, y, x1, y, fill=TRACK)
+        cv.create_text(x0 - 6 * s, y, text=f"{round(v, 6):g}", anchor="e", fill=MUTED, font=(FONT, 8))
+        v += step
+
+
+def recortar(pts, a, b):
+    """Puntos entre a y b; si la línea entra o sale del tramo, se corta justo en el borde."""
+    out = [p for p in pts if a <= p[0] <= b]
+    dentro = lambda p, q, x: (x, p[1] + (q[1] - p[1]) * (x - p[0]) / (q[0] - p[0]))
+    if pts and pts[0][0] < a:
+        q = next((p for p in pts if p[0] >= a), None)
+        if q and q[0] > pts[0][0]:
+            out.insert(0, dentro(pts[0], q, a))
+    if pts and pts[-1][0] > b:
+        p = next((p for p in reversed(pts) if p[0] <= b), None)
+        if p and pts[-1][0] > p[0]:
+            out.append(dentro(p, pts[-1], b))
+    return out
+
+
+COLORES_SERIE = [ACCENT, BLUE, OK, WARN]
+
+
+class GraficaFija(tk.Canvas):
+    """Gráfica de una grabación completa: eje X fijo, valores bajo el ratón y zoom arrastrando."""
+
+    def __init__(self, parent, s=1.0, al_cambiar=None):
+        super().__init__(parent, bg=CARD, highlightthickness=0)
+        self.s = s
+        self.series = []                 # [(nombre, unidad, color, puntos)]
+        self.eje = "s"
+        self.rango = None                # (x0, x1) visible; None = todo
+        self.total = (0, 1)
+        self.raton = None                # x en píxeles bajo el ratón
+        self.arrastre = None             # x en píxeles donde empezó el arrastre
+        self.al_cambiar = al_cambiar     # se llama al cambiar el zoom
+        self.mensaje = ""
+        self.bind("<Configure>", lambda e: self.redraw())
+        self.bind("<Motion>", self._mover)
+        self.bind("<Leave>", lambda e: self._mover(None))
+        self.bind("<ButtonPress-1>", self._pulsar)
+        self.bind("<ButtonRelease-1>", self._soltar)
+        self.bind("<Double-Button-1>", lambda e: self.ver_todo())
+        self.bind("<Button-3>", lambda e: self.ver_todo())
+
+    def poner(self, series, eje):
+        self.series, self.eje = series, eje
+        xs = [p[0] for *_, pts in series for p in (pts[0], pts[-1]) if pts]
+        self.total = (min(xs), max(xs)) if xs else (0, 1)
+        if self.total[1] <= self.total[0]:
+            self.total = (self.total[0], self.total[0] + 1)
+        if self.rango and not (self.total[0] <= self.rango[0] < self.rango[1] <= self.total[1]):
+            self.rango = None
+        self.redraw()
+
+    def visible(self):
+        return self.rango or self.total
+
+    def ver_todo(self):
+        self.rango = None
+        self.redraw()
+        if self.al_cambiar:
+            self.al_cambiar()
+
+    def ampliar(self, x0, x1):
+        if x1 - x0 > (self.total[1] - self.total[0]) * 1e-4:
+            self.rango = (max(x0, self.total[0]), min(x1, self.total[1]))
+            self.redraw()
+            if self.al_cambiar:
+                self.al_cambiar()
+
+    def _marco(self):
+        s = self.s
+        w, h = self.winfo_width(), self.winfo_height()
+        return 58 * s, 14 * s, 34 * s, 26 * s, w, h
+
+    def _x_a_valor(self, px):
+        L, R, _, _, w, _ = self._marco()
+        a, b = self.visible()
+        return a + (px - L) / max(1, w - L - R) * (b - a)
+
+    def _mover(self, e):
+        self.raton = e.x if e else None
+        self.redraw()
+
+    def _pulsar(self, e):
+        self.arrastre = e.x
+
+    def _soltar(self, e):
+        if self.arrastre is not None and abs(e.x - self.arrastre) > 8 * self.s:
+            a, b = sorted((self._x_a_valor(self.arrastre), self._x_a_valor(e.x)))
+            self.arrastre = None
+            self.ampliar(a, b)
+            return
+        self.arrastre = None
+        self.redraw()
+
+    def redraw(self):
+        self.delete("all")
+        s = self.s
+        L, R, T, B, w, h = self._marco()
+        if w < 80 or h < 60:
+            return
+        if not self.series:
+            self.create_text(w / 2, h / 2, text=self.mensaje, fill=MUTED, font=(FONT, 10),
+                             width=max(100, w - 60 * s), justify="center")
+            return
+        a, b = self.visible()
+        pw, ph = w - L - R, h - T - B
+        unidades = list(dict.fromkeys(u for _, u, _, _ in self.series if u))
+        self.create_text(L, 16 * s, text=" · ".join(unidades), anchor="w", fill=MUTED, font=(FONT, 9))
+        x = w - R
+        for nombre, _, color, _ in reversed(self.series):
+            tid = self.create_text(x, 16 * s, text=nombre, anchor="e", fill=MUTED, font=(FONT, 9))
+            x = self.bbox(tid)[0] - 6 * s
+            self.create_rectangle(x - 10 * s, 13 * s, x, 19 * s, fill=color, outline="")
+            x -= 18 * s
+        vistos, trazos = [], []
+        for *_, pts in self.series:
+            i = max(0, bisect.bisect_left(pts, (a, -math.inf)) - 1)
+            j = bisect.bisect_right(pts, (b, math.inf)) + 1
+            trazos.append(pts[i:j])                    # con el punto anterior y el siguiente: la línea sigue
+            vistos.append([p for p in pts[i:j] if a <= p[0] <= b])
+        lo, top = escala_y([v for pts in (vistos if any(vistos) else trazos) for _, v in pts])
+        dibujar_eje_y(self, lo, top, L, T, w - R, ph, s)
+        X = lambda v: L + (v - a) / (b - a) * pw
+        Y = lambda v: T + ph - (v - lo) / (top - lo) * ph
+        for i in range(5):
+            v = a + (b - a) * i / 4
+            etiqueta = (f"{v:.1f} s" if b - a < 60 else f"{int(v // 60)}:{int(v % 60):02d}") if self.eje == "s" else f"{v:.0f}"
+            self.create_text(X(v), h - B + 13 * s, text=etiqueta, fill=MUTED, font=(FONT, 8),
+                             anchor="w" if i == 0 else "e" if i == 4 else "center")
+        for (_, _, color, _), pts in zip(self.series, trazos):
+            pts = csv_datos.reducir(recortar(pts, a, b), int(pw * 2))
+            coords = [c for x_, v in pts for c in (X(x_), Y(v))]
+            if len(coords) >= 4:
+                self.create_line(*coords, fill=color, width=max(1, 1.6 * s))
+
+            elif len(coords) == 2:
+                self.create_oval(coords[0] - 2, coords[1] - 2, coords[0] + 2, coords[1] + 2, fill=color, outline="")
+        if self.arrastre is not None and self.raton is not None:
+            x0, x1 = sorted((self.arrastre, self.raton))
+            self.create_rectangle(max(L, x0), T, min(w - R, x1), T + ph, outline=ACCENT, stipple="gray25", fill=ACCENT)
+        elif self.raton is not None and L <= self.raton <= w - R:
+            xv = self._x_a_valor(self.raton)
+            self.create_line(self.raton, T, self.raton, T + ph, fill=MUTED, dash=(3, 3))
+            lineas = [(f"t = {xv:.2f} s" if self.eje == "s" else tr("muestra {n}", n=f"{xv:.0f}"), FG)]
+            for (nombre, unidad, color, _), pts in zip(self.series, vistos):
+                if not pts:
+                    continue
+                cerca = min(pts, key=lambda p: abs(p[0] - xv))
+                self.create_oval(X(cerca[0]) - 3 * s, Y(cerca[1]) - 3 * s, X(cerca[0]) + 3 * s, Y(cerca[1]) + 3 * s,
+                                 fill=color, outline="")
+                lineas.append((f"{nombre}: {round(cerca[1], 3):g} {unidad}".rstrip(), color))
+            izq = self.raton > L + pw * 0.6
+            y = T + 8 * s
+            for texto, color in lineas:
+                self.create_text(self.raton + (-10 if izq else 10) * s, y, text=texto, anchor="ne" if izq else "nw",
+                                 fill=color, font=(FONT, 9, "bold"))
+                y += 17 * s
 
 
 def texto_ff(ff):
@@ -841,6 +1028,86 @@ class Worker(threading.Thread):
         self.post("live", (self.live_gen, time.monotonic(), data))
 
 
+class VisorCSV:
+    """Ventana para ver una grabación CSV: columnas a elegir, gráfica con zoom y resumen."""
+
+    def __init__(self, app, ruta, datos):
+        self.app, self.datos = app, datos
+        s = app.s
+        self.win = win = tk.Toplevel(app.root)
+        win.title(tr("Visor de CSV · {archivo}", archivo=os.path.basename(ruta)))
+        win.configure(bg=PANEL)
+        _poner_icono(win)
+        win.geometry(f"{int(1120 * s)}x{int(660 * s)}")
+        win.minsize(int(760 * s), int(460 * s))
+        cols = datos["columnas"]
+        xs = [p[0] for *_, pts in cols for p in pts]
+        duracion = (f"{max(xs) - min(xs):.1f} s" if datos["eje"] == "s" else tr("sin columna de tiempo"))
+        cab = ttk.Frame(win, style="Panel.TFrame", padding=(16, 12, 16, 0))
+        cab.pack(fill="x")
+        ttk.Label(cab, text=os.path.basename(ruta), style="Panel.TLabel", font=(FONT, 12, "bold")).pack(side="left")
+        ttk.Label(cab, text="   " + tr("{n} muestras · {columnas} columnas · {duracion}", n=datos["n"],
+                                       columnas=len(cols), duracion=duracion),
+                  style="PanelMuted.TLabel").pack(side="left")
+        ttk.Button(cab, text=tr("Ver todo"), command=lambda: self.grafica.ver_todo()).pack(side="right")
+
+        cuerpo = ttk.Frame(win, style="Panel.TFrame", padding=16)
+        cuerpo.pack(fill="both", expand=True)
+        lado = app._card(cuerpo, padding=12)
+        lado.pack(side="left", fill="y", padx=(0, 14))
+        ttk.Label(lado, text=tr("Columnas (Ctrl+clic: hasta 4)"), style="Muted.TLabel").pack(anchor="w", pady=(0, 6))
+        marco = ttk.Frame(lado, style="Card.TFrame")
+        marco.pack(fill="both", expand=True)
+        self.lista = tk.Listbox(marco, selectmode="extended", bg=CARD2, fg=FG, bd=0, highlightthickness=0,
+                                selectbackground=ACCENT, selectforeground="#111", activestyle="none",
+                                font=(FONT, 10), width=34, exportselection=False)
+        sb = ttk.Scrollbar(marco, orient="vertical", command=self.lista.yview)
+        self.lista.configure(yscrollcommand=sb.set)
+        self.lista.pack(side="left", fill="both", expand=True)
+        sb.pack(side="right", fill="y")
+        for nombre, unidad, _ in cols:
+            self.lista.insert("end", f"  {nombre}" + (f" ({unidad})" if unidad else ""))
+        self.lista.bind("<<ListboxSelect>>", lambda e: self._elegir())
+        self.resumen = ttk.Label(lado, text="", style="Card.TLabel", font=(MONO, 9), justify="left")
+        self.resumen.pack(anchor="w", pady=(10, 0))
+
+        der = app._card(cuerpo, padding=0)
+        der.pack(side="left", fill="both", expand=True)
+        self.grafica = GraficaFija(der, s=s, al_cambiar=self._resumir)
+        self.grafica.mensaje = tr("Elige una o varias columnas a la izquierda.")
+        self.grafica.pack(fill="both", expand=True)
+        ttk.Label(win, text=tr("Pasa el ratón por la gráfica para ver los valores · arrastra para ampliar un tramo "
+                               "· doble clic o «Ver todo» para volver."),
+                  style="PanelMuted.TLabel", padding=(16, 0, 16, 10)).pack(fill="x")
+        self.lista.selection_set(0)
+        self._elegir()
+
+    def _elegir(self):
+        sel = list(self.lista.curselection())
+        if len(sel) > 4:
+            for i in sel[4:]:
+                self.lista.selection_clear(i)
+            sel = sel[:4]
+        cols = self.datos["columnas"]
+        self.grafica.poner([(cols[i][0], cols[i][1], color, cols[i][2]) for i, color in zip(sel, COLORES_SERIE)],
+                           self.datos["eje"])
+        self._resumir()
+
+    def _resumir(self):
+        a, b = self.grafica.visible()
+        lineas = []
+        for nombre, unidad, _, pts in self.grafica.series:
+            r = csv_datos.resumen(pts, a, b)
+            if r:
+                f = lambda v: f"{round(v, 2):g}"
+                lineas.append(f"{nombre[:30]}\n  {tr('mín')} {f(r[0])}  {tr('media')} {f(r[1])}  {tr('máx')} {f(r[2])} {unidad}")
+        if self.grafica.rango:
+            dec = 0 if self.datos["eje"] != "s" else 1 if b - a >= 10 else 2 if b - a >= 0.1 else 3
+            lineas.insert(0, tr("Tramo: {a} - {b}", a=f"{a:.{dec}f}", b=f"{b:.{dec}f}")
+                          + (" s" if self.datos["eje"] == "s" else ""))
+        self.resumen.configure(text="\n".join(lineas))
+
+
 # ---------------------------------------------------------------------------
 # Ventana principal
 # ---------------------------------------------------------------------------
@@ -866,6 +1133,10 @@ class App:
         self.csv_t0 = 0
         self.csv_n = 0
         self.tree_items = {}
+        self.vals_hist = {}                      # (clave, fila): deque[(t, valor)] del último minuto
+        self.vals_nombres = {}                   # (clave, fila): (nombre, unidad)
+        self.vals_serie = {}                     # (clave, fila): nombre de su serie en la gráfica
+        self.visores = []                        # ventanas del visor de CSV abiertas
         # Consumo y 0-100
         self.trayecto = consumo.Trayecto()
         self.crono = consumo.Cronometro()
@@ -1381,9 +1652,15 @@ class App:
         self.rec_btn.pack(fill="x")
         self.rec_lbl = ttk.Label(self.side_btns, text="", style="Muted.TLabel", wraplength=int(220 * self.s))
         self.rec_lbl.pack(anchor="w", pady=(8, 0))
+        ttk.Button(self.side_btns, text=tr("Abrir CSV..."), command=self.abrir_csv).pack(fill="x", pady=(10, 0))
 
-        main = self._card(p, padding=0)
-        main.pack(side="left", fill="both", expand=True)
+        derecha = ttk.Frame(p, style="Panel.TFrame")
+        derecha.pack(side="left", fill="both", expand=True)
+        self.ch_vals = Chart(derecha, "", "", [], ymin_top=1, s=self.s)
+        self.ch_vals.mensaje = tr("Haz clic en una fila de la tabla para ver su gráfica (Ctrl+clic: hasta 4 valores).")
+        self.ch_vals.pack(side="bottom", fill="x", pady=(12, 0))
+        main = self._card(derecha, padding=0)
+        main.pack(side="top", fill="both", expand=True)
         cols = ("grupo", "campo", "valor", "unidad")
         self.tree = ttk.Treeview(main, columns=cols, show="headings")
         for c, t, w, a in (("grupo", tr("GRUPO"), 90, "center"), ("campo", tr("CAMPO"), 320, "w"),
@@ -1393,6 +1670,7 @@ class App:
         self.tree.tag_configure("err", foreground=ERR)
         self.tree.tag_configure("unk", foreground=WARN)
         self.tree.tag_configure("first", background=CARD2)
+        self.tree.bind("<<TreeviewSelect>>", lambda e: self._vals_grafica())
         sb = ttk.Scrollbar(main, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=sb.set)
         self.tree.pack(side="left", fill="both", expand=True)
@@ -2127,6 +2405,8 @@ class App:
         else:
             self.tree.delete(*self.tree.get_children())
             self.tree_items = {}
+            self.vals_hist, self.vals_nombres = {}, {}
+            self._vals_grafica()
         self.bar.configure(text=tr("Leyendo {lista}", lista=", ".join(self._key_label(k) for k in items)))
 
     def _stop_live(self):
@@ -2392,6 +2672,63 @@ class App:
                 else:
                     self.tree_items[key] = self.tree.insert("", "end", values=vals, tags=tags)
 
+    def _vals_hist_add(self, t, data):
+        for k, rows in data.items():
+            if isinstance(rows, str):
+                continue
+            for i, (nombre, valor, unidad, _) in enumerate(rows):
+                try:
+                    v = float(valor)
+                except ValueError:
+                    continue
+                d = self.vals_hist.setdefault((k, i), deque())
+                d.append((t, v))
+                while d and d[0][0] < t - 65:
+                    d.popleft()
+                self.vals_nombres[(k, i)] = (nombre, unidad)
+        series = {name for name, _ in self.ch_vals.series}
+        if series:
+            self.ch_vals.add(t, {self.vals_serie[c]: d[-1][1] for c, d in self.vals_hist.items()
+                                 if c in self.vals_serie and d and d[-1][0] == t and self.vals_serie[c] in series})
+
+    def _vals_grafica(self):
+        """Gráfica en vivo de las filas elegidas en la tabla (hasta 4)."""
+        por_iid = {iid: c for c, iid in self.tree_items.items() if c[1] != "err"}
+        elegidas = [por_iid[i] for i in self.tree.selection() if i in por_iid][:4]
+        nombres = [self.vals_nombres.get(c, (self.tree.set(self.tree_items[c], "campo"),
+                                             self.tree.set(self.tree_items[c], "unidad"))) for c in elegidas]
+        repetidos = {n for n, _ in nombres if [x for x, _ in nombres].count(n) > 1}
+        self.vals_serie = {}
+        series, datos = [], {}
+        for c, (n, u), color in zip(elegidas, nombres, COLORES_SERIE):
+            etiqueta = f"{self._key_label(c[0])} {n}" if n in repetidos else n
+            self.vals_serie[c] = etiqueta
+            series.append((etiqueta, color))
+            datos[etiqueta] = list(self.vals_hist.get(c, ()))
+        unidades = " · ".join(dict.fromkeys(u for _, u in nombres if u))
+        titulo = nombres[0][0] if len(nombres) == 1 else tr("{n} valores", n=len(nombres))
+        self.ch_vals.configurar(titulo if nombres else "", unidades, series, datos)
+
+    # ---------------- visor de CSV ----------------
+    def abrir_csv(self, ruta=None):
+        if ruta is None:
+            ruta = filedialog.askopenfilename(
+                parent=self.root, title=tr("Abrir grabación CSV"),
+                initialdir=CARPETA if os.path.isdir(CARPETA) else os.path.expanduser("~"),
+                filetypes=[(tr("Archivos CSV"), "*.csv"), (tr("Todos los archivos"), "*")])
+            if not ruta:
+                return None
+        try:
+            datos = csv_datos.leer(ruta)
+        except (OSError, UnicodeDecodeError, ValueError) as e:
+            messagebox.showerror(tr("Abrir CSV"), tr("No se pudo abrir {archivo}:", archivo=os.path.basename(ruta))
+                                 + f"\n{e}", parent=self.root)
+            return None
+        v = VisorCSV(self, ruta, datos)
+        self.visores = [x for x in self.visores if x.win.winfo_exists()] + [v]
+        self.log(tr("Abierto en el visor: {archivo}", archivo=ruta))
+        return v
+
     def _write_csv(self, data):
         if any(isinstance(v, str) for v in data.values()):
             return
@@ -2419,8 +2756,10 @@ class App:
                     if gen != self.live_gen:
                         continue                  # lectura de una sesion anterior
                     last = data
-                    if self.live_source == "vals" and self.csv_writer:
-                        self._write_csv(data)
+                    if self.live_source == "vals":
+                        if self.csv_writer:
+                            self._write_csv(data)
+                        self._vals_hist_add(t, data)
                     elif self.live_source == "panel":
                         self._chart_add(t, data)
                     elif self.live_source == "cons":
@@ -2437,6 +2776,7 @@ class App:
                 self._update_panel(last)
             elif self.live_source == "vals":
                 self._update_tree(last)
+                self.ch_vals.redraw()
             elif self.live_source == "cons":
                 self._cons_pintar()
         self.root.after(50, self.poll)
