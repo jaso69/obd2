@@ -77,14 +77,14 @@
       </div>
       <div class="tarjeta">
         <h2 class="tarjeta-titulo">Any OBD2 car with an ELM327</h2>
-        <p>With a USB, Bluetooth or WiFi ELM327 it reads P0xxx codes (including pending and permanent), <strong>freeze frame data</strong>, readiness monitors for the emissions test, the VIN and dozens of live values from any OBD2/EOBD car. If automatic detection fails, it tries the K-line protocols (KWP2000 and ISO 9141) of pre-CAN cars one by one.</p>
+        <p>With a USB, Bluetooth or WiFi ELM327 it reads fault codes from <strong>any make with their meaning</strong> (9,533 generic codes, including pending and permanent), <strong>freeze frame data</strong>, readiness monitors for the emissions test, the VIN and dozens of live values from any OBD2/EOBD car. If automatic detection fails, it tries the K-line protocols (KWP2000 and ISO 9141) of pre-CAN cars one by one.</p>
       </div>
       <div class="tarjeta">
         <h2 class="tarjeta-titulo">An assistant that checks</h2>
         <p>Describe the symptom: the AI <strong>reads the fault codes and values itself</strong>, asks you to start the engine or rev it, and gives you a reasoned diagnosis.</p>
       </div>
     </div>
-    <ul class="cifras"><li><strong>21</strong><span>VAG control units via KKL cable</span></li><li><strong>631</strong><span>described VAG fault codes</span></li><li><strong>50</strong><span>live OBD2 values</span></li><li><strong>36</strong><span>named VAG measuring blocks for 3 engine types</span></li><li><strong>3</strong><span>AI providers</span></li><li><strong>2</strong><span>languages: English and Spanish</span></li></ul>
+    <ul class="cifras"><li><strong>21</strong><span>VAG control units via KKL cable</span></li><li><strong>10,000+</strong><span>described fault codes</span></li><li><strong>50</strong><span>live OBD2 values</span></li><li><strong>36</strong><span>named VAG measuring blocks for 3 engine types</span></li><li><strong>3</strong><span>AI providers</span></li><li><strong>2</strong><span>languages: English and Spanish</span></li></ul>
   </div>
 </section>
 
@@ -212,7 +212,7 @@
 
     <div class="fila-funcion">
       <div class="texto-funcion">
-        <h3>Adaptation and coding <span class="nuevo">New</span></h3>
+        <h3>Adaptation and coding</h3>
         <p>With the KKL cable you can read and change the <strong>adaptation channels</strong> and the <strong>coding</strong> of the control unit, with the values from your car's workshop manual.</p>
         <ul class="lista-ok">
           <li><strong>Test first, then save</strong>: the control unit uses the new value without saving it so you can check the result; if you close without saving, it goes back to the previous one.</li>
@@ -246,7 +246,7 @@
     <table class="tabla tabla-cables">
       <thead><tr><th>Feature</th><th>KKL cable · VAG KW1281</th><th>ELM327 · OBD2</th></tr></thead>
       <tbody>
-        <tr><td>Read and clear fault codes</td><td class="si"><span class="sr">Yes. </span><span class="marca-si" aria-hidden="true">✓</span> <span>5-digit VAG codes, with fault type and intermittent flag</span></td><td class="si"><span class="sr">Yes. </span><span class="marca-si" aria-hidden="true">✓</span> <span>stored, pending and permanent; VAG P1 codes described</span></td></tr>
+        <tr><td>Read and clear fault codes</td><td class="si"><span class="sr">Yes. </span><span class="marca-si" aria-hidden="true">✓</span> <span>5-digit VAG codes, with fault type and intermittent flag</span></td><td class="si"><span class="sr">Yes. </span><span class="marca-si" aria-hidden="true">✓</span> <span>stored, pending and permanent; 9,533 generic codes for any make and VAG P1 codes described</span></td></tr>
         <tr><td>Scan every control unit</td><td class="si"><span class="sr">Yes. </span><span class="marca-si" aria-hidden="true">✓</span> <span>21 addresses: engine, ABS, airbag, instrument cluster, comfort…</span></td><td class="no"><span aria-hidden="true">—</span><span class="sr">No</span></td></tr>
         <tr><td>Freeze frame data</td><td class="no"><span aria-hidden="true">—</span><span class="sr">No</span></td><td class="si"><span class="sr">Yes. </span><span class="marca-si" aria-hidden="true">✓</span></td></tr>
         <tr><td>Readiness monitors (emissions test)</td><td class="no"><span aria-hidden="true">—</span><span class="sr">No</span></td><td class="si"><span class="sr">Yes. </span><span class="marca-si" aria-hidden="true">✓</span></td></tr>
@@ -406,7 +406,7 @@
         <h3>Any make with OBD2</h3>
         <p>In Europe, petrol cars from 2001 and diesels from 2003-2004; in the USA, from 1996. It finds the protocol by itself (CAN, KWP2000, ISO 9141 or J1850, depending on the adapter) and, if that fails, tries the K-line ones one by one.</p>
         <ul class="lista-ok">
-          <li>The 107 most common generic (P0) fault codes with their description, plus the <strong><a href="vag-fault-codes/">538 VAG P1 codes</a></strong> if the VIN belongs to a SEAT, VW, Audi or Skoda.</li>
+          <li>All <strong><a href="obd2-codes/">9,533 generic fault codes</a></strong> (P0, P2, B, C and U) for any make with their description, plus the <strong><a href="vag-fault-codes/">538 VAG P1 codes</a></strong> if the VIN belongs to a SEAT, VW, Audi or Skoda.</li>
           <li>Decoded VIN for 64 manufacturers, with the model for VAG cars.</li>
         </ul>
         <details class="grupos"><summary>The 50 OBD2 values it can read</summary><ul class="modulos"><li>Engine load</li><li>Coolant temp.</li><li>Short-term fuel trim B1</li><li>Long-term fuel trim B1</li><li>Short-term fuel trim B2</li><li>Long-term fuel trim B2</li><li>Fuel pressure</li><li>Manifold pressure (MAP)</li><li>Engine speed</li><li>Speed</li><li>Ignition advance</li><li>Intake air temp.</li><li>Air flow (MAF)</li><li>Throttle position</li><li>O2 sensor B1S1</li><li>O2 sensor B1S2</li><li>O2 sensor B1S3</li><li>O2 sensor B1S4</li><li>O2 sensor B2S1</li><li>O2 sensor B2S2</li><li>Time since start</li><li>Distance with MIL on</li><li>Rail pressure (rel. vacuum)</li><li>Fuel rail pressure</li><li>Lambda sensor B1S1 (wideband)</li><li>Commanded EGR</li><li>EGR error</li><li>Commanded EVAP purge</li><li>Fuel level</li><li>Warm-ups since codes cleared</li><li>Distance since codes cleared</li><li>Barometric pressure</li><li>Lambda sensor B1S1 (current)</li><li>Catalyst temp. B1S1</li><li>Catalyst temp. B2S1</li><li>Control module voltage</li><li>Absolute load</li><li>Commanded lambda</li><li>Relative throttle</li><li>Ambient temp.</li><li>Absolute throttle B</li><li>Accelerator pedal D</li><li>Accelerator pedal E</li><li>Commanded throttle actuator</li><li>Time with MIL on</li><li>Time since codes cleared</li><li>Ethanol in fuel</li><li>Relative accelerator pedal</li><li>Oil temp.</li><li>Fuel consumption</li></ul></details>
@@ -511,6 +511,13 @@ sudo usermod -aG dialout $USER</code></pre>
   <div class="contenedor contenedor-estrecho">
     <h2>What's new in each version</h2>
     <p class="intro">What has been added to OBD2Desk over time. Full details of every version are on <a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.</p>
+    <div class="version">
+      <h3>v0.9.0 <time datetime="2026-11-28">28 November 2026</time></h3>
+      <ul>
+        <li><strong>Fault codes from any make, with their meaning</strong>: with an ELM327, all 9,533 generic OBD2 codes (powertrain, body, chassis and network) are described in English or Spanish. Previously, only 107.</li>
+        <li>Manufacturer-specific codes (P1…) are still described on VAG cars. Full list in <a href="obd2-codes/">OBD2 codes</a>.</li>
+      </ul>
+    </div>
     <div class="version">
       <h3>v0.8.1 <time datetime="2026-11-28">28 November 2026</time></h3>
       <ul>

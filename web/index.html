@@ -78,14 +78,14 @@
       </div>
       <div class="tarjeta">
         <h2 class="tarjeta-titulo">Cualquier OBD2 con ELM327</h2>
-        <p>Con un ELM327 USB, Bluetooth o WiFi lee averías P0xxx (también pendientes y permanentes), los <strong>datos congelados</strong>, los monitores para la ITV, el VIN y decenas de valores de cualquier coche con OBD2/EOBD. Si la búsqueda automática falla, prueba uno a uno los protocolos de línea K (KWP2000 e ISO 9141) de los coches anteriores a CAN.</p>
+        <p>Con un ELM327 USB, Bluetooth o WiFi lee las averías de <strong>cualquier marca con su significado</strong> (9533 códigos genéricos, también pendientes y permanentes), los <strong>datos congelados</strong>, los monitores para la ITV, el VIN y decenas de valores de cualquier coche con OBD2/EOBD. Si la búsqueda automática falla, prueba uno a uno los protocolos de línea K (KWP2000 e ISO 9141) de los coches anteriores a CAN.</p>
       </div>
       <div class="tarjeta">
         <h2 class="tarjeta-titulo">Un asistente que comprueba</h2>
         <p>Cuéntale el síntoma: la IA <strong>lee ella misma</strong> las averías y los valores, te pide que arranques o aceleres y te da un diagnóstico razonado.</p>
       </div>
     </div>
-    <ul class="cifras"><li><strong>21</strong><span>centralitas VAG por cable KKL</span></li><li><strong>631</strong><span>averías VAG descritas</span></li><li><strong>50</strong><span>valores OBD2 en directo</span></li><li><strong>36</strong><span>grupos VAG con nombre, en 3 tipos de motor</span></li><li><strong>3</strong><span>proveedores de IA</span></li><li><strong>2</strong><span>idiomas: español e inglés</span></li></ul>
+    <ul class="cifras"><li><strong>21</strong><span>centralitas VAG por cable KKL</span></li><li><strong>10&nbsp;000+</strong><span>códigos de avería descritos</span></li><li><strong>50</strong><span>valores OBD2 en directo</span></li><li><strong>36</strong><span>grupos VAG con nombre, en 3 tipos de motor</span></li><li><strong>3</strong><span>proveedores de IA</span></li><li><strong>2</strong><span>idiomas: español e inglés</span></li></ul>
   </div>
 </section>
 
@@ -213,7 +213,7 @@
 
     <div class="fila-funcion">
       <div class="texto-funcion">
-        <h3>Adaptación y codificación <span class="nuevo">Nuevo</span></h3>
+        <h3>Adaptación y codificación</h3>
         <p>Con el cable KKL puedes leer y cambiar los <strong>canales de adaptación</strong> y la <strong>codificación</strong> de la centralita, con los valores del manual de taller de tu coche.</p>
         <ul class="lista-ok">
           <li><strong>Primero se prueba, después se guarda</strong>: la centralita usa el valor nuevo sin guardarlo para que compruebes el resultado; si cierras sin guardar, vuelve al de antes.</li>
@@ -247,7 +247,7 @@
     <table class="tabla tabla-cables">
       <thead><tr><th>Función</th><th>Cable KKL · VAG KW1281</th><th>ELM327 · OBD2</th></tr></thead>
       <tbody>
-        <tr><td>Leer y borrar averías</td><td class="si"><span class="sr">Sí. </span><span class="marca-si" aria-hidden="true">✓</span> <span>códigos VAG de 5 cifras, con tipo de fallo e intermitente</span></td><td class="si"><span class="sr">Sí. </span><span class="marca-si" aria-hidden="true">✓</span> <span>memorizadas, pendientes y permanentes; P1 de VAG descritas</span></td></tr>
+        <tr><td>Leer y borrar averías</td><td class="si"><span class="sr">Sí. </span><span class="marca-si" aria-hidden="true">✓</span> <span>códigos VAG de 5 cifras, con tipo de fallo e intermitente</span></td><td class="si"><span class="sr">Sí. </span><span class="marca-si" aria-hidden="true">✓</span> <span>memorizadas, pendientes y permanentes; 9533 códigos genéricos de cualquier marca y P1 de VAG descritos</span></td></tr>
         <tr><td>Escanear todas las centralitas</td><td class="si"><span class="sr">Sí. </span><span class="marca-si" aria-hidden="true">✓</span> <span>21 direcciones: motor, ABS, airbag, cuadro, confort…</span></td><td class="no"><span aria-hidden="true">—</span><span class="sr">No</span></td></tr>
         <tr><td>Datos congelados de la avería</td><td class="no"><span aria-hidden="true">—</span><span class="sr">No</span></td><td class="si"><span class="sr">Sí. </span><span class="marca-si" aria-hidden="true">✓</span></td></tr>
         <tr><td>Monitores de preparación (ITV)</td><td class="no"><span aria-hidden="true">—</span><span class="sr">No</span></td><td class="si"><span class="sr">Sí. </span><span class="marca-si" aria-hidden="true">✓</span></td></tr>
@@ -407,7 +407,7 @@
         <h3>Cualquier marca con OBD2</h3>
         <p>En Europa, gasolina desde 2001 y diésel desde 2003-2004; en EE. UU., desde 1996. Busca el protocolo solo (CAN, KWP2000, ISO 9141 o J1850, según el adaptador) y, si no lo encuentra, prueba uno a uno los de línea K.</p>
         <ul class="lista-ok">
-          <li>Las 107 averías genéricas (P0) más comunes con su descripción, y las <strong><a href="averias-vag/">538 averías P1 de VAG</a></strong> si el VIN es de SEAT, VW, Audi o Skoda.</li>
+          <li>Los <strong><a href="codigos-obd2/">9533 códigos de avería genéricos</a></strong> (P0, P2, B, C y U) de cualquier marca con su descripción en español, y las <strong><a href="averias-vag/">538 averías P1 de VAG</a></strong> si el VIN es de SEAT, VW, Audi o Skoda.</li>
           <li>VIN descifrado para 64 fabricantes, con el modelo en los VAG.</li>
         </ul>
         <details class="grupos"><summary>Los 50 valores OBD2 que puede leer</summary><ul class="modulos"><li>Carga del motor</li><li>Temp. refrigerante</li><li>Corrección corto plazo B1</li><li>Corrección largo plazo B1</li><li>Corrección corto plazo B2</li><li>Corrección largo plazo B2</li><li>Presión combustible</li><li>Presión colector (MAP)</li><li>Régimen motor</li><li>Velocidad</li><li>Avance encendido</li><li>Temp. aire admisión</li><li>Caudal de aire (MAF)</li><li>Posición mariposa</li><li>Sonda O2 B1S1</li><li>Sonda O2 B1S2</li><li>Sonda O2 B1S3</li><li>Sonda O2 B1S4</li><li>Sonda O2 B2S1</li><li>Sonda O2 B2S2</li><li>Tiempo desde arranque</li><li>Distancia con testigo MIL</li><li>Presión rail (rel. vacío)</li><li>Presión rail combustible</li><li>Lambda sonda B1S1 (banda ancha)</li><li>EGR comandada</li><li>Error EGR</li><li>Purga EVAP comandada</li><li>Nivel de combustible</li><li>Calentamientos desde borrado</li><li>Distancia desde borrado</li><li>Presión barométrica</li><li>Lambda sonda B1S1 (corriente)</li><li>Temp. catalizador B1S1</li><li>Temp. catalizador B2S1</li><li>Tensión módulo de control</li><li>Carga absoluta</li><li>Lambda comandada</li><li>Mariposa relativa</li><li>Temp. ambiente</li><li>Mariposa absoluta B</li><li>Pedal acelerador D</li><li>Pedal acelerador E</li><li>Actuador mariposa comandado</li><li>Tiempo con testigo MIL</li><li>Tiempo desde borrado</li><li>Etanol en combustible</li><li>Pedal acelerador relativo</li><li>Temp. aceite</li><li>Consumo de combustible</li></ul></details>
@@ -512,6 +512,13 @@ sudo usermod -aG dialout $USER</code></pre>
   <div class="contenedor contenedor-estrecho">
     <h2>Novedades por versión</h2>
     <p class="intro">Lo que ha ido llegando a OBD2Desk. El detalle de cada versión está en <a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.</p>
+    <div class="version">
+      <h3>v0.9.0 <time datetime="2026-11-28">28 de noviembre de 2026</time></h3>
+      <ul>
+        <li><strong>Averías de cualquier marca con su significado</strong>: con un ELM327, los 9533 códigos genéricos OBD2 (motor y cambio, carrocería, chasis y red) salen descritos en español o en inglés. Antes, solo 107.</li>
+        <li>Los propios de cada fabricante (P1…) se siguen describiendo en los VAG. Lista completa en <a href="codigos-obd2/">códigos OBD2</a>.</li>
+      </ul>
+    </div>
     <div class="version">
       <h3>v0.8.1 <time datetime="2026-11-28">28 de noviembre de 2026</time></h3>
       <ul>
