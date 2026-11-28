@@ -32,8 +32,8 @@ from idioma import tr
 from kw1281 import KW1281, KW1281Error
 from obd_datos import OBD_STANDARDS, PIDS, decode_pid
 from obd_datos import describe_dtc as describe_obd_dtc
-from toledo import leer_grupo_formateado, texto_id
-from vag_datos import FAULT_TYPES, MODULOS, MOTORES, componente as vag_componente, detectar_motor
+from toledo import formatear_grupo, leer_grupo_formateado, texto_id
+from vag_datos import FAULT_TYPES, MODULOS, MOTORES, ajustes_basicos, componente as vag_componente, detectar_motor
 from vag_datos import describe_dtc as vag_describe_dtc
 from vin_datos import VAG as VIN_VAG, decodificar_vin
 
@@ -590,6 +590,8 @@ class Worker(threading.Thread):
         self.elm_errors = 0
         self.scan_stop = threading.Event()
         self.grupos = MOTORES["edc15"][1]    # nombres de los campos de los grupos VAG (según el motor)
+        self.basico = None                   # (grupo, nombres) en ajuste básico
+        self.basico_t = 0.0
 
     def post(self, kind, payload=None):
         self.out.put((kind, payload))
@@ -603,7 +605,7 @@ class Worker(threading.Thread):
     def run(self):
         while True:
             try:
-                task = self.tasks.get(timeout=0.01 if self.live_items else 0.1)
+                task = self.tasks.get(timeout=0.01 if self.live_items or self.basico else 0.1)
             except queue.Empty:
                 task = None
             if task:
@@ -622,15 +624,33 @@ class Worker(threading.Thread):
                 continue
             if self.live_items and self.online:
                 self._read_live()
+            elif self.basico and self.online:
+                self._read_basico()
             self._check_lost()
 
     @staticmethod
     def _is_port_error(e):
         return isinstance(e, OSError) or type(e).__name__ == "SerialException"
 
+    def _read_basico(self):
+        """Repite la petición de ajuste básico (unas 4 veces por segundo) y manda sus valores."""
+        if time.monotonic() - self.basico_t < 0.25:
+            return
+        self.basico_t = time.monotonic()
+        g, nombres = self.basico
+        try:
+            campos = self.ecu.basic_setting(g)
+        except KW1281Error as e:
+            self.basico = None
+            self.log(tr("Error: {e}", e=e))
+            self.post("basic", {"error": str(e)})
+            return
+        self.post("basic", {"filas": formatear_grupo(campos, g, {g: ("", nombres)} if nombres else self.grupos)})
+
     def _lost(self, msg):
         self.online = False
         self.live_items = None
+        self.basico = None
         self.post("lost", msg)
 
     def _check_lost(self):
@@ -732,6 +752,21 @@ class Worker(threading.Thread):
             except KW1281Error as e:
                 self.log(tr("Error: {e}", e=e))
                 self.post("act", {"error": str(e)})
+        elif kind == "basic":
+            self.basico = (args[0], args[1])
+            self.basico_t = 0.0
+            self.log(tr("Ajuste básico del grupo {g}.", g=f"{args[0]:03d}"))
+        elif kind == "basic_stop":
+            g = self.basico[0] if self.basico else args[0]
+            self.basico = None
+            try:
+                self.ecu.read_group(g)          # una lectura normal saca a la centralita del ajuste básico
+            except KW1281Error as e:
+                if not self.ecu.connected:
+                    raise
+                self.log(tr("Aviso: {e}", e=e))
+            self.log(tr("Fin del ajuste básico del grupo {g}.", g=f"{g:03d}"))
+            self.post("basic", {"stopped": True})
         elif kind == "act_stop":
             # La centralita deja de activar el componente al cerrar la sesión: se vuelve a conectar.
             self.log(tr("Fin del test de actuadores: se reinicia la comunicación para apagar el componente."))
@@ -1411,6 +1446,205 @@ class VentanaActuadores:
                 self._destruir()
 
 
+class VentanaAjustes:
+    """Ajustes básicos KW1281: la centralita entra en el modo de ajuste básico de un grupo."""
+
+    def __init__(self, app):
+        self.app = app
+        s = app.s
+        self.estado = "listo"        # listo, activo, saliendo
+        self.cerrando = False
+        self.desde = None
+        self.grupo = None
+        addr = int(app.mod_var.get().split(" · ")[0], 16)
+        self.ajustes = ajustes_basicos(app.motor) if addr == 0x01 else {}
+        self.win = win = tk.Toplevel(app.root)
+        win.title(tr("Ajustes básicos"))
+        win.configure(bg=PANEL)
+        _poner_icono(win)
+        win.geometry(f"{int(820 * s)}x{int(680 * s)}")
+        win.minsize(int(640 * s), int(560 * s))
+        win.transient(app.root)
+        win.protocol("WM_DELETE_WINDOW", self.cerrar)
+
+        p = ttk.Frame(win, style="Panel.TFrame", padding=18)
+        p.pack(fill="both", expand=True)
+        ttk.Label(p, text=tr("Ajustes básicos · {modulo}", modulo=app.mod_var.get()), style="Panel.TLabel",
+                  font=(FONT, 12, "bold")).pack(anchor="w")
+        aviso = app._card(p, padding=(14, 10))
+        aviso.pack(fill="x", pady=(10, 10))
+        for i, txt in enumerate((
+                tr("La centralita entra en el modo de ajuste básico del grupo elegido: según el grupo, aprende una "
+                   "posición (p. ej. la mariposa), deja de regular algo (p. ej. la EGR) o muestra valores para "
+                   "ajustar a mano (p. ej. el calado de la bomba)."),
+                tr("• Haz solo los ajustes que sepas para qué sirven y en las condiciones que pide el manual de "
+                   "taller de tu motor. Un ajuste hecho a destiempo puede dejar un ralentí irregular hasta repetirlo bien."),
+                tr("• No cambia la codificación ni los canales de adaptación; lo que aprende la centralita se puede "
+                   "volver a hacer."),
+                tr("• «Salir del ajuste básico» devuelve la centralita al modo normal. Quitar el contacto también."))):
+            ttk.Label(aviso, text=txt, style="Card.TLabel", wraplength=int(740 * s), justify="left",
+                      foreground=WARN if i == 1 else None).pack(anchor="w", pady=(0, 4))
+
+        fila = ttk.Frame(p, style="Panel.TFrame")
+        fila.pack(fill="x")
+        ttk.Label(fila, text=tr("Grupo"), style="Panel.TLabel").pack(side="left", padx=(0, 8))
+        opciones = [f"{g:03d} · {a[0]}" for g, a in self.ajustes.items()]
+        self.grupo_var = tk.StringVar(value=opciones[0] if opciones else "")
+        self.grupo_cb = ttk.Combobox(fila, textvariable=self.grupo_var, values=opciones, width=60)
+        self.grupo_cb.pack(side="left", fill="x", expand=True)
+        self.grupo_cb.bind("<<ComboboxSelected>>", lambda e: self._elegido())
+        self.grupo_var.trace_add("write", lambda *a: self._elegido())
+        self.cond = ttk.Label(p, text="", style="PanelMuted.TLabel", wraplength=int(760 * s), justify="left")
+        self.cond.pack(anchor="w", pady=(6, 6))
+        self.ok_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(p, text=tr("Se cumplen las condiciones de este ajuste"), variable=self.ok_var,
+                        command=self._botones).pack(anchor="w")
+        self.info = ttk.Label(p, text="", style="PanelMuted.TLabel", wraplength=int(760 * s))
+        self.info.pack(anchor="w", pady=(10, 8))
+
+        btns = ttk.Frame(p, style="Panel.TFrame")
+        btns.pack(fill="x", side="bottom", pady=(12, 0))
+        self.btn = ttk.Button(btns, text=tr("Activar ajuste básico"), style="Accent.TButton", width=26,
+                              command=self.activar)
+        self.btn.pack(side="left")
+        self.fin_btn = ttk.Button(btns, text=tr("Cerrar"), width=14, command=self.cerrar)
+        self.fin_btn.pack(side="right")
+
+        card = app._card(p, padding=0)
+        card.pack(fill="both", expand=True)
+        self.tabla = ttk.Treeview(card, columns=("campo", "valor", "unidad"), show="headings", height=4)
+        for c, txt, w, st in (("campo", tr("CAMPO"), 420, True), ("valor", tr("VALOR"), 160, False),
+                              ("unidad", tr("UNIDAD"), 120, False)):
+            self.tabla.heading(c, text=txt, anchor="w")
+            self.tabla.column(c, width=int(w * s), stretch=st)
+        self.tabla.pack(fill="both", expand=True)
+        self._elegido()
+        self._reloj()
+        app.act_en_curso = True
+        win.after(150, self._modal)
+
+    def _modal(self):
+        try:
+            self.win.grab_set()
+        except tk.TclError:
+            pass
+
+    def _destruir(self):
+        self.app.act_en_curso = False
+        try:
+            self.win.after_cancel(self.reloj_id)
+        except (tk.TclError, AttributeError):
+            pass
+        self.win.destroy()
+
+    def _numero(self):
+        """Número de grupo escrito o elegido (1-254), o None."""
+        txt = self.grupo_var.get().strip().split(" · ")[0].strip()
+        try:
+            g = int(txt)
+        except ValueError:
+            return None
+        return g if 1 <= g <= 254 else None
+
+    def _elegido(self):
+        g = self._numero()
+        if g in self.ajustes:
+            self.cond.configure(text=self.ajustes[g][1], foreground=MUTED)
+        elif g is None:
+            self.cond.configure(text=tr("Elige un ajuste o escribe el número de grupo (1-254) que indica el manual de "
+                                        "taller."), foreground=MUTED)
+        else:
+            self.cond.configure(text=tr("Grupo {g}: haz el ajuste en las condiciones que indica el manual de taller.",
+                                        g=f"{g:03d}"), foreground=WARN)
+        if self.estado == "listo":
+            self.ok_var.set(False)
+        self._botones()
+
+    def _botones(self):
+        e = self.estado
+        if e == "activo":
+            self.btn.configure(state="normal", text=tr("Salir del ajuste básico"), style="Danger.TButton")
+        else:
+            listo = e == "listo" and self.ok_var.get() and self._numero() is not None
+            self.btn.configure(state="normal" if listo else "disabled", text=tr("Activar ajuste básico"),
+                               style="Accent.TButton")
+        self.fin_btn.configure(state="disabled" if e == "saliendo" else "normal")
+        self.grupo_cb.configure(state="normal" if e == "listo" else "disabled")
+
+    def _reloj(self):
+        if not self.win.winfo_exists():
+            return
+        if self.estado == "activo" and self.desde:
+            self.info.configure(text=tr("En ajuste básico del grupo {g} desde hace {s} s.", g=f"{self.grupo:03d}",
+                                        s=int(time.monotonic() - self.desde)), foreground=OK)
+        self.reloj_id = self.win.after(500, self._reloj)
+
+    def activar(self):
+        if self.estado == "activo":
+            self.salir()
+            return
+        g = self._numero()
+        if g is None:
+            return
+        self.grupo = g
+        nombres = self.ajustes[g][2] if g in self.ajustes else None
+        self.estado = "activo"
+        self.desde = time.monotonic()
+        self.tabla.delete(*self.tabla.get_children())
+        self.info.configure(text=tr("Esperando a la centralita..."), foreground=MUTED)
+        self._botones()
+        self.app.worker.submit("basic", g, nombres)
+
+    def salir(self):
+        self.estado = "saliendo"
+        self.desde = None
+        self.info.configure(text=tr("Saliendo del ajuste básico..."), foreground=MUTED)
+        self._botones()
+        self.app.worker.submit("basic_stop", self.grupo)
+
+    def cerrar(self):
+        if self.estado == "activo":
+            self.cerrando = True
+            self.salir()
+        elif self.estado == "saliendo":
+            self.cerrando = True
+        else:
+            self._destruir()
+
+    def respuesta(self, r):
+        if not self.win.winfo_exists():
+            return
+        if r.get("stopped"):
+            self.estado = "listo"
+            self.info.configure(text=tr("Fuera del ajuste básico: la centralita vuelve a funcionar normal."),
+                                foreground=OK)
+            if self.cerrando:
+                self._destruir()
+                return
+        elif r.get("error"):
+            self.estado = "listo"
+            self.desde = None
+            self.info.configure(text=r["error"], foreground=ERR)
+        elif self.estado == "activo":
+            filas = r["filas"]
+            hijos = self.tabla.get_children()
+            if len(hijos) != len(filas):
+                self.tabla.delete(*hijos)
+                hijos = [self.tabla.insert("", "end") for _ in filas]
+            for i, (nombre, valor, unidad, _ok) in zip(hijos, filas):
+                self.tabla.item(i, values=(nombre, valor, unidad))
+        self._botones()
+
+    def perdida(self):
+        if self.win.winfo_exists():
+            self.estado = "listo"
+            self.desde = None
+            self.info.configure(text=tr("Conexión perdida: el ajuste básico se ha detenido."), foreground=ERR)
+            self._botones()
+            if self.cerrando:
+                self._destruir()
+
+
 class VentanaHistorial:
     """Diagnósticos guardados de cada coche y comparación de cada uno con el anterior."""
 
@@ -1592,7 +1826,8 @@ class App:
         self.vag_motor = None                    # (id, nombre) por la centralita de motor VAG (sin VIN)
         self.ventana_historial = None
         self.ventana_act = None                  # VentanaActuadores abierta
-        self.act_en_curso = False                # la IA no lee nada mientras hay un test de actuadores
+        self.ventana_ajustes = None              # VentanaAjustes abierta
+        self.act_en_curso = False                # la IA no lee nada durante un test de actuadores o ajuste básico
         self.informe_ia = None                   # informe pedido por la IA: {"texto", "reply"}
         # Consumo y 0-100
         self.trayecto = consumo.Trayecto()
@@ -2220,6 +2455,8 @@ class App:
         self.scan_btn.pack(side="left")
         self.act_btn = ttk.Button(top, text=tr("Test de actuadores..."), command=self.test_actuadores)
         self.act_btn.pack(side="left", padx=(10, 0))
+        self.ajustes_btn = ttk.Button(top, text=tr("Ajustes básicos..."), command=self.ajustes_basicos)
+        self.ajustes_btn.pack(side="left", padx=(10, 0))
         self.report_btn = ttk.Button(top, text=tr("Generar informe"), command=self.make_report)
         self.report_btn.pack(side="right")
         ttk.Button(top, text=tr("Historial..."), command=self.ver_historial).pack(side="right", padx=(0, 10))
@@ -2604,7 +2841,8 @@ class App:
         elif nombre == "generar_informe":
             res = self._ai_main(lambda reply: self._ai_informe(entrada, reply), conv, asincrono=True)
         elif nombre in ("leer_averias", "leer_valores", "borrar_averias", "grabar_valores") and self.act_en_curso:
-            res = (tr("Ahora no se puede: el usuario está haciendo un test de actuadores. Espera a que lo termine."),
+            res = (tr("Ahora no se puede: el usuario está haciendo un test de actuadores o un ajuste básico. "
+                  "Espera a que lo termine."),
                    True)
         elif nombre in ("leer_averias", "leer_valores", "borrar_averias", "grabar_valores"):
             if nombre == "borrar_averias":
@@ -2849,10 +3087,12 @@ class App:
         if kkl:
             self.scan_btn.pack(side="left", after=self.dtc_clear_btn)
             self.act_btn.pack(side="left", padx=(10, 0), after=self.scan_btn)
+            self.ajustes_btn.pack(side="left", padx=(10, 0), after=self.act_btn)
             self.ff_frame.pack_forget()
         else:
             self.scan_btn.pack_forget()
             self.act_btn.pack_forget()
+            self.ajustes_btn.pack_forget()
             self.ff_frame.pack(side="right", fill="y", padx=(14, 0))
         self._fill_ff(None)
         self.hist_lbl.configure(text="")
@@ -2909,7 +3149,7 @@ class App:
         self.connected = on
         state = "normal" if on else "disabled"
         for b in (self.panel_btn, self.cons_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
-                  self.scan_btn, self.act_btn, self.report_btn):
+                  self.scan_btn, self.act_btn, self.ajustes_btn, self.report_btn):
             b.configure(state=state)
         self.port_cb.configure(state="disabled" if on else self._port_state())
         self.mode_cb.configure(state="disabled" if on else "readonly")
@@ -2926,8 +3166,9 @@ class App:
             self.status(tr("Desconectado"), MUTED)
             self._stop_live()
             self._stop_rec()
-            if self.ventana_act:
-                self.ventana_act.perdida()
+            for v in (self.ventana_act, self.ventana_ajustes):
+                if v:
+                    v.perdida()
         self._cons_texto()
 
     def _key_label(self, k):
@@ -3115,6 +3356,13 @@ class App:
         self._stop_live()
         self.ventana_act = VentanaActuadores(self)
 
+    def ajustes_basicos(self):
+        if self.ventana_ajustes and self.ventana_ajustes.win.winfo_exists():
+            self.ventana_ajustes.win.lift()
+            return
+        self._stop_live()
+        self.ventana_ajustes = VentanaAjustes(self)
+
     def scan_modules(self, direcciones=None, confirmar=True):
         if self.scanning:
             self.worker.scan_stop.set()
@@ -3130,7 +3378,7 @@ class App:
         self._stop_live()
         self.scanning = True
         for b in (self.panel_btn, self.cons_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
-                  self.act_btn, self.report_btn, self.conn_btn):
+                  self.act_btn, self.ajustes_btn, self.report_btn, self.conn_btn):
             b.configure(state="disabled")
         self.scan_btn.configure(text=tr("■  Detener escaneo"), style="Danger.TButton")
         self.dtc_tree.delete(*self.dtc_tree.get_children())
@@ -3643,6 +3891,9 @@ class App:
         elif kind == "act":
             if self.ventana_act:
                 self.ventana_act.respuesta(payload)
+        elif kind == "basic":
+            if self.ventana_ajustes:
+                self.ventana_ajustes.respuesta(payload)
         elif kind == "disconnected":
             self._set_connected(False)
             self.bar.configure(text=tr("Desconectado."))

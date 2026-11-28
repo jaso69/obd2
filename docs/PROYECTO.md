@@ -355,6 +355,13 @@ Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windo
 - Simulador: secuencia del TDI (K29, EGR N18, N75, N109), del gasolina (bomba, 4 inyectores, N80, EGR), ABS (bomba V64) y cuadro; el airbag contesta NAK. Pruebas en `prueba_simuladores.py` y `prueba_gui.py` (español e inglés) → «TODO CORRECTO».
 - **Sin probar en coche.** Dudas a comprobar con la EDC15 real: si espera el byte 0x00, cómo marca el final y si cerrar la sesión apaga el componente.
 
+### 8.2f Ajustes básicos (2026-11-28, sin publicar)
+- Botón «Ajustes básicos...» en Averías (solo KKL) → ventana `VentanaAjustes` (`gui.py`), modal y con la IA bloqueada igual que el test de actuadores. Se elige un ajuste habitual del motor (`vag_datos.ajustes_basicos`: TDI EDC15 004 comienzo de inyección y 003 EGR desactivada; PD 003; gasolina 098 y 060 adaptación de la mariposa y 001 ajuste básico del motor) o se escribe un número de grupo 1-254; casilla «Se cumplen las condiciones de este ajuste» obligatoria; valores en vivo con los nombres del grupo y el tiempo que lleva.
+- Protocolo (`KW1281.basic_setting`): bloque 0x28 con el grupo, repetido unas 4 veces por segundo mientras dura (`Worker._read_basico`); respuesta 0xE7 (como un grupo) o 0xF4 (si son ternas con fórmulas conocidas se decodifican; si no, se muestran los bytes en bruto). «Salir del ajuste básico» (y cerrar la ventana) hace una lectura normal del grupo (0x29), que saca a la centralita del modo de ajuste básico.
+- Simulador: grupo 003 con la EGR a 0 en ajuste básico, grupo 004 del TDI, 098 de gasolina (respuesta 0xF4) que termina la adaptación a los 3 s; los grupos que no tiene → NAK. Pruebas en `prueba_simuladores.py` y `prueba_gui.py` (español e inglés) → «TODO CORRECTO».
+- **Sin probar en coche.** A comprobar: qué título usa la EDC15 al contestar (E7 o F4), que la lectura normal la saque del ajuste básico y los textos de estado de la adaptación de la mariposa (salen como bits o `a=.. b=..` si la fórmula no está en la tabla).
+- No se ha hecho (a propósito): canales de adaptación (0x21/0x2A, escriben valores en la centralita) ni codificación.
+
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py`, `.venv/bin/python tests/prueba_idioma.py`, `xvfb-run -a .venv/bin/python tests/prueba_gui.py` y `OBD2DESK_IDIOMA=en xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO» (las dos de GUI una detrás de otra: a la vez chocan en el nombre del CSV).
@@ -374,7 +381,7 @@ Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 - **v0.3.0 probada en coche** (2026-11-22, el usuario: «funciona bien»); la web lo dice. Falta probar con un ELM327 WiFi real (la web lo indica como pendiente).
 - Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 538 en la tabla `vag_p1.py` desde la v0.6.0). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 en la v0.3.0 (publicada, web actualizada).
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
-- No hay funciones de adaptación, ajustes básicos ni codificación (solo lectura y borrado de averías y, desde el 2026-11-28 sin publicar, test de actuadores sin probar en coche).
+- No hay canales de adaptación ni codificación. Desde el 2026-11-28 (sin publicar, sin probar en coche): test de actuadores y ajustes básicos.
 
 ## 10. Próximos pasos (actualizado el 2026-11-22)
 Por orden de prioridad propuesto; el usuario decide por dónde seguir.
@@ -393,7 +400,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 **3. Más adelante**
 - ~~Más P1 de VAG y grupos de TDI inyector-bomba y gasolina~~ **hecho el 2026-11-28** (538 P1, también en OBD2 si el VIN es VAG; grupos PD del manual de taller y de gasolina estándar de Ross-Tech; sin publicar, probado con simuladores). Falta: averías de confort/clima (no se encontró una tabla pública fiable). Panel y consumo KKL para gasolina **hechos el 2026-11-28** (sin publicar; probados con el simulador de gasolina: `simulador.GASOLINA = True`, ident «1.8L R4/5VT», grupos 1-5).
 - Firma del ejecutable de Windows (evitar SmartScreen).
-- ~~Test de actuadores KW1281~~ **hecho el 2026-11-28** (§8.2e, sin publicar, sin probar en coche). Queda: ajustes básicos KW1281 (con mucho cuidado).
+- ~~Test de actuadores KW1281~~ **hecho el 2026-11-28** (§8.2e, sin publicar, sin probar en coche). ~~Ajustes básicos~~ **hechos el mismo día** (§8.2f, sin publicar, sin probar en coche).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
 
 **Hecho el 2026-11-27 (publicado en la v0.4.0):** renombrado a **OBD2Desk** (dominio obd2desk.com) e interfaz en inglés.

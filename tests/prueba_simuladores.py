@@ -7,7 +7,7 @@ Comprueba KW1281 (init 5 baudios, velocidad automática, identificación,
 averías, borrado, grupos, keep-alive) y ELM327 (protocolo, PIDs soportados,
 VIN, MIL, averías, multi-PID, borrado) y el parseo de respuestas de línea K y
 CAN 29 bits, datos congelados, monitores, averías permanentes, identificación
-(modo 09), VIN, varias centralitas KW1281, test de actuadores, informe HTML y códigos de avería VAG. Tarda unos 20 segundos (el init de 5 baudios es lento por diseño).
+(modo 09), VIN, varias centralitas KW1281, test de actuadores, ajustes básicos, informe HTML y códigos de avería VAG. Tarda unos 20 segundos (el init de 5 baudios es lento por diseño).
 """
 import os
 import sys
@@ -169,6 +169,38 @@ try:
     comprobar(False, "el airbag (15) rechaza el test")
 except KW1281Error as err:
     comprobar("no acepta" in str(err) and m.connected, "el airbag (15) rechaza el test y la sesión sigue")
+m.disconnect()
+
+print("Ajustes básicos KW1281")
+from toledo import formatear_grupo  # noqa: E402
+s = FakeSerial()
+m = KW1281(s, retry_wait=0.5)
+m.connect()
+v = m.basic_setting(3)
+comprobar(len(v) == 4 and s.ecu.basico == 3 and v[3][2] == 0, "grupo 003 en ajuste básico (E7): la EGR se cierra")
+time.sleep(0.5)
+comprobar(m.connected and s.ecu.basico == 3, "el ajuste básico sigue con el keep-alive")
+filas = formatear_grupo(m.basic_setting(4), 4)
+comprobar(filas[2][1] == "3" and filas[1][0] == "Comienzo inyección teórico", f"grupo 004: comienzo de inyección ({filas[2]})")
+m.read_group(4)
+comprobar(s.ecu.basico is None, "una lectura normal del grupo sale del ajuste básico")
+try:
+    m.basic_setting(99)
+    comprobar(False, "grupo sin ajuste básico da error")
+except KW1281Error as err:
+    comprobar("no acepta" in str(err) and m.connected, "grupo sin ajuste básico da error y la sesión sigue")
+m.disconnect()
+import simulador  # noqa: E402
+simulador.GASOLINA = True
+s = FakeSerial()
+simulador.GASOLINA = False
+m = KW1281(s, retry_wait=0.5)
+m.connect()
+v1 = m.basic_setting(98)
+time.sleep(3.2)
+v2 = m.basic_setting(98)
+comprobar(v1[3][2] == 0 and v2[3][2] == 1 and v1[0][0] == 0x06, "gasolina, grupo 098 (respuesta F4): la adaptación de la mariposa termina")
+comprobar(formatear_grupo([1, 2, 3], 5)[2] == ("Byte 3", "3", "", True), "datos en bruto como bytes")
 m.disconnect()
 
 print("Informe HTML")

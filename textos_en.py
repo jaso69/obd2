@@ -1232,8 +1232,6 @@ EN = {
     # ------------------------------------------------------- test de actuadores
     "Activo desde hace {s} s. Comprueba que funciona y pulsa «Siguiente componente».":
         "Active for {s} s. Check that it works and press \"Next component\".",
-    "Ahora no se puede: el usuario está haciendo un test de actuadores. Espera a que lo termine.":
-        "Not possible right now: the user is running an output (actuator) test. Wait until it is finished.",
     "Apagando el componente (reiniciando la comunicación)...": "Switching the component off (restarting communication)...",
     "Cerrar": "Close",
     "Conexión perdida: el test se ha detenido.": "Connection lost: the test has stopped.",
@@ -1280,4 +1278,81 @@ EN = {
         "valves, injectors, warning lamps) so you can check that they work: you hear a click or a buzz, or a lamp "
         "lights up. With the engine off and the ignition on. Each component stays active until you move to the "
         "next one or press \"Finish\".",
+    # ------------------------------------------------------- ajustes básicos
+    'Activar ajuste básico':
+        'Start basic setting',
+    'Adaptación de la mariposa (acelerador electrónico)':
+        'Throttle body adaptation (drive-by-wire)',
+    'Adaptación de la mariposa (acelerador por cable)':
+        'Throttle body adaptation (cable throttle)',
+    'Ahora no se puede: el usuario está haciendo un test de actuadores o un ajuste básico. Espera a que lo termine.':
+        'Not possible right now: the user is running an output test or a basic setting. Wait until it is finished.',
+    'Ajuste básico del grupo {g}.':
+        'Basic setting of block {g}.',
+    'Ajuste básico del motor (ralentí y avance)':
+        'Engine basic setting (idle and ignition timing)',
+    'Ajustes básicos':
+        'Basic settings',
+    'Ajustes básicos · {modulo}':
+        'Basic settings · {modulo}',
+    'Ajustes básicos...':
+        'Basic settings...',
+    'Aviso: {e}':
+        'Warning: {e}',
+    'Comienzo de inyección (calado de la bomba)':
+        'Start of injection (pump timing)',
+    'Conexión perdida: el ajuste básico se ha detenido.':
+        'Connection lost: the basic setting has stopped.',
+    'Contacto puesto, motor parado y sin pisar el acelerador. Espera a que termine (unos 10 s, el último campo cambia) y sal del ajuste básico. Se hace tras limpiar o cambiar la mariposa o tras desconectar la batería.':
+        'Ignition on, engine off and accelerator not pressed. Wait until it finishes (about 10 s, the last field changes) and leave the basic setting. It is done after cleaning or replacing the throttle body or after disconnecting the battery.',
+    'EGR desactivada (comprobar el caudalímetro)':
+        'EGR off (check the air flow meter)',
+    'Elige un ajuste o escribe el número de grupo (1-254) que indica el manual de taller.':
+        'Choose a setting or type the block number (1-254) given in the workshop manual.',
+    'En ajuste básico del grupo {g} desde hace {s} s.':
+        'In basic setting of block {g} for {s} s.',
+    'Estado de la adaptación':
+        'Adaptation status',
+    'Fin del ajuste básico del grupo {g}.':
+        'End of the basic setting of block {g}.',
+    'Fuera del ajuste básico: la centralita vuelve a funcionar normal.':
+        'Out of basic setting: the control unit is back to normal operation.',
+    'Grupo':
+        'Block',
+    'Grupo {g}: haz el ajuste en las condiciones que indica el manual de taller.':
+        'Block {g}: do the setting under the conditions given in the workshop manual.',
+    'La centralita entra en el modo de ajuste básico del grupo elegido: según el grupo, aprende una posición (p. ej. la mariposa), deja de regular algo (p. ej. la EGR) o muestra valores para ajustar a mano (p. ej. el calado de la bomba).':
+        'The control unit enters the basic setting mode of the chosen block: depending on the block, it learns a position (e.g. the throttle), stops regulating something (e.g. the EGR) or shows values for manual adjustment (e.g. the pump timing).',
+    'La centralita no acepta el ajuste básico del grupo {g}: no lo tiene o no se cumplen las condiciones.':
+        'The control unit does not accept the basic setting of block {g}: it does not have it or the conditions are not met.',
+    'Motor caliente (más de 80 °C) al ralentí. La centralita deja de regular el comienzo de inyección: compara el real con el teórico para comprobar el calado de la bomba.':
+        'Warm engine (above 80 °C) at idle. The control unit stops regulating the start of injection: compare the actual value with the specified one to check the pump timing.',
+    'Motor caliente al ralentí y sin consumidores (luces, aire acondicionado). La centralita fija el ralentí y el avance para comprobarlos o ajustarlos.':
+        'Warm engine at idle with no loads (lights, air conditioning). The control unit fixes the idle speed and ignition timing so you can check or adjust them.',
+    'Motor en marcha. La válvula EGR se cierra mientras dura, para comparar la masa de aire real con la esperada sin recirculación de gases.':
+        'Engine running. The EGR valve stays closed meanwhile, to compare the actual air mass with the expected one without exhaust gas recirculation.',
+    'Paso de la adaptación':
+        'Adaptation step',
+    'Posicionador de la mariposa':
+        'Throttle actuator',
+    'Potenciómetro 1 de la mariposa':
+        'Throttle potentiometer 1',
+    'Potenciómetro 2 de la mariposa':
+        'Throttle potentiometer 2',
+    'Potenciómetro de la mariposa':
+        'Throttle potentiometer',
+    'Saliendo del ajuste básico...':
+        'Leaving the basic setting...',
+    'Salir del ajuste básico':
+        'Leave basic setting',
+    'Se cumplen las condiciones de este ajuste':
+        'The conditions for this setting are met',
+    '• Haz solo los ajustes que sepas para qué sirven y en las condiciones que pide el manual de taller de tu motor. Un ajuste hecho a destiempo puede dejar un ralentí irregular hasta repetirlo bien.':
+        "• Only do settings whose purpose you know, under the conditions required by your engine's workshop manual. A setting done at the wrong time can leave an uneven idle until it is repeated properly.",
+    '• No cambia la codificación ni los canales de adaptación; lo que aprende la centralita se puede volver a hacer.':
+        '• It does not change the coding or the adaptation channels; whatever the control unit learns can be done again.',
+    '• «Salir del ajuste básico» devuelve la centralita al modo normal. Quitar el contacto también.':
+        '• "Leave basic setting" returns the control unit to normal mode. Switching the ignition off does too.',
+    '• «Ajustes básicos...» (KKL) pone la centralita en el modo de ajuste básico de un grupo: adaptar la mariposa de un gasolina, comprobar el calado de la bomba de un TDI o el caudalímetro con la EGR cerrada. Se elige entre los habituales del motor o se escribe el número de grupo del manual de taller, y se ven sus valores en vivo hasta pulsar «Salir del ajuste básico».':
+        '• "Basic settings..." (KKL) puts the control unit into the basic setting mode of a block: adapting the throttle body of a petrol engine, checking the pump timing of a TDI or the air flow meter with the EGR closed. Choose one of the usual ones for the engine or type the block number from the workshop manual, and see its values live until you press "Leave basic setting".',
 }

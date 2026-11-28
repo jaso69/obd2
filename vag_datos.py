@@ -361,6 +361,39 @@ MOTORES = {
 }
 
 
+def ajustes_basicos(motor):
+    """Ajustes básicos habituales de la centralita del motor: {grupo: (título, condiciones,
+    nombres de los campos o None para los del grupo de valores medidos)}."""
+    egr = (tr("EGR desactivada (comprobar el caudalímetro)"),
+           tr("Motor en marcha. La válvula EGR se cierra mientras dura, para comparar la masa de aire real con la "
+              "esperada sin recirculación de gases."), None)
+    if motor == "edc15":
+        return {
+            4: (tr("Comienzo de inyección (calado de la bomba)"),
+                tr("Motor caliente (más de 80 °C) al ralentí. La centralita deja de regular el comienzo de inyección: "
+                   "compara el real con el teórico para comprobar el calado de la bomba."), None),
+            3: egr,
+        }
+    if motor == "pd":
+        return {3: egr}
+    if motor == "gasolina":
+        cond = tr("Contacto puesto, motor parado y sin pisar el acelerador. Espera a que termine (unos 10 s, el "
+                  "último campo cambia) y sal del ajuste básico. Se hace tras limpiar o cambiar la mariposa o tras "
+                  "desconectar la batería.")
+        return {
+            98: (tr("Adaptación de la mariposa (acelerador por cable)"), cond,
+                 [tr("Potenciómetro de la mariposa"), tr("Posicionador de la mariposa"),
+                  tr("Estado de funcionamiento"), tr("Estado de la adaptación")]),
+            60: (tr("Adaptación de la mariposa (acelerador electrónico)"), cond,
+                 [tr("Potenciómetro 1 de la mariposa"), tr("Potenciómetro 2 de la mariposa"),
+                  tr("Paso de la adaptación"), tr("Estado de la adaptación")]),
+            1: (tr("Ajuste básico del motor (ralentí y avance)"),
+                tr("Motor caliente al ralentí y sin consumidores (luces, aire acondicionado). La centralita fija el "
+                   "ralentí y el avance para comprobarlos o ajustarlos."), None),
+        }
+    return {}
+
+
 def detectar_motor(ident):
     """Tipo de motor (clave de MOTORES) según la identificación de la centralita de motor, o None.
 

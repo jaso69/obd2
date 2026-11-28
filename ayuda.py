@@ -74,6 +74,10 @@ def secciones():
                "electroválvulas, inyectores, testigos) para comprobar que funcionan: se oye un clic o un zumbido, o se "
                "enciende un testigo. Con el motor parado y el contacto puesto. Cada componente sigue activo hasta que "
                "pasas al siguiente o pulsas «Terminar»."),
+            tr("• «Ajustes básicos...» (KKL) pone la centralita en el modo de ajuste básico de un grupo: adaptar la "
+               "mariposa de un gasolina, comprobar el calado de la bomba de un TDI o el caudalímetro con la EGR "
+               "cerrada. Se elige entre los habituales del motor o se escribe el número de grupo del manual de taller, "
+               "y se ven sus valores en vivo hasta pulsar «Salir del ajuste básico»."),
             tr("• «Generar informe» crea una página con los datos del coche y las averías que se abre en el "
                "navegador y se puede imprimir o guardar como PDF."),
             tr("• Historial: cada lectura se guarda sola por coche. Debajo de los botones verás qué averías son "

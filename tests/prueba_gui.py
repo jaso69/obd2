@@ -208,6 +208,40 @@ for modo in (gui.KKL, gui.ELM):
         va.cerrar()
         root.update()
         ok(not va.win.winfo_exists() and not app.act_en_curso, "actuadores: se cierra la ventana")
+        # ajustes básicos: comienzo de inyección del TDI, salir, grupo que no lo tiene
+        app.ajustes_basicos()
+        vb = app.ventana_ajustes
+        root.update()
+        ok(vb.grupo_var.get().startswith("004") and str(vb.btn.cget("state")) == "disabled",
+           "ajustes: sugiere el grupo 004 y Activar está desactivado sin confirmar")
+        vb.ok_var.set(True)
+        vb._botones()
+        vb.activar()
+        ok(esperar(lambda: len(vb.tabla.get_children()) == 4 and app.worker.ser.ecus[0x01].basico == 4, 10),
+           "ajustes: grupo 004 en ajuste básico con 4 valores")
+        fila = vb.tabla.item(vb.tabla.get_children()[2], "values")
+        ok(fila[1] == "3" and str(vb.btn.cget("text")) == tr("Salir del ajuste básico"), f"ajustes: valores en vivo {fila}")
+        ok(herramienta("leer_valores", {"elementos": [1]})[1], "ajustes: la IA no puede leer durante el ajuste")
+        revisar_idioma("ajustes básicos")
+        vb.salir()
+        ok(esperar(lambda: vb.estado == "listo", 10) and app.worker.ser.ecus[0x01].basico is None and app.connected,
+           "ajustes: salir devuelve la centralita al modo normal")
+        vb.grupo_var.set("99")
+        vb.ok_var.set(True)
+        vb._botones()
+        vb.activar()
+        esperar(lambda: vb.estado == "listo" and "099" in str(vb.info.cget("text")), 10)
+        ok(vb.estado == "listo" and "099" in str(vb.info.cget("text")),
+           f"ajustes: grupo sin ajuste básico da aviso ({vb.info.cget('text')})")
+        ok(app.connected, "ajustes: la sesión sigue tras el aviso")
+        vb.grupo_var.set("004")
+        vb.ok_var.set(True)
+        vb._botones()
+        vb.activar()
+        esperar(lambda: app.worker.ser.ecus[0x01].basico == 4, 10)
+        vb.cerrar()
+        ok(esperar(lambda: not vb.win.winfo_exists(), 10) and app.worker.ser.ecus[0x01].basico is None
+           and not app.act_en_curso, "ajustes: cerrar la ventana sale del ajuste básico")
     revisar_idioma(f"averías {modo}")
     app.nb.select(app.tab_ecu)
     revisar_idioma(f"vehículo {modo}")
@@ -384,6 +418,22 @@ if app.connected:
        f"{app.trayecto.km:.2f} km)")
     revisar_idioma("consumo gasolina")
     app._stop_live()
+    app.nb.select(app.tab_dtc)
+    app.ajustes_basicos()
+    vb = app.ventana_ajustes
+    root.update()
+    ok([v.split(" · ")[0] for v in vb.grupo_cb["values"]] == ["098", "060", "001"], "ajustes de gasolina: 098, 060 y 001")
+    vb.ok_var.set(True)
+    vb._botones()
+    vb.activar()
+    ok(esperar(lambda: len(vb.tabla.get_children()) == 4
+               and vb.tabla.item(vb.tabla.get_children()[3], "values")[1] == "00000001", 12),
+       "adaptación de la mariposa (098) termina y el estado cambia")
+    ok(vb.tabla.item(vb.tabla.get_children()[0], "values")[0] == tr("Potenciómetro de la mariposa"),
+       "nombres de los campos de la adaptación")
+    revisar_idioma("ajustes gasolina")
+    vb.cerrar()
+    ok(esperar(lambda: not vb.win.winfo_exists(), 10) and app.worker.ser.ecu.basico is None, "sale y se cierra")
     app.toggle_connect()
     ok(esperar(lambda: not app.connected, 10), "desconecta")
 simulador.GASOLINA = False

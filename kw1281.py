@@ -30,6 +30,8 @@ END_COMM = 0x06
 CLEAR_DTC = 0x05
 GET_DTC = 0x07
 GROUP_READ = 0x29
+BASIC_SETTING = 0x28
+R_BASIC = 0xF4
 R_ACTUATOR = 0xF5
 R_ASCII = 0xF6
 R_DTC = 0xFC
@@ -186,7 +188,7 @@ class KW1281:
         result = []
         while blk.title != ACK:
             result.append(blk)
-            if blk.title in (NAK, R_GROUP, R_ACTUATOR):
+            if blk.title in (NAK, R_GROUP, R_ACTUATOR, R_BASIC):
                 break
             self._send_block(ACK)
             blk = self._recv_block()
@@ -369,3 +371,22 @@ class KW1281:
             raise KW1281Error(tr("La centralita no acepta el test de actuadores: no lo tiene o no se cumplen "
                                  "las condiciones (motor parado y contacto puesto)."))
         raise KW1281Error(tr("Respuesta inesperada al test de actuadores: {blk}", blk=b))
+
+    def basic_setting(self, group):
+        """Ajuste básico del grupo (servicio 0x28): la centralita entra en el modo de ajuste
+        básico de ese grupo (p. ej. adapta la mariposa o deja de regular la EGR) y devuelve sus
+        valores. Hay que repetir la petición mientras dure; una lectura normal del grupo
+        (read_group) lo termina.
+
+        Devuelve, como read_group, una lista de (formula, a, b) o, si la centralita contesta
+        con datos en bruto, una lista de bytes.
+        """
+        blocks = self._call(BASIC_SETTING, bytes([group & 0xFF]))
+        if blocks and blocks[0].title in (R_GROUP, R_BASIC):
+            d = blocks[0].data
+            from vag_datos import FORMULAS
+            if len(d) % 3 == 0 and d and all(d[i] in FORMULAS for i in range(0, len(d), 3)):
+                return [(d[i], d[i + 1], d[i + 2]) for i in range(0, len(d), 3)]
+            return list(d)
+        raise KW1281Error(tr("La centralita no acepta el ajuste básico del grupo {g}: no lo tiene o no se "
+                             "cumplen las condiciones.", g=f"{group:03d}"))

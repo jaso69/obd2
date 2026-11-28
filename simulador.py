@@ -41,6 +41,8 @@ class FakeECU:
         self.inbuf = []
         self.queue = deque()
         self.actuador = -1     # componente que se está activando en el test de actuadores
+        self.basico = None     # grupo en ajuste básico
+        self.basico_t0 = 0.0
 
     def _actuadores(self):
         if self.address == 0x01:
@@ -70,7 +72,13 @@ class FakeECU:
             return [(0x01, 200, int(rpm / 40)),
                     (0x31, 100, int(spec / 2.5)),          # mg/H = b/4*a*0.1
                     (0x31, 100, int((spec + random.uniform(-15, 15)) / 2.5)),
-                    (0x17, 100, int(255 * (0.6 - 0.5 * load)))]
+                    (0x17, 100, 0 if self.basico == 3 else int(255 * (0.6 - 0.5 * load)))]   # EGR cerrada
+        if g == 4:
+            real = 3.0 if self.basico == 4 else 3.0 + random.uniform(-0.3, 0.3)
+            return [(0x01, 200, int(rpm / 40)),
+                    (0x03, 100, 15),                       # comienzo teórico, ° (0.2*b)
+                    (0x03, 100, int(real / 0.2)),
+                    (0x17, 100, int(255 * 0.4))]
         if g == 10:
             return [(0x31, 100, int((300 + 400 * load) / 2.5)),
                     (0x12, 250, 101),
@@ -104,6 +112,9 @@ class FakeECU:
         if g == 5:
             return [(0x01, 200, rpm_b), (0x21, 100, int(15 + 60 * load)), (0x07, 100, int(kmh)),
                     (0x10, 255, 0)]
+        if g == 98:                                    # adaptación de la mariposa: tarda 3 s
+            hecho = self.basico == 98 and time.monotonic() - self.basico_t0 > 3
+            return [(0x06, 100, 38), (0x06, 100, 21), (0x10, 255, 0b00000001), (0x10, 255, 1 if hecho else 0)]
         return None
 
     # --- bloques -------------------------------------------------------------
@@ -124,6 +135,18 @@ class FakeECU:
             return self._start_block(0x09)
         if title != 0x04:
             self.actuador = -1
+        if title == 0x28:
+            g = data[0]
+            if self.basico != g:
+                self.basico, self.basico_t0 = g, time.monotonic()
+            vals = self._group(g)
+            if vals is None:
+                self.basico = None
+                return self._start_block(0x0A, bytes([cnt]))
+            # el gasolina contesta con 0xF4 y el TDI con 0xE7, para probar los dos
+            return self._start_block(0xF4 if g == 98 else 0xE7, bytes(max(0, min(255, x)) for v in vals for x in v))
+        if title == 0x29:
+            self.basico = None
         if title == 0x04:
             lista = self._actuadores()
             if not lista:
