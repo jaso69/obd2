@@ -48,6 +48,6 @@ Se llamaba *Toledo Diagnosis* hasta la v0.3.0; desde el 2026-11-27 es **OBD2Desk
 
 **v0.6.0 (2026-11-28)**: pestaña Ayuda, 538 averías P1 de VAG, grupos de TDI inyector-bomba y gasolina con selector de Motor, Panel y consumo de gasolina por KKL. Probada solo con simuladores (falta coche de gasolina VAG y PD). **v0.6.1** (mismo día): lista de grupos desplazable (con gasolina «Abrir CSV...» quedaba fuera). **v0.6.1 cerrada**: release «Latest» con el `.exe` de Windows (probado por el usuario: funciona bien) y el paquete Linux. Ver `docs/PROYECTO.md` §8.2d.
 
-**v0.7.0 publicada (2026-11-28, «Latest», etiqueta `v0.7.0` → `58d47ee`)**: test de actuadores y ajustes básicos KW1281 (Averías, solo KKL). Probada solo con simuladores (falta coche). Release con el paquete Linux y el `OBD2Desk.exe` de Windows; web publicada (§8.2g).
+**v0.7.0 publicada y cerrada (2026-11-28, «Latest», etiqueta `v0.7.0` → `58d47ee`)**: test de actuadores y ajustes básicos KW1281 (Averías, solo KKL). Probada solo con simuladores (falta coche). Release con el paquete Linux y el `OBD2Desk.exe` de Windows (probado por el usuario: funciona bien); web publicada (§8.2g).
 
 **Próximos pasos**: `docs/PROYECTO.md` §10 (Bloque 2 hecho en la v0.5.0; quedan los pendientes y lo de «más adelante»). Pasos para sacar una versión: §8.3. La versión para Mac está aparcada.
