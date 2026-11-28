@@ -181,6 +181,33 @@ for modo in (gui.KKL, gui.ELM):
         filas = [app.dtc_tree.item(i, "values") for i in app.dtc_tree.get_children()]
         ok(len(filas) == 7 and tr("Responden {n} de {total} módulos · {averias} avería(s)", n=3, total=4, averias=4)
            == str(app.dtc_lbl.cget("text")), f"escaneo: 3 módulos de 4, 4 averías ({len(filas)} filas)")
+        # test de actuadores: secuencia completa, repetir y terminar a mitad (se reconecta)
+        import simulador
+        app.test_actuadores()
+        va = app.ventana_act
+        root.update()
+        ok(str(va.btn.cget("state")) == "disabled", "actuadores: Iniciar desactivado sin aceptar los avisos")
+        va.ok_var.set(True)
+        va._botones()
+        n_act = len(simulador.ACTUADORES_TDI)
+        for i in range(n_act + 1):
+            va.siguiente()
+            esperar(lambda: va.estado != "esperando", 10)
+        ok(va.estado == "fin" and len(va.lista.get_children()) == n_act
+           and str(va.actual.cget("text")) == tr("Test terminado"), f"actuadores: secuencia de {n_act} componentes y fin")
+        va.siguiente()
+        esperar(lambda: va.estado != "esperando", 10)
+        ok(va.estado == "activo" and len(va.lista.get_children()) == 1
+           and str(va.fin_btn.cget("text")) == tr("Terminar"), "actuadores: repetir el test")
+        ok(herramienta("leer_averias", {})[1], "actuadores: la IA no puede leer mientras dura el test")
+        revisar_idioma("test de actuadores")
+        va.terminar()
+        ok(esperar(lambda: va.estado == "fin", 20) and app.connected and app.worker.ecu.connected
+           and app.worker.ecu.address == 0x01, "actuadores: Terminar reinicia la comunicación")
+        ok(app.worker.ser.ecus[0x01].actuador == -1, "actuadores: la centralita ya no activa nada")
+        va.cerrar()
+        root.update()
+        ok(not va.win.winfo_exists() and not app.act_en_curso, "actuadores: se cierra la ventana")
     revisar_idioma(f"averías {modo}")
     app.nb.select(app.tab_ecu)
     revisar_idioma(f"vehículo {modo}")

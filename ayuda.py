@@ -70,6 +70,10 @@ def secciones():
                "antes: si el fallo sigue, volverán."),
             tr("• «Escanear todos los módulos» (KKL) recorre todas las centralitas del coche y lista las averías "
                "de cada una. Tarda unos minutos y se puede detener."),
+            tr("• «Test de actuadores...» (KKL) hace que la centralita active uno a uno sus componentes (relés, "
+               "electroválvulas, inyectores, testigos) para comprobar que funcionan: se oye un clic o un zumbido, o se "
+               "enciende un testigo. Con el motor parado y el contacto puesto. Cada componente sigue activo hasta que "
+               "pasas al siguiente o pulsas «Terminar»."),
             tr("• «Generar informe» crea una página con los datos del coche y las averías que se abre en el "
                "navegador y se puede imprimir o guardar como PDF."),
             tr("• Historial: cada lectura se guarda sola por coche. Debajo de los botones verás qué averías son "

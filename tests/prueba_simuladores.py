@@ -7,7 +7,7 @@ Comprueba KW1281 (init 5 baudios, velocidad automática, identificación,
 averías, borrado, grupos, keep-alive) y ELM327 (protocolo, PIDs soportados,
 VIN, MIL, averías, multi-PID, borrado) y el parseo de respuestas de línea K y
 CAN 29 bits, datos congelados, monitores, averías permanentes, identificación
-(modo 09), VIN, varias centralitas KW1281, informe HTML y códigos de avería VAG. Tarda unos 20 segundos (el init de 5 baudios es lento por diseño).
+(modo 09), VIN, varias centralitas KW1281, test de actuadores, informe HTML y códigos de avería VAG. Tarda unos 20 segundos (el init de 5 baudios es lento por diseño).
 """
 import os
 import sys
@@ -144,6 +144,32 @@ for a in (0x17, 0x08):
         idents[a] = str(err)
 comprobar(idents[0x17] == (b"1M0920821C  ", [(779, 5, False)]), "cuadro (17): identificación y avería 00779")
 comprobar("no responde" in idents[0x08] and time.time() - t < 12, f"módulo ausente (08) descartado rápido ({time.time() - t:.1f} s en total)")
+
+print("Test de actuadores KW1281")
+s = FakeSerial()
+m = KW1281(s, retry_wait=0.5)
+m.connect()
+seq = [m.actuator_test(inicio=True)]
+time.sleep(0.5)                                  # el componente sigue activo con el keep-alive
+comprobar(m.connected, "la sesión sigue viva mientras se activa un componente")
+while seq[-1] is not None and len(seq) < 20:
+    seq.append(m.actuator_test())
+import simulador  # noqa: E402
+comprobar(seq == simulador.ACTUADORES_TDI + [None], f"secuencia del TDI y fin ({seq})")
+comprobar(m.actuator_test(inicio=True) == simulador.ACTUADORES_TDI[0], "se puede repetir el test")
+m.disconnect()
+m.connect()
+comprobar(s.ecu.actuador == -1 and m.actuator_test(inicio=True) == simulador.ACTUADORES_TDI[0],
+          "al reconectar la secuencia empieza de nuevo")
+m.disconnect()
+m = KW1281(s, address=0x15, retry_wait=0.5)
+m.connect()
+try:
+    m.actuator_test(inicio=True)
+    comprobar(False, "el airbag (15) rechaza el test")
+except KW1281Error as err:
+    comprobar("no acepta" in str(err) and m.connected, "el airbag (15) rechaza el test y la sesión sigue")
+m.disconnect()
 
 print("Informe HTML")
 import informe  # noqa: E402

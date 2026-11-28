@@ -24,11 +24,13 @@ from idioma import tr
 
 # Titulos de bloque
 ACK = 0x09
+ACTUATOR_TEST = 0x04
 NAK = 0x0A
 END_COMM = 0x06
 CLEAR_DTC = 0x05
 GET_DTC = 0x07
 GROUP_READ = 0x29
+R_ACTUATOR = 0xF5
 R_ASCII = 0xF6
 R_DTC = 0xFC
 R_GROUP = 0xE7
@@ -184,7 +186,7 @@ class KW1281:
         result = []
         while blk.title != ACK:
             result.append(blk)
-            if blk.title in (NAK, R_GROUP):
+            if blk.title in (NAK, R_GROUP, R_ACTUATOR):
                 break
             self._send_block(ACK)
             blk = self._recv_block()
@@ -343,3 +345,27 @@ class KW1281:
         if group == 0:
             return list(d)
         return [(d[i], d[i + 1], d[i + 2]) for i in range(0, len(d) - 2, 3)]
+
+    def actuator_test(self, inicio=False):
+        """Test de actuadores (diagnóstico de elementos finales, servicio 0x04): cada llamada
+        pasa al siguiente componente, que la centralita activa hasta la llamada siguiente.
+
+        Devuelve el código del componente (en la numeración de averías VAG: 01265 = EGR N18)
+        o None cuando la secuencia ha terminado. Con el motor en marcha o en una centralita
+        que no tiene el test, la centralita contesta NAK y se lanza KW1281Error.
+        inicio: primera llamada; si da NAK se reintenta sin el byte de datos, que algunas
+        centralitas no esperan.
+        """
+        blocks = self._call(ACTUATOR_TEST, b"\x00")
+        if inicio and blocks and blocks[0].title == NAK:
+            blocks = self._call(ACTUATOR_TEST)
+        if not blocks:
+            return None                      # ACK: no quedan componentes
+        b = blocks[0]
+        if b.title == R_ACTUATOR and len(b.data) >= 2:
+            code = (b.data[0] << 8) | b.data[1]
+            return None if code in (0x0000, 0xFFFF) else code
+        if b.title == NAK:
+            raise KW1281Error(tr("La centralita no acepta el test de actuadores: no lo tiene o no se cumplen "
+                                 "las condiciones (motor parado y contacto puesto)."))
+        raise KW1281Error(tr("Respuesta inesperada al test de actuadores: {blk}", blk=b))

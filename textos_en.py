@@ -1229,4 +1229,55 @@ EN = {
         '• With KKL on a petrol engine (Engine selector in Measured values): engine speed, load, temperatures, injection time, air mass, throttle, ignition timing and voltage.',
     '• Con KKL, un TDI no da la velocidad: solo hay consumo en litros por hora. En un gasolina con los grupos estándar (002 y 005) hay consumo en L/100 km, distancia y cronómetro 0-100.':
         '• With KKL, a TDI does not report speed: there is only consumption in litres per hour. On a petrol engine with the standard blocks (002 and 005) you get consumption in L/100 km, distance and the 0-100 timer.',
+    # ------------------------------------------------------- test de actuadores
+    "Activo desde hace {s} s. Comprueba que funciona y pulsa «Siguiente componente».":
+        "Active for {s} s. Check that it works and press \"Next component\".",
+    "Ahora no se puede: el usuario está haciendo un test de actuadores. Espera a que lo termine.":
+        "Not possible right now: the user is running an output (actuator) test. Wait until it is finished.",
+    "Apagando el componente (reiniciando la comunicación)...": "Switching the component off (restarting communication)...",
+    "Cerrar": "Close",
+    "Conexión perdida: el test se ha detenido.": "Connection lost: the test has stopped.",
+    "Esperando a la centralita...": "Waiting for the control unit...",
+    "Fin del test de actuadores: se reinicia la comunicación para apagar el componente.":
+        "End of the output test: restarting communication to switch the component off.",
+    "He leído los avisos: el motor está parado y el contacto puesto":
+        "I have read the warnings: the engine is off and the ignition is on",
+    "Iniciar": "Start",
+    "La centralita activa de verdad, uno a uno, sus componentes (relés, electroválvulas, inyectores, testigos...) para comprobar que funcionan: se oye un clic o un zumbido, o se enciende un testigo.":
+        "The control unit really activates its components one by one (relays, solenoid valves, injectors, warning "
+        "lamps...) so you can check that they work: you hear a click or a buzz, or a lamp lights up.",
+    "La centralita ha probado todos sus componentes ({n}).": "The control unit has tested all its components ({n}).",
+    "La centralita no acepta el test de actuadores: no lo tiene o no se cumplen las condiciones (motor parado y contacto puesto).":
+        "The control unit does not accept the output test: it does not have one or the conditions are not met "
+        "(engine off and ignition on).",
+    "Nº": "No.",
+    "Pulsa «Iniciar» para activar el primer componente.": "Press \"Start\" to activate the first component.",
+    "Repetir el test": "Repeat the test",
+    "Respuesta inesperada al test de actuadores: {blk}": "Unexpected reply to the output test: {blk}",
+    "Siguiente componente": "Next component",
+    "Terminar": "Finish",
+    "Test de actuadores": "Output test",
+    "Test de actuadores terminado ({n} componentes).": "Output test finished ({n} components).",
+    "Test de actuadores · {modulo}": "Output test · {modulo}",
+    "Test de actuadores...": "Output test...",
+    "Test de actuadores: {n}. {codigo} {comp}": "Output test: {n}. {codigo} {comp}",
+    "Test detenido y comunicación restablecida.": "Test stopped and communication restored.",
+    "Test detenido: {e}": "Test stopped: {e}",
+    "Test terminado": "Test finished",
+    "no se pudo reconectar tras el test de actuadores: {e}": "could not reconnect after the output test: {e}",
+    "• Apártate del ventilador y de las piezas móviles. Con la batería baja puede fallar.":
+        "• Keep clear of the fan and moving parts. With a low battery it may fail.",
+    "• Cada componente sigue activo hasta que pulses «Siguiente componente». No lo dejes mucho rato: en un gasolina los inyectores y la bomba pueden mandar combustible al motor.":
+        "• Each component stays active until you press \"Next component\". Don't leave it on for long: on a petrol "
+        "engine the injectors and the pump can send fuel into the engine.",
+    "• Motor parado y contacto puesto. Con el motor en marcha la centralita no lo acepta.":
+        "• Engine off and ignition on. With the engine running the control unit refuses it.",
+    "• «Terminar» apaga el componente reiniciando la comunicación (tarda unos segundos). Quitar el contacto también lo para.":
+        "• \"Finish\" switches the component off by restarting communication (takes a few seconds). Switching the "
+        "ignition off also stops it.",
+    "• «Test de actuadores...» (KKL) hace que la centralita active uno a uno sus componentes (relés, electroválvulas, inyectores, testigos) para comprobar que funcionan: se oye un clic o un zumbido, o se enciende un testigo. Con el motor parado y el contacto puesto. Cada componente sigue activo hasta que pasas al siguiente o pulsas «Terminar».":
+        "• \"Output test...\" (KKL) makes the control unit activate its components one by one (relays, solenoid "
+        "valves, injectors, warning lamps) so you can check that they work: you hear a click or a buzz, or a lamp "
+        "lights up. With the engine off and the ignition on. Each component stays active until you move to the "
+        "next one or press \"Finish\".",
 }

@@ -726,6 +726,23 @@ class Worker(threading.Thread):
                 d = self._elm_dtcs()
                 self.post("dtcs", d)
                 self.post("report", {"dtcs": d})
+        elif kind == "act":
+            try:
+                self.post("act", {"code": self.ecu.actuator_test(inicio=args[0])})
+            except KW1281Error as e:
+                self.log(tr("Error: {e}", e=e))
+                self.post("act", {"error": str(e)})
+        elif kind == "act_stop":
+            # La centralita deja de activar el componente al cerrar la sesión: se vuelve a conectar.
+            self.log(tr("Fin del test de actuadores: se reinicia la comunicación para apagar el componente."))
+            try:
+                self.ecu.disconnect()
+                time.sleep(1.0)
+                self.ecu.connect()
+                self.post("act", {"stopped": True})
+            except Exception as e:
+                self.post("act", {"stopped": True, "error": str(e)})
+                self._lost(tr("no se pudo reconectar tras el test de actuadores: {e}", e=e))
         elif kind == "live":
             self.live_items = args[0] or None
             self.live_gen = args[1]
@@ -1209,6 +1226,191 @@ class VisorCSV:
         self.resumen.configure(text="\n".join(lineas))
 
 
+class VentanaActuadores:
+    """Test de actuadores KW1281: la centralita activa sus componentes uno a uno."""
+
+    def __init__(self, app):
+        self.app = app
+        s = app.s
+        self.estado = "listo"        # listo, esperando, activo, parando, fin
+        self.cerrando = False
+        self.n = 0
+        self.desde = None
+        self.win = win = tk.Toplevel(app.root)
+        win.title(tr("Test de actuadores"))
+        win.configure(bg=PANEL)
+        _poner_icono(win)
+        win.geometry(f"{int(820 * s)}x{int(640 * s)}")
+        win.minsize(int(640 * s), int(520 * s))
+        win.transient(app.root)
+        win.protocol("WM_DELETE_WINDOW", self.cerrar)
+
+        p = ttk.Frame(win, style="Panel.TFrame", padding=18)
+        p.pack(fill="both", expand=True)
+        ttk.Label(p, text=tr("Test de actuadores · {modulo}", modulo=app.mod_var.get()), style="Panel.TLabel",
+                  font=(FONT, 12, "bold")).pack(anchor="w")
+        aviso = self.app._card(p, padding=(14, 10))
+        aviso.pack(fill="x", pady=(10, 10))
+        for i, txt in enumerate((
+                tr("La centralita activa de verdad, uno a uno, sus componentes (relés, electroválvulas, inyectores, "
+                   "testigos...) para comprobar que funcionan: se oye un clic o un zumbido, o se enciende un testigo."),
+                tr("• Motor parado y contacto puesto. Con el motor en marcha la centralita no lo acepta."),
+                tr("• Cada componente sigue activo hasta que pulses «Siguiente componente». No lo dejes mucho rato: "
+                   "en un gasolina los inyectores y la bomba pueden mandar combustible al motor."),
+                tr("• Apártate del ventilador y de las piezas móviles. Con la batería baja puede fallar."),
+                tr("• «Terminar» apaga el componente reiniciando la comunicación (tarda unos segundos). Quitar el "
+                   "contacto también lo para."))):
+            ttk.Label(aviso, text=txt, style="Card.TLabel", wraplength=int(740 * s), justify="left",
+                      foreground=WARN if i == 2 else None).pack(anchor="w", pady=(0, 4))
+        self.ok_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(p, text=tr("He leído los avisos: el motor está parado y el contacto puesto"),
+                        variable=self.ok_var, command=self._botones).pack(anchor="w")
+
+        self.actual = ttk.Label(p, text="—", style="Panel.TLabel", font=(FONT, 13, "bold"),
+                                wraplength=int(760 * s))
+        self.actual.pack(anchor="w", pady=(14, 0))
+        self.info = ttk.Label(p, text=tr("Pulsa «Iniciar» para activar el primer componente."),
+                              style="PanelMuted.TLabel", wraplength=int(760 * s))
+        self.info.pack(anchor="w", pady=(2, 10))
+
+        btns = ttk.Frame(p, style="Panel.TFrame")
+        btns.pack(fill="x", side="bottom", pady=(12, 0))
+        self.btn = ttk.Button(btns, text=tr("Iniciar"), style="Accent.TButton", width=24, command=self.siguiente)
+        self.btn.pack(side="left")
+        self.fin_btn = ttk.Button(btns, text=tr("Cerrar"), width=14, command=self.terminar)
+        self.fin_btn.pack(side="right")
+
+        card = self.app._card(p, padding=0)
+        card.pack(fill="both", expand=True)
+        self.lista = ttk.Treeview(card, columns=("n", "codigo", "comp"), show="headings", height=6)
+        for c, txt, w, st in (("n", tr("Nº"), 50, False), ("codigo", tr("CÓDIGO"), 90, False),
+                              ("comp", tr("COMPONENTE"), 560, True)):
+            self.lista.heading(c, text=txt, anchor="w")
+            self.lista.column(c, width=int(w * s), stretch=st)
+        self.lista.pack(fill="both", expand=True)
+        self._botones()
+        self._reloj()
+        app.act_en_curso = True
+        win.after(150, self._modal)
+
+    def _modal(self):
+        try:
+            self.win.grab_set()          # mientras tanto no se puede leer nada más de la centralita
+        except tk.TclError:
+            pass
+
+    def _destruir(self):
+        self.app.act_en_curso = False
+        try:
+            self.win.after_cancel(self.reloj_id)
+        except (tk.TclError, AttributeError):
+            pass
+        self.win.destroy()
+
+    def _botones(self):
+        e = self.estado
+        listo = self.ok_var.get() and e in ("listo", "activo", "fin")
+        self.btn.configure(state="normal" if listo else "disabled",
+                           text=tr("Siguiente componente") if e in ("activo", "esperando") and self.n else
+                           tr("Repetir el test") if e == "fin" else tr("Iniciar"))
+        activo = e == "activo" or (e == "esperando" and self.n)
+        self.fin_btn.configure(state="disabled" if e in ("esperando", "parando") else "normal",
+                               text=tr("Terminar") if activo else tr("Cerrar"),
+                               style="Danger.TButton" if activo else "TButton")
+
+    def _reloj(self):
+        if not self.win.winfo_exists():
+            return
+        if self.estado == "activo" and self.desde:
+            self.info.configure(text=tr("Activo desde hace {s} s. Comprueba que funciona y pulsa «Siguiente "
+                                        "componente».", s=int(time.monotonic() - self.desde)), foreground=MUTED)
+        self.reloj_id = self.win.after(500, self._reloj)
+
+    def siguiente(self):
+        inicio = self.estado in ("listo", "fin")
+        if inicio:
+            self.n = 0
+            self.lista.delete(*self.lista.get_children())
+        self.estado = "esperando"
+        self.info.configure(text=tr("Esperando a la centralita..."), foreground=MUTED)
+        self._botones()
+        self.app.worker.submit("act", inicio)
+
+    def terminar(self):
+        if self.estado == "activo":
+            self.estado = "parando"
+            self.info.configure(text=tr("Apagando el componente (reiniciando la comunicación)..."), foreground=MUTED)
+            self._botones()
+            self.app.worker.submit("act_stop")
+        elif self.estado not in ("esperando", "parando"):
+            self._destruir()
+
+    def cerrar(self):
+        if self.estado in ("activo", "esperando", "parando"):
+            self.cerrando = True
+            if self.estado == "activo":
+                self.terminar()
+        else:
+            self._destruir()
+
+    def respuesta(self, r):
+        if not self.win.winfo_exists():
+            return
+        if r.get("stopped"):
+            self.estado = "fin"
+            self.desde = None
+            self.actual.configure(text="—")
+            self.info.configure(text=tr("Test detenido: {e}", e=r["error"]) if r.get("error") else
+                                tr("Test detenido y comunicación restablecida."),
+                                foreground=ERR if r.get("error") else OK)
+        elif r.get("error"):
+            self.desde = None
+            self.actual.configure(text="—")
+            self.info.configure(text=r["error"], foreground=ERR)
+            self.estado = "activo" if self.n else "fin"     # algo puede seguir activo: se reconecta
+            if self.n:
+                self.terminar()
+        elif r["code"] is None:
+            self.estado = "fin"
+            self.desde = None
+            self.actual.configure(text=tr("Test terminado"))
+            self.info.configure(text=tr("La centralita ha probado todos sus componentes ({n}).", n=self.n), foreground=OK)
+            self.app.log(tr("Test de actuadores terminado ({n} componentes).", n=self.n))
+        else:
+            c = r["code"]
+            self.n += 1
+            self.estado = "activo"
+            self.desde = time.monotonic()
+            self.actual.configure(text=f"{self.n}. {c:05d} · {vag_componente(c)}")
+            self.lista.insert("", "end", values=(self.n, f"{c:05d}", vag_componente(c)))
+            self.lista.see(self.lista.get_children()[-1])
+            self.app.log(tr("Test de actuadores: {n}. {codigo} {comp}", n=self.n, codigo=f"{c:05d}",
+                            comp=vag_componente(c)))
+            if self.cerrando:
+                self.terminar()
+        if self.cerrando and self.estado == "fin":
+            self._destruir()
+            return
+        self._reloj_info_inmediata()
+        self._botones()
+
+    def _reloj_info_inmediata(self):
+        if self.estado == "activo":
+            self.info.configure(text=tr("Activo desde hace {s} s. Comprueba que funciona y pulsa «Siguiente "
+                                        "componente».", s=0), foreground=MUTED)
+
+    def perdida(self):
+        """Se ha perdido la conexión: la centralita ya no activa nada."""
+        if self.win.winfo_exists():
+            self.estado = "fin"
+            self.desde = None
+            self.actual.configure(text="—")
+            self.info.configure(text=tr("Conexión perdida: el test se ha detenido."), foreground=ERR)
+            self._botones()
+            if self.cerrando:
+                self._destruir()
+
+
 class VentanaHistorial:
     """Diagnósticos guardados de cada coche y comparación de cada uno con el anterior."""
 
@@ -1389,6 +1591,8 @@ class App:
         self.coche = None                        # (id, nombre) del coche conectado, para el historial
         self.vag_motor = None                    # (id, nombre) por la centralita de motor VAG (sin VIN)
         self.ventana_historial = None
+        self.ventana_act = None                  # VentanaActuadores abierta
+        self.act_en_curso = False                # la IA no lee nada mientras hay un test de actuadores
         self.informe_ia = None                   # informe pedido por la IA: {"texto", "reply"}
         # Consumo y 0-100
         self.trayecto = consumo.Trayecto()
@@ -2014,6 +2218,8 @@ class App:
         self.dtc_clear_btn.pack(side="left", padx=10)
         self.scan_btn = ttk.Button(top, text=tr("Escanear todos los módulos"), command=self.scan_modules)
         self.scan_btn.pack(side="left")
+        self.act_btn = ttk.Button(top, text=tr("Test de actuadores..."), command=self.test_actuadores)
+        self.act_btn.pack(side="left", padx=(10, 0))
         self.report_btn = ttk.Button(top, text=tr("Generar informe"), command=self.make_report)
         self.report_btn.pack(side="right")
         ttk.Button(top, text=tr("Historial..."), command=self.ver_historial).pack(side="right", padx=(0, 10))
@@ -2397,6 +2603,9 @@ class App:
             res = self._ai_main(lambda: self._ai_historial(entrada), conv)
         elif nombre == "generar_informe":
             res = self._ai_main(lambda reply: self._ai_informe(entrada, reply), conv, asincrono=True)
+        elif nombre in ("leer_averias", "leer_valores", "borrar_averias", "grabar_valores") and self.act_en_curso:
+            res = (tr("Ahora no se puede: el usuario está haciendo un test de actuadores. Espera a que lo termine."),
+                   True)
         elif nombre in ("leer_averias", "leer_valores", "borrar_averias", "grabar_valores"):
             if nombre == "borrar_averias":
                 ok = self._ai_main(lambda: (messagebox.askyesno(
@@ -2639,9 +2848,11 @@ class App:
         self._cons_texto()
         if kkl:
             self.scan_btn.pack(side="left", after=self.dtc_clear_btn)
+            self.act_btn.pack(side="left", padx=(10, 0), after=self.scan_btn)
             self.ff_frame.pack_forget()
         else:
             self.scan_btn.pack_forget()
+            self.act_btn.pack_forget()
             self.ff_frame.pack(side="right", fill="y", padx=(14, 0))
         self._fill_ff(None)
         self.hist_lbl.configure(text="")
@@ -2698,7 +2909,7 @@ class App:
         self.connected = on
         state = "normal" if on else "disabled"
         for b in (self.panel_btn, self.cons_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
-                  self.scan_btn, self.report_btn):
+                  self.scan_btn, self.act_btn, self.report_btn):
             b.configure(state=state)
         self.port_cb.configure(state="disabled" if on else self._port_state())
         self.mode_cb.configure(state="disabled" if on else "readonly")
@@ -2715,6 +2926,8 @@ class App:
             self.status(tr("Desconectado"), MUTED)
             self._stop_live()
             self._stop_rec()
+            if self.ventana_act:
+                self.ventana_act.perdida()
         self._cons_texto()
 
     def _key_label(self, k):
@@ -2895,6 +3108,13 @@ class App:
             self.dtc_lbl.configure(text=tr("Borrando..."), foreground=FG)
             self.worker.submit("clear")
 
+    def test_actuadores(self):
+        if self.ventana_act and self.ventana_act.win.winfo_exists():
+            self.ventana_act.win.lift()
+            return
+        self._stop_live()
+        self.ventana_act = VentanaActuadores(self)
+
     def scan_modules(self, direcciones=None, confirmar=True):
         if self.scanning:
             self.worker.scan_stop.set()
@@ -2910,7 +3130,7 @@ class App:
         self._stop_live()
         self.scanning = True
         for b in (self.panel_btn, self.cons_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
-                  self.report_btn, self.conn_btn):
+                  self.act_btn, self.report_btn, self.conn_btn):
             b.configure(state="disabled")
         self.scan_btn.configure(text=tr("■  Detener escaneo"), style="Danger.TButton")
         self.dtc_tree.delete(*self.dtc_tree.get_children())
@@ -3420,6 +3640,9 @@ class App:
             self._fill_readiness(payload.get("readiness"))
             self.vehicle_fields = payload["fields"]
             self.bar.configure(text=tr("Conectado: {titulo}", titulo=payload.get("title", "")))
+        elif kind == "act":
+            if self.ventana_act:
+                self.ventana_act.respuesta(payload)
         elif kind == "disconnected":
             self._set_connected(False)
             self.bar.configure(text=tr("Desconectado."))

@@ -348,6 +348,13 @@ Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windo
 - Etiqueta `v0.6.1` → `bf104aa`. Paquete `OBD2Desk-v0.6.1-linux-x86_64.tar.gz` (40 550 138 bytes, SHA-256 `2154c5dd49ce283e3626d3191ef0f35bc703568d7539e26808e472c122bf6c80`): autoprueba IA bien, abre la ventana; descargado de GitHub con el mismo SHA-256. Release «OBD2Desk v0.6.1» «Latest»; las notas de la v0.6.0 remiten a la v0.6.1 para el `.exe`. Pruebas antes de etiquetar: idioma, simuladores y GUI en español e inglés → «TODO CORRECTO». `OBD2Desk.exe` compilado en Windows desde `4420a24` (mismo código que `v0.6.1`; solo cambia este documento): 27 735 666 bytes, SHA-256 `1619873a8f51204726dafc897dba1d0f521ffc69b81b496ff326ab885c48eb8d`. Copiado a Fedora con el mismo SHA-256, subido con `gh release upload v0.6.1`, quitado «en breve» de las notas y descargado de GitHub con el mismo SHA-256. El usuario abrió el `.exe` en Windows: «funciona bien». La web lo ofrece sola (`web.js` toma el `.exe` de la release más reciente). **La v0.6.1 está cerrada.**
 - Web ampliada (2026-11-28): franja de cifras, tabla «Qué puedes hacer con cada cable», sección «Coches y centralitas compatibles» (21 módulos, 50 PIDs y grupos de los 3 motores, sacados de las tablas del programa), filas «Diésel y gasolina VAG» y «Manual dentro del programa» con capturas nuevas (`panel-gasolina`, `valores-gasolina`, `ayuda`, hechas por `web/capturas.py`) y «Novedades por versión». **Al sacar una versión, añadir su bloque en `#novedades` de las dos páginas.**
 
+### 8.2e Test de actuadores (2026-11-28, sin publicar)
+- Botón «Test de actuadores...» en Averías (solo KKL) → ventana `VentanaActuadores` (`gui.py`): avisos, casilla «He leído los avisos…» obligatoria, «Iniciar» / «Siguiente componente» / «Terminar», componente activo con el tiempo que lleva y lista de los probados. La ventana es modal y la IA no puede leer ni borrar mientras está abierta (`act_en_curso`).
+- Protocolo (`KW1281.actuator_test`): bloque 0x04 con un byte 0x00 (como kw1281test); la centralita contesta 0xF5 con el código del componente (numeración de averías VAG: 01265 = EGR N18) y lo activa hasta la petición siguiente; ACK o código 0000/FFFF = fin. Si la primera petición da NAK se reintenta sin el byte de datos. NAK = no tiene el test o no se cumplen las condiciones (motor parado, contacto puesto).
+- «Terminar» a mitad: se cierra la sesión (0x06) y se vuelve a conectar, para que la centralita apague el componente.
+- Simulador: secuencia del TDI (K29, EGR N18, N75, N109), del gasolina (bomba, 4 inyectores, N80, EGR), ABS (bomba V64) y cuadro; el airbag contesta NAK. Pruebas en `prueba_simuladores.py` y `prueba_gui.py` (español e inglés) → «TODO CORRECTO».
+- **Sin probar en coche.** Dudas a comprobar con la EDC15 real: si espera el byte 0x00, cómo marca el final y si cerrar la sesión apaga el componente.
+
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py`, `.venv/bin/python tests/prueba_idioma.py`, `xvfb-run -a .venv/bin/python tests/prueba_gui.py` y `OBD2DESK_IDIOMA=en xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO» (las dos de GUI una detrás de otra: a la vez chocan en el nombre del CSV).
@@ -367,7 +374,7 @@ Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 - **v0.3.0 probada en coche** (2026-11-22, el usuario: «funciona bien»); la web lo dice. Falta probar con un ELM327 WiFi real (la web lo indica como pendiente).
 - Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 538 en la tabla `vag_p1.py` desde la v0.6.0). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 en la v0.3.0 (publicada, web actualizada).
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
-- No hay funciones de adaptación, ajustes básicos, codificación ni test de actuadores (solo lectura y borrado de averías).
+- No hay funciones de adaptación, ajustes básicos ni codificación (solo lectura y borrado de averías y, desde el 2026-11-28 sin publicar, test de actuadores sin probar en coche).
 
 ## 10. Próximos pasos (actualizado el 2026-11-22)
 Por orden de prioridad propuesto; el usuario decide por dónde seguir.
@@ -386,7 +393,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 **3. Más adelante**
 - ~~Más P1 de VAG y grupos de TDI inyector-bomba y gasolina~~ **hecho el 2026-11-28** (538 P1, también en OBD2 si el VIN es VAG; grupos PD del manual de taller y de gasolina estándar de Ross-Tech; sin publicar, probado con simuladores). Falta: averías de confort/clima (no se encontró una tabla pública fiable). Panel y consumo KKL para gasolina **hechos el 2026-11-28** (sin publicar; probados con el simulador de gasolina: `simulador.GASOLINA = True`, ident «1.8L R4/5VT», grupos 1-5).
 - Firma del ejecutable de Windows (evitar SmartScreen).
-- Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
+- ~~Test de actuadores KW1281~~ **hecho el 2026-11-28** (§8.2e, sin publicar, sin probar en coche). Queda: ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
 
 **Hecho el 2026-11-27 (publicado en la v0.4.0):** renombrado a **OBD2Desk** (dominio obd2desk.com) e interfaz en inglés.

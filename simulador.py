@@ -17,6 +17,12 @@ ECU_BAUD = 9600
 GASOLINA = False
 IDENT_GASOLINA = [b"06A906032HN ", b"1.8L R4/5VT   G   0002", b"   SG  0002"]
 
+# Componentes del test de actuadores (códigos de avería VAG), por centralita. Orientativo:
+# la secuencia real la decide cada centralita. Las que no están aquí contestan NAK.
+ACTUADORES_TDI = [626, 1265, 1262, 1237]          # K29, EGR N18, N75, corte de combustible N109
+ACTUADORES_GASOLINA = [1259, 1249, 1250, 1251, 1252, 1247, 1265]
+ACTUADORES = {0x03: [1276], 0x17: [1039]}
+
 
 class FakeECU:
     def __init__(self, address=0x01, ident=None, dtcs=None):
@@ -34,6 +40,12 @@ class FakeECU:
         self.out_idx = 0
         self.inbuf = []
         self.queue = deque()
+        self.actuador = -1     # componente que se está activando en el test de actuadores
+
+    def _actuadores(self):
+        if self.address == 0x01:
+            return ACTUADORES_TDI if b"EDC" in b"".join(self.ident[1:2]) else ACTUADORES_GASOLINA
+        return ACTUADORES.get(self.address)
 
     # --- valores simulados -------------------------------------------------
     def _rpm(self):
@@ -110,6 +122,18 @@ class FakeECU:
             return self._start_block(t, d)
         if title == 0x09:
             return self._start_block(0x09)
+        if title != 0x04:
+            self.actuador = -1
+        if title == 0x04:
+            lista = self._actuadores()
+            if not lista:
+                return self._start_block(0x0A, bytes([cnt]))
+            self.actuador += 1
+            if self.actuador >= len(lista):
+                self.actuador = -1
+                return self._start_block(0x09)          # fin de la secuencia
+            c = lista[self.actuador]
+            return self._start_block(0xF5, bytes([c >> 8, c & 0xFF]))
         if title == 0x06:
             self.reset()
             return []
