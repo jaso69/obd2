@@ -23,6 +23,7 @@ import vag_datos  # noqa: E402
 import vag_p1  # noqa: E402
 from textos_en import EN  # noqa: E402
 from guias import GUIAS  # noqa: E402
+from obd_codigos import CODIGOS  # noqa: E402
 
 DOMINIO = "https://www.obd2desk.com"
 FECHA = "2026-11-28"
@@ -101,6 +102,14 @@ P1_TEMAS = {
 assert {k // 100 for k in vag_p1.P1} == set(P1_TEMAS)
 
 
+def desc_generica(p):
+    """(español, inglés) de un código genérico: primero la descripción revisada del programa."""
+    if p in obd_datos.DTCS:
+        return obd_datos.DTCS[p], en(obd_datos.DTCS[p])
+    en_, es_ = CODIGOS[p]
+    return es_ or en_, en_
+
+
 def familias():
     """Lista de páginas de códigos: dict con slug, títulos, filas [(vag, p, es, en)]."""
     fams = []
@@ -114,12 +123,12 @@ def familias():
                      tema_es="motor, cambio, ABS, airbag, cuadro, confort y radio",
                      tema_en="engine, transmission, ABS, airbag, cluster, convenience and radio",
                      rango="{:05d}-{:05d}".format(min(r[0] for r in filas), max(r[0] for r in filas if r[0] != 65535)), filas=filas, sistemas=sistemas, tipo="clasico"))
-    p0 = sorted(obd_datos.DTCS)
-    assert all(p.startswith("P0") for p in p0)
+    assert all(p.startswith("P0") for p in obd_datos.DTCS)
+    p0 = sorted(set(obd_datos.DTCS) | {c for c in CODIGOS if c.startswith("P0") and c[2:].isdigit()})
     fams.append(dict(slug_es="p0", slug_en="p0", corto_es="16xxx = P0xxx", corto_en="16xxx = P0xxx",
                      tema_es="códigos OBD2 genéricos en formato VAG", tema_en="generic OBD2 codes in VAG format",
                      rango="16384-17383",
-                     filas=[(vag_de_p(p), p, obd_datos.DTCS[p], en(obd_datos.DTCS[p])) for p in p0], tipo="p0"))
+                     filas=[(vag_de_p(p), p, *desc_generica(p)) for p in p0], tipo="p0"))
     for c in sorted(P1_TEMAS):
         ks = sorted(k for k in vag_p1.P1 if k // 100 == c)
         fams.append(dict(slug_es=f"p{c}xx", slug_en=f"p{c}xx", corto_es=f"P{c}xx", corto_en=f"P{c}xx",
@@ -163,6 +172,16 @@ L = {
         guias_intro="Guías prácticas para diagnosticar tu coche desde el portátil, escritas a partir de lo que hemos aprendido desarrollando y probando OBD2Desk.",
         guias_codigos="¿Buscas qué significa un código? Mira la <a href=\"/averias-vag/\">lista de códigos de avería VAG</a>.",
         grupo="Grupo", muestra="Qué muestra",
+        obd="/codigos-obd2/", nav_obd="Códigos OBD2",
+        obd_titulo="Códigos de avería OBD2: lista completa y significado",
+        obd_title="Códigos de avería OBD2 (P0, P2, B, C, U): lista y significado en español · OBD2Desk",
+        obd_desc="Significado en español de los {n} códigos de avería OBD2 genéricos (P0xxx, P2xxx, P34xx, B0, C0, U0 y U3), válidos para cualquier marca, con buscador.",
+        obd_h1="Códigos OBD2 {g}: {tema}",
+        obd_ftitle="Códigos OBD2 {g}: {tema} · OBD2Desk",
+        obd_fdesc="Significado de los {n} códigos de avería OBD2 {g} ({tema}), válidos para cualquier marca con OBD2. Con buscador.",
+        obd_buscar_ph="Ej.: P0420, U0100, P2463 o «catalizador»",
+        obd_buscar_ayuda="Escribe el código (P0420) o una palabra de la descripción.",
+        col_codigo="Código", obd_otras="Otras listas de códigos OBD2",
     ),
     "en": dict(
         base="/en/vag-fault-codes/", inicio="/en/", otro="es", otro_nombre="Español", otro_corto="ES",
@@ -194,6 +213,16 @@ L = {
         guias_intro="Practical guides to diagnose your car from a laptop, written from what we have learned building and testing OBD2Desk.",
         guias_codigos="Looking up what a code means? See the <a href=\"/en/vag-fault-codes/\">list of VAG fault codes</a>.",
         grupo="Group", muestra="What it shows",
+        obd="/en/obd2-codes/", nav_obd="OBD2 codes",
+        obd_titulo="OBD2 fault codes: full list and meaning",
+        obd_title="OBD2 fault codes (P0, P2, B, C, U): full list and meaning · OBD2Desk",
+        obd_desc="Meaning of the {n} generic OBD2 fault codes (P0xxx, P2xxx, P34xx, B0, C0, U0 and U3), valid for any make, with search.",
+        obd_h1="OBD2 codes {g}: {tema}",
+        obd_ftitle="OBD2 codes {g}: {tema} · OBD2Desk",
+        obd_fdesc="Meaning of the {n} OBD2 fault codes {g} ({tema}), valid for any make with OBD2. With search.",
+        obd_buscar_ph="E.g. P0420, U0100, P2463 or “catalyst”",
+        obd_buscar_ayuda="Type the code (P0420) or a word from the description.",
+        col_codigo="Code", obd_otras="Other OBD2 code lists",
     ),
 }
 
@@ -221,6 +250,7 @@ def pagina(lang, ruta, ruta_otro, title, desc, migas, cuerpo, articulo=None):
     nav = "\n      ".join(f'<a href="{u}">{e(n)}</a>' for u, n in t["nav_links"])
     actual = ' aria-current="page"' if ruta == t["base"] else ""
     actual_g = ' aria-current="page"' if ruta == t["guias"] else ""
+    actual_o = ' aria-current="page"' if ruta == t["obd"] else ""
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -258,6 +288,7 @@ def pagina(lang, ruta, ruta_otro, title, desc, migas, cuerpo, articulo=None):
     <button class="menu-boton" type="button" aria-label="{t['menu']}" aria-expanded="false" aria-controls="menu">☰</button>
     <nav id="menu" class="menu" aria-label="{t['nav']}">
       {nav}
+      <a href="{t['obd']}"{actual_o}>{t['nav_obd']}</a>
       <a href="{t['base']}"{actual}>{t['nav_averias']}</a>
       <a href="{t['guias']}"{actual_g}>{t['nav_guias']}</a>
       <a class="idioma" href="{ruta_otro}" hreflang="{t['otro']}" lang="{t['otro']}" data-idioma="{t['otro']}" title="{t['otro_nombre']}">{t['otro_corto']}</a>
@@ -286,13 +317,16 @@ def pagina(lang, ruta, ruta_otro, title, desc, migas, cuerpo, articulo=None):
 """
 
 
-def buscador(lang):
+def buscador(lang, obd=False):
     t = L[lang]
+    indice = (t["obd"] if obd else t["base"]) + "codigos.json"
+    ph = t["obd_buscar_ph"] if obd else t["buscar_ph"]
+    ayuda = t["obd_buscar_ayuda"] if obd else t["buscar_ayuda"]
     return f"""<div class="buscador" role="search">
   <label for="buscar">{t['buscar']}</label>
-  <input id="buscar" type="search" placeholder="{e(t['buscar_ph'])}" autocomplete="off" spellcheck="false"
-    aria-describedby="buscar-ayuda" data-indice="{t['base']}codigos.json">
-  <p id="buscar-ayuda" class="pequeno">{t['buscar_ayuda']}</p>
+  <input id="buscar" type="search" placeholder="{e(ph)}" autocomplete="off" spellcheck="false"
+    aria-describedby="buscar-ayuda" data-indice="{indice}">
+  <p id="buscar-ayuda" class="pequeno">{ayuda}</p>
   <noscript><p class="pequeno">{t['sin_js']}</p></noscript>
   <div id="resultados" class="resultados" aria-live="polite"></div>
 </div>"""
@@ -388,9 +422,9 @@ def intro_familia(lang, f):
 <p>They are read with a KKL cable; an OBD2 reader with an ELM327 does not see them. After the code, the control unit gives the <a href="{L[lang]['base']}#tipos">fault type</a> (short circuit, open circuit, signal too high…).</p>"""
     if f["tipo"] == "p0":
         if lang == "es":
-            return f"""<p class="intro">Los VAG con OBD escriben los códigos genéricos P0xxx con 5 cifras: <code>código VAG = 16384 + número del P0</code>. Por ejemplo, 16684 es P0300. Aquí tienes {n} de los más comunes.</p>
+            return f"""<p class="intro">Los VAG con OBD escriben los códigos genéricos P0xxx con 5 cifras: <code>código VAG = 16384 + número del P0</code>. Por ejemplo, 16684 es P0300. Aquí tienes los {n} códigos P0 con número.</p>
 <p>Significan lo mismo en cualquier marca: un lector OBD2 con ELM327 los muestra como P0xxx, y un programa VAG con las 5 cifras.</p>"""
-        return f"""<p class="intro">VAG cars with OBD write the generic P0xxx codes with 5 digits: <code>VAG code = 16384 + P0 number</code>. For example, 16684 is P0300. Here are {n} of the most common.</p>
+        return f"""<p class="intro">VAG cars with OBD write the generic P0xxx codes with 5 digits: <code>VAG code = 16384 + P0 number</code>. For example, 16684 is P0300. Here are all {n} numeric P0 codes.</p>
 <p>They mean the same for any make: an OBD2 reader with an ELM327 shows them as P0xxx, and a VAG program shows the 5 digits.</p>"""
     c = f["corto_es"]
     if lang == "es":
@@ -487,6 +521,181 @@ def guias(lang):
     return [(L["es"]["guias"], L["en"]["guias"])] + urls
 
 
+# ---------------------------------------------------------------------------
+# Códigos OBD2 genéricos (obd_codigos.py)
+# ---------------------------------------------------------------------------
+_TEMA_P0 = {
+    "0": ("Aire, combustible y control auxiliar de emisiones", "Fuel and air metering and auxiliary emission controls"),
+    "1": ("Medición de aire y combustible", "Fuel and air metering"),
+    "2": ("Medición de aire y combustible (circuito de inyectores)", "Fuel and air metering (injector circuit)"),
+    "3": ("Encendido y fallos de combustión", "Ignition system and misfire"),
+    "4": ("Control auxiliar de emisiones", "Auxiliary emission controls"),
+    "5": ("Velocidad, ralentí y entradas auxiliares", "Vehicle speed, idle control and auxiliary inputs"),
+    "6": ("Centralita y salidas auxiliares", "Computer and auxiliary outputs"),
+    "7": ("Cambio", "Transmission"), "8": ("Cambio", "Transmission"), "9": ("Cambio", "Transmission"),
+}
+_TEMA_P2 = {
+    "0": _TEMA_P0["0"], "1": _TEMA_P0["0"], "2": _TEMA_P0["0"],
+    "3": ("Encendido y fallos de combustión", "Ignition system and misfire"),
+    "4": ("Control auxiliar de emisiones", "Auxiliary emission controls"),
+    "5": ("Entradas auxiliares", "Auxiliary inputs"),
+    "6": ("Centralita y salidas auxiliares", "Computer and auxiliary outputs"),
+    "7": ("Cambio", "Transmission"), "8": ("Cambio y embragues", "Transmission and clutches"),
+}
+_HIBRIDO = ("Propulsión híbrida y eléctrica", "Hybrid and electric propulsion")
+_AMPLIACION = ("Motor, emisiones e híbridos (ampliación)", "Engine, emissions and hybrid (extension)")
+_U = {
+    "0": ("Buses de comunicación (CAN)", "Communication buses (CAN)"),
+    "1": ("Sin comunicación con módulos", "Lost communication with modules"),
+    "2": ("Sin comunicación con módulos", "Lost communication with modules"),
+    "3": ("Software incompatible", "Software incompatibility"),
+    "4": ("Datos no válidos recibidos", "Invalid data received"),
+    "5": ("Datos no válidos recibidos", "Invalid data received"),
+    "6": ("Sin comunicación con sensores y módulos", "Lost communication with sensors and modules"),
+}
+
+
+def grupos_obd():
+    """Listas de códigos genéricos: [dict(slug, g (rótulo), tema_es, tema_en, codigos)]."""
+    por = {}
+    for c in sorted(CODIGOS):
+        if c[:2] in ("P0", "P2"):
+            k = c[:3] if c[:3] != "P0F" else "P0E"
+            k = "U06" if c.startswith("U09") else k
+        elif c.startswith("U0"):
+            k = "U06" if c[2] == "9" else c[:3]
+        elif c.startswith("U3"):
+            k = "U3"
+        else:
+            k = c[:2]              # P3, B0, C0
+        por.setdefault(k, []).append(c)
+    grupos = []
+    for k, cs in sorted(por.items()):
+        if k.startswith("P0"):
+            tema = _TEMA_P0.get(k[2], _HIBRIDO)
+            g = f"{k}xx" + ("-P0Fxx" if k == "P0E" else "")
+        elif k.startswith("P2"):
+            tema = _TEMA_P2.get(k[2], _AMPLIACION)
+            g = f"{k}xx"
+        elif k == "P3":
+            tema, g = ("Desactivación de cilindros y control de válvulas", "Cylinder deactivation and valve control"), "P34xx"
+        elif k == "B0":
+            tema, g = ("Carrocería: airbags, asientos, luces y confort", "Body: airbags, seats, lighting and comfort"), "B0xxx"
+        elif k == "C0":
+            tema, g = ("Chasis: frenos, ABS, ruedas y suspensión", "Chassis: brakes, ABS, wheels and suspension"), "C0xxx"
+        elif k == "U3":
+            tema, g = ("Red: alta tensión, pila de combustible y otros", "Network: high voltage, fuel cell and more"), "U3xxx"
+        else:
+            tema = _U[k[2]]
+            g = f"{k}xx" + ("-U09xx" if k == "U06" and any(c.startswith("U09") for c in cs) else "")
+        grupos.append(dict(slug=g.lower().replace("-", "-"), g=g, tema_es=tema[0], tema_en=tema[1], codigos=cs))
+    assert sum(len(x["codigos"]) for x in grupos) == len(CODIGOS)
+    return grupos
+
+
+def url_obd(lang, grupo):
+    return L[lang]["obd"] + grupo["slug"] + "/"
+
+
+def texto_obd(lang, c):
+    """(texto, es_ingles): descripción del código en ese idioma; en español, la revisada si la hay."""
+    en_, es_ = CODIGOS[c]
+    if lang == "en":
+        return en_, False
+    if c in obd_datos.DTCS:
+        return obd_datos.DTCS[c], False
+    return (es_, False) if es_ else (en_, True)
+
+
+def tabla_obd(lang, codigos):
+    t = L[lang]
+    filas = []
+    for c in codigos:
+        texto, ingles = texto_obd(lang, c)
+        celda = f'<td lang="en">{e(texto)}</td>' if ingles else f"<td>{e(texto)}</td>"
+        filas.append(f'<tr id="{c}"><th scope="row">{c}</th>{celda}</tr>')
+    return (f'<div class="tabla-scroll" tabindex="0" role="region" aria-labelledby="lista">'
+            f'<table class="tabla tabla-codigos"><thead><tr><th scope="col">{t["col_codigo"]}</th>'
+            f'<th scope="col">{t["col_desc"]}</th></tr></thead><tbody>\n' + "\n".join(filas) + "\n</tbody></table></div>")
+
+
+def intro_obd(lang, n):
+    vag = L[lang]["base"]
+    if lang == "es":
+        return f"""<p class="intro">Los códigos de avería OBD2 son los que da cualquier coche con OBD2/EOBD (en Europa, gasolina desde 2001 y diésel desde 2003-2004) a un lector como el ELM327. Aquí tienes el significado de los <strong>{n} códigos genéricos</strong>, los que significan lo mismo en todas las marcas.</p>
+<h2>Cómo se lee un código OBD2</h2>
+<ul class="lista-ok">
+<li><strong>La letra</strong> dice el sistema: <strong>P</strong> motor y cambio, <strong>B</strong> carrocería (airbags, asientos, luces), <strong>C</strong> chasis (frenos, ABS, suspensión) y <strong>U</strong> red de comunicación entre centralitas.</li>
+<li><strong>La primera cifra</strong> dice quién lo define: <strong>0</strong> (y también P2, P34 y U3) son genéricos de la norma SAE J2012, iguales en todas las marcas; <strong>1</strong> y <strong>2</strong> (salvo P2) son propios de cada fabricante.</li>
+<li><strong>El resto</strong> dice el subsistema y el fallo. En los P0, la segunda cifra agrupa: 1 y 2 aire y combustible, 3 encendido, 4 emisiones, 5 velocidad y ralentí, 6 centralita, 7 a 9 cambio, y A a E híbridos y eléctricos.</li>
+</ul>
+<p>Los códigos del fabricante (P1xxx, B1xxx…) cambian de una marca a otra y no están en esta lista. Para SEAT, Volkswagen, Audi y Skoda tienes la <a href="{vag}">lista de códigos de avería VAG</a>.</p>"""
+    return f"""<p class="intro">OBD2 fault codes are the ones any car with OBD2/EOBD (in Europe, petrol cars from 2001 and diesels from 2003-2004) gives to a reader such as an ELM327. Here is the meaning of the <strong>{n} generic codes</strong>, the ones that mean the same for every make.</p>
+<h2>How to read an OBD2 code</h2>
+<ul class="lista-ok">
+<li><strong>The letter</strong> gives the system: <strong>P</strong> powertrain (engine and transmission), <strong>B</strong> body (airbags, seats, lighting), <strong>C</strong> chassis (brakes, ABS, suspension) and <strong>U</strong> the network between control units.</li>
+<li><strong>The first digit</strong> says who defines it: <strong>0</strong> (and also P2, P34 and U3) are generic codes from the SAE J2012 standard, the same for every make; <strong>1</strong> and <strong>2</strong> (except P2) are manufacturer-specific.</li>
+<li><strong>The rest</strong> gives the subsystem and the fault. In P0 codes the second digit groups them: 1 and 2 fuel and air, 3 ignition, 4 emissions, 5 speed and idle, 6 computer, 7 to 9 transmission, and A to E hybrid and electric.</li>
+</ul>
+<p>Manufacturer codes (P1xxx, B1xxx…) differ from one make to another and are not in this list. For Volkswagen, Audi, SEAT and Skoda see the <a href="{vag}">list of VAG fault codes</a>.</p>"""
+
+
+def fuente_obd(lang):
+    if lang == "es":
+        return ('<p class="aclaracion">Títulos de <a href="https://github.com/foerbsnavi/OBDex">OBDex</a>, una base de datos abierta '
+                '(dominio público, CC0). La traducción al español es automática; en los códigos más comunes, revisada a mano. '
+                'Si ves alguna rara, cuéntalo en <a href="https://github.com/jaso69/obd2/issues">GitHub</a>. '
+                'Los pocos títulos que no se han podido traducir aparecen en inglés.</p>')
+    return ('<p class="aclaracion">Titles from <a href="https://github.com/foerbsnavi/OBDex">OBDex</a>, an open database '
+            '(public domain, CC0). If you spot a mistake, please report it on <a href="https://github.com/jaso69/obd2/issues">GitHub</a>.</p>')
+
+
+def obd2(lang):
+    """Escribe las páginas de códigos OBD2 genéricos y su codigos.json; devuelve los pares de URL."""
+    t = L[lang]
+    otro = "en" if lang == "es" else "es"
+    grupos = grupos_obd()
+    tema = "tema_" + lang
+    for g in grupos:
+        fmt = dict(g=g["g"], tema=g[tema], n=len(g["codigos"]))
+        h1 = t["obd_h1"].format(**fmt)
+        otras = "".join(f'<li><a href="{url_obd(lang, o)}">{o["g"]}</a> · {e(o[tema])}</li>' for o in grupos if o is not g)
+        cuerpo = f"""<h1>{e(h1)}</h1>
+<p class="intro">{e(t['obd_fdesc'].format(**fmt))}</p>
+{buscador(lang, obd=True)}
+<h2 id="lista" class="sr">{e(h1)}</h2>
+{tabla_obd(lang, g['codigos'])}
+{fuente_obd(lang)}
+{consejos(lang)}
+{descarga(lang)}
+<section aria-labelledby="otras-h"><h2 id="otras-h">{t['obd_otras']}</h2><ul class="lista-familias">{otras}</ul></section>"""
+        ruta = url_obd(lang, g)
+        escribir(ruta, pagina(lang, ruta, url_obd(otro, g), t["obd_ftitle"].format(**fmt), t["obd_fdesc"].format(**fmt),
+                              [(t["migas_inicio"], t["inicio"]), (t["nav_obd"], t["obd"]), (g["g"], ruta)], cuerpo))
+    tarjetas = "\n".join(
+        f'<li class="tarjeta"><a href="{url_obd(lang, g)}"><strong>{g["g"]}</strong></a><span>{e(g[tema])}</span>'
+        f'<span class="pequeno">{t["codigos"].format(n=len(g["codigos"]))}</span></li>' for g in grupos)
+    cuerpo = f"""<h1>{t['obd_titulo']}</h1>
+{intro_obd(lang, len(CODIGOS))}
+{buscador(lang, obd=True)}
+<h2>{t['familias']}</h2>
+<ul class="familias">
+{tarjetas}
+</ul>
+{fuente_obd(lang)}
+{consejos(lang)}
+{descarga(lang)}"""
+    escribir(t["obd"], pagina(lang, t["obd"], L[otro]["obd"], t["obd_title"], t["obd_desc"].format(n=len(CODIGOS)),
+                             [(t["migas_inicio"], t["inicio"]), (t["nav_obd"], t["obd"])], cuerpo))
+    datos = []
+    for g in grupos:
+        for c in g["codigos"]:
+            datos.append(["", c, texto_obd(lang, c)[0], g["slug"] + "/#" + c])   # enlace relativo al índice
+    with open(os.path.join(WEB, t["obd"].strip("/"), "codigos.json"), "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(datos, fh, ensure_ascii=False, separators=(",", ":"))
+    return [(L["es"]["obd"], L["en"]["obd"])] + [(url_obd("es", g), url_obd("en", g)) for g in grupos]
+
+
 def pagina_404():
     """404.html bilingüe (Vercel la sirve para cualquier ruta que no exista)."""
     contenido = f"""<!DOCTYPE html>
@@ -513,6 +722,7 @@ def pagina_404():
 <p class="intro">Puede que el enlace esté mal escrito o que la página se haya movido.</p>
 <ul class="lista-familias">
 <li><a href="/">Página principal de OBD2Desk</a></li>
+<li><a href="/codigos-obd2/">Códigos de avería OBD2</a></li>
 <li><a href="/averias-vag/">Códigos de avería VAG</a></li>
 <li><a href="/guias/">Guías de diagnóstico</a></li>
 <li><a href="/#descargar">Descargar el programa</a></li>
@@ -522,6 +732,7 @@ def pagina_404():
 <p>The link may be mistyped or the page may have moved.</p>
 <ul class="lista-familias">
 <li><a href="/en/">OBD2Desk home page</a></li>
+<li><a href="/en/obd2-codes/">OBD2 fault codes</a></li>
 <li><a href="/en/vag-fault-codes/">VAG fault codes</a></li>
 <li><a href="/en/guides/">Diagnostic guides</a></li>
 <li><a href="/en/#descargar">Download the program</a></li>
@@ -597,10 +808,12 @@ def main():
             json.dump(datos, fh, ensure_ascii=False, separators=(",", ":"))
     for lang in ("es", "en"):
         pares_guias = guias(lang)
+        pares_obd = obd2(lang)
     pagina_404()
     urls.append((L["es"]["base"], L["en"]["base"]))
     urls += [(url_fam("es", f), url_fam("en", f)) for f in fams]
     urls += pares_guias
+    urls += pares_obd
     # sitemap completo
     entradas = []
     for es_u, en_u in urls:
@@ -614,7 +827,8 @@ def main():
     with open(os.path.join(WEB, "sitemap.xml"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
                  'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' + "\n".join(entradas) + "\n</urlset>\n")
-    print(f"{total} códigos en {len(fams)} listas, {len(GUIAS)} guías, español e inglés, 404.html; "
+    print(f"{total} códigos VAG en {len(fams)} listas, {len(CODIGOS)} OBD2 en {len(pares_obd) - 1}, {len(GUIAS)} guías, "
+          f"español e inglés, 404.html; "
           f"sitemap con {len(urls) * 2} URL.")
 
 

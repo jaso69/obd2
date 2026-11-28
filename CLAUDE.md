@@ -23,6 +23,7 @@ Se llamaba *Toledo Diagnosis* hasta la v0.3.0; desde el 2026-11-27 es **OBD2Desk
 - Consumo y 0-100: `python tests/prueba_consumo.py` (<1 s).
 - Lector de CSV del visor: `python tests/prueba_csv.py` (<1 s).
 - Historial por coche: `python tests/prueba_historial.py` (<1 s).
+- Códigos genéricos OBD2: `python tests/prueba_codigos.py` (<1 s). La tabla `obd_codigos.py` se genera con `python3 herramientas/codigos_genericos.py` (traductor en `herramientas/traductor_dtc.py`; no editar `obd_codigos.py` a mano).
 - Traducciones: `python tests/prueba_idioma.py` (≈1 s). **Todo texto visible va con `tr("texto en español")` y su traducción en `textos_en.py`** (ver `docs/PROYECTO.md` §7.6).
 - Prueba de la GUI: `python tests/prueba_gui.py` (Linux: `xvfb-run -a .venv/bin/python tests/prueba_gui.py`, ≈90 s; el Python del sistema en Fedora no trae `pyserial`). En inglés: `OBD2DESK_IDIOMA=en ...` (busca restos de español). No lanzar las dos a la vez.
 - Ejecutable: Windows `build.bat` → `dist\OBD2Desk.exe`; Linux `./build.sh` → `dist/OBD2Desk` (solo uso local). Recompilar tras cambiar código.
@@ -51,5 +52,7 @@ Se llamaba *Toledo Diagnosis* hasta la v0.3.0; desde el 2026-11-27 es **OBD2Desk
 **v0.7.0 publicada y cerrada (2026-11-28, «Latest», etiqueta `v0.7.0` → `58d47ee`)**: test de actuadores y ajustes básicos KW1281 (Averías, solo KKL). Probada en coche por el usuario: funciona bien. Release con el paquete Linux y el `OBD2Desk.exe` de Windows (probado por el usuario: funciona bien); web publicada (§8.2g).
 
 **v0.8.1 publicada y cerrada (2026-11-28, «Latest», etiqueta `v0.8.1` → `87b8e5a`)**: canales de adaptación, código de acceso y codificación KW1281 (botón «Adaptación...» en Averías, solo KKL), con registro de cambios para volver al valor anterior (`cambios.py`). Probada en coche por el usuario: todo bien. La v0.8.0 (`94a3cb8`) tenía el botón «Volver al valor anterior» cortado en inglés. Release con el paquete Linux y el `OBD2Desk.exe` de Windows (probado por el usuario: funciona bien); web publicada (§8.2i).
+
+**Sin publicar (2026-11-28)**: ampliación a más marcas, nivel 1: `describe_dtc` usa los 9533 códigos genéricos OBD2 (`obd_codigos.py`, de OBDex, CC0) en español e inglés. Probado con todas las pruebas y la GUI en los dos idiomas. La web ya tiene las páginas `/codigos-obd2/` (no dicen que el programa lo haga); la portada no lo anuncia hasta sacar la versión. Nivel 2 (escanear centralitas por UDS con ELM327) pendiente de saber qué coches hay para probar (§10).
 
 **Próximos pasos**: `docs/PROYECTO.md` §10 (todo lo pendiente probado; queda lo de «más adelante»). Pasos para sacar una versión: §8.3. La versión para Mac está aparcada.

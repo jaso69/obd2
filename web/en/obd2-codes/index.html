@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OBD2 fault codes (P0, P2, B, C, U): full list and meaning · OBD2Desk</title>
+<meta name="description" content="Meaning of the 9533 generic OBD2 fault codes (P0xxx, P2xxx, P34xx, B0, C0, U0 and U3), valid for any make, with search.">
+<meta name="theme-color" content="#111418">
+<link rel="icon" type="image/png" href="/img/icono.png">
+<link rel="apple-touch-icon" href="/img/icono.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OBD2Desk">
+<meta property="og:title" content="OBD2 fault codes (P0, P2, B, C, U): full list and meaning · OBD2Desk">
+<meta property="og:description" content="Meaning of the 9533 generic OBD2 fault codes (P0xxx, P2xxx, P34xx, B0, C0, U0 and U3), valid for any make, with search.">
+<meta property="og:image" content="https://www.obd2desk.com/img/en/og.jpg">
+<meta property="og:url" content="https://www.obd2desk.com/en/obd2-codes/">
+<meta property="og:locale" content="en_US">
+<link rel="canonical" href="https://www.obd2desk.com/en/obd2-codes/">
+<link rel="alternate" hreflang="es" href="https://www.obd2desk.com/codigos-obd2/">
+<link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/obd2-codes/">
+<link rel="alternate" hreflang="x-default" href="https://www.obd2desk.com/codigos-obd2/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.obd2desk.com/en/"}, {"@type": "ListItem", "position": 2, "name": "OBD2 codes", "item": "https://www.obd2desk.com/en/obd2-codes/"}]}
+</script>
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Skip to content</a>
+
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="/en/"><img src="/img/icono.png" alt="" width="32" height="32"> OBD2Desk</a>
+    <button class="menu-boton" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu">☰</button>
+    <nav id="menu" class="menu" aria-label="Main">
+      <a href="/en/#funciones">Features</a>
+      <a href="/en/#hardware">Which cable</a>
+      <a href="/en/#descargar">Download</a>
+      <a href="/en/obd2-codes/" aria-current="page">OBD2 codes</a>
+      <a href="/en/vag-fault-codes/">VAG fault codes</a>
+      <a href="/en/guides/">Guides</a>
+      <a class="idioma" href="/codigos-obd2/" hreflang="es" lang="es" data-idioma="es" title="Español">ES</a>
+      <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenido">
+<div class="contenedor contenedor-codigos">
+<nav class="migas" aria-label="Breadcrumb"><a href="/en/">Home</a> <span aria-hidden="true">›</span> <span aria-current="page">OBD2 codes</span></nav>
+<h1>OBD2 fault codes: full list and meaning</h1>
+<p class="intro">OBD2 fault codes are the ones any car with OBD2/EOBD (in Europe, petrol cars from 2001 and diesels from 2003-2004) gives to a reader such as an ELM327. Here is the meaning of the <strong>9533 generic codes</strong>, the ones that mean the same for every make.</p>
+<h2>How to read an OBD2 code</h2>
+<ul class="lista-ok">
+<li><strong>The letter</strong> gives the system: <strong>P</strong> powertrain (engine and transmission), <strong>B</strong> body (airbags, seats, lighting), <strong>C</strong> chassis (brakes, ABS, suspension) and <strong>U</strong> the network between control units.</li>
+<li><strong>The first digit</strong> says who defines it: <strong>0</strong> (and also P2, P34 and U3) are generic codes from the SAE J2012 standard, the same for every make; <strong>1</strong> and <strong>2</strong> (except P2) are manufacturer-specific.</li>
+<li><strong>The rest</strong> gives the subsystem and the fault. In P0 codes the second digit groups them: 1 and 2 fuel and air, 3 ignition, 4 emissions, 5 speed and idle, 6 computer, 7 to 9 transmission, and A to E hybrid and electric.</li>
+</ul>
+<p>Manufacturer codes (P1xxx, B1xxx…) differ from one make to another and are not in this list. For Volkswagen, Audi, SEAT and Skoda see the <a href="/en/vag-fault-codes/">list of VAG fault codes</a>.</p>
+<div class="buscador" role="search">
+  <label for="buscar">Search for a code</label>
+  <input id="buscar" type="search" placeholder="E.g. P0420, U0100, P2463 or “catalyst”" autocomplete="off" spellcheck="false"
+    aria-describedby="buscar-ayuda" data-indice="/en/obd2-codes/codigos.json">
+  <p id="buscar-ayuda" class="pequeno">Type the code (P0420) or a word from the description.</p>
+  <noscript><p class="pequeno">Search needs JavaScript; you can browse the lists below.</p></noscript>
+  <div id="resultados" class="resultados" aria-live="polite"></div>
+</div>
+<h2>Code lists</h2>
+<ul class="familias">
+<li class="tarjeta"><a href="/en/obd2-codes/b0xxx/"><strong>B0xxx</strong></a><span>Body: airbags, seats, lighting and comfort</span><span class="pequeno">323 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/c0xxx/"><strong>C0xxx</strong></a><span>Chassis: brakes, ABS, wheels and suspension</span><span class="pequeno">626 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p00xx/"><strong>P00xx</strong></a><span>Fuel and air metering and auxiliary emission controls</span><span class="pequeno">255 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p01xx/"><strong>P01xx</strong></a><span>Fuel and air metering</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p02xx/"><strong>P02xx</strong></a><span>Fuel and air metering (injector circuit)</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p03xx/"><strong>P03xx</strong></a><span>Ignition system and misfire</span><span class="pequeno">253 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p04xx/"><strong>P04xx</strong></a><span>Auxiliary emission controls</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p05xx/"><strong>P05xx</strong></a><span>Vehicle speed, idle control and auxiliary inputs</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p06xx/"><strong>P06xx</strong></a><span>Computer and auxiliary outputs</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p07xx/"><strong>P07xx</strong></a><span>Transmission</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p08xx/"><strong>P08xx</strong></a><span>Transmission</span><span class="pequeno">234 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p09xx/"><strong>P09xx</strong></a><span>Transmission</span><span class="pequeno">147 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p0axx/"><strong>P0Axx</strong></a><span>Hybrid and electric propulsion</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p0bxx/"><strong>P0Bxx</strong></a><span>Hybrid and electric propulsion</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p0cxx/"><strong>P0Cxx</strong></a><span>Hybrid and electric propulsion</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p0dxx/"><strong>P0Dxx</strong></a><span>Hybrid and electric propulsion</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p0exx-p0fxx/"><strong>P0Exx-P0Fxx</strong></a><span>Hybrid and electric propulsion</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p20xx/"><strong>P20xx</strong></a><span>Fuel and air metering and auxiliary emission controls</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p21xx/"><strong>P21xx</strong></a><span>Fuel and air metering and auxiliary emission controls</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p22xx/"><strong>P22xx</strong></a><span>Fuel and air metering and auxiliary emission controls</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p23xx/"><strong>P23xx</strong></a><span>Ignition system and misfire</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p24xx/"><strong>P24xx</strong></a><span>Auxiliary emission controls</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p25xx/"><strong>P25xx</strong></a><span>Auxiliary inputs</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p26xx/"><strong>P26xx</strong></a><span>Computer and auxiliary outputs</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p27xx/"><strong>P27xx</strong></a><span>Transmission</span><span class="pequeno">242 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p28xx/"><strong>P28xx</strong></a><span>Transmission and clutches</span><span class="pequeno">247 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p2axx/"><strong>P2Axx</strong></a><span>Engine, emissions and hybrid (extension)</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p2bxx/"><strong>P2Bxx</strong></a><span>Engine, emissions and hybrid (extension)</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p2cxx/"><strong>P2Cxx</strong></a><span>Engine, emissions and hybrid (extension)</span><span class="pequeno">256 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p2dxx/"><strong>P2Dxx</strong></a><span>Engine, emissions and hybrid (extension)</span><span class="pequeno">254 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p2exx/"><strong>P2Exx</strong></a><span>Engine, emissions and hybrid (extension)</span><span class="pequeno">192 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/p34xx/"><strong>P34xx</strong></a><span>Cylinder deactivation and valve control</span><span class="pequeno">155 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/u00xx/"><strong>U00xx</strong></a><span>Communication buses (CAN)</span><span class="pequeno">116 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/u01xx/"><strong>U01xx</strong></a><span>Lost communication with modules</span><span class="pequeno">182 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/u02xx/"><strong>U02xx</strong></a><span>Lost communication with modules</span><span class="pequeno">174 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/u03xx/"><strong>U03xx</strong></a><span>Software incompatibility</span><span class="pequeno">80 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/u04xx/"><strong>U04xx</strong></a><span>Invalid data received</span><span class="pequeno">181 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/u05xx/"><strong>U05xx</strong></a><span>Invalid data received</span><span class="pequeno">161 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/u06xx-u09xx/"><strong>U06xx-U09xx</strong></a><span>Lost communication with sensors and modules</span><span class="pequeno">161 codes</span></li>
+<li class="tarjeta"><a href="/en/obd2-codes/u3xxx/"><strong>U3xxx</strong></a><span>Network: high voltage, fuel cell and more</span><span class="pequeno">174 codes</span></li>
+</ul>
+<p class="aclaracion">Titles from <a href="https://github.com/foerbsnavi/OBDex">OBDex</a>, an open database (public domain, CC0). If you spot a mistake, please report it on <a href="https://github.com/jaso69/obd2/issues">GitHub</a>.</p>
+<section aria-labelledby="consejos-h">
+<h2 id="consejos-h">Before replacing parts</h2>
+<ul class="lista-ok">
+<li><strong>Write the faults down before clearing them</strong>, with the fault type and, on OBD2, the freeze frame data (engine speed, temperature and load when the fault happened).</li>
+<li><strong>Clear them and see whether they come back.</strong> A fault that does not return after several starts may be old; one that comes back straight away is current.</li>
+<li><strong>Check the wiring and connectors first</strong> when the fault is a short, an open circuit or intermittent.</li>
+<li><strong>Look at the component's measured values</strong> with the engine running: a sender giving an absurd value (−40 °C coolant, for example) confirms the fault.</li>
+</ul>
+</section>
+<section class="tarjeta tarjeta-grande descarga-codigos" aria-labelledby="descarga-h">
+  <h2 id="descarga-h">Read and clear these faults with OBD2Desk</h2>
+  <p>OBD2Desk is a free, open-source program for Windows and Linux. With a KKL cable it reads the fault codes of older VAG cars (KW1281) from every control unit; with an ELM327, those of any OBD2 car, and it describes VAG P1 codes when the VIN is from VW, Audi, SEAT or Skoda.</p>
+  <div class="botones botones-izq">
+    <a class="boton boton-principal" href="/en/#descargar">Download OBD2Desk</a>
+    <a class="boton boton-secundario" href="/en/#funciones">See what it does</a>
+  </div>
+</section>
+</div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p><strong>OBD2Desk</strong> is free software under the <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">MIT license</a>. Source code at <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p class="legal">Independent project, not affiliated with Volkswagen Group, SEAT or Bosch. Trademarks belong to their owners. Information is provided as is, without warranty; to repair, follow the workshop manual.</p>
+  </div>
+</footer>
+
+<script src="/averias.js"></script>
+</body>
+</html>

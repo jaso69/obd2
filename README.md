@@ -49,6 +49,7 @@ el programa consulta en GitHub si hay una versión nueva y lo avisa junto al tí
 | `cambios.py` | Registro de los cambios de adaptación y codificación, con el valor de antes |
 | `elm327.py` | OBD2 por ELM327: protocolo automático (y prueba de línea K si falla), CAN multi-trama, multi-PID, averías (también permanentes), datos congelados, monitores, VIN, CALID/CVN |
 | `obd_datos.py` | PIDs OBD2 estándar, descripciones de averías P0xxx y monitores de preparación |
+| `obd_codigos.py` | Los 9533 códigos de avería genéricos OBD2 (P0, P2, P3, B0, C0, U0, U3) en inglés y español; generado por `herramientas/codigos_genericos.py` |
 | `vin_datos.py` | Decodificación del VIN (fabricante, país, año modelo, modelo VAG) |
 | `informe.py` | Informe de diagnóstico en HTML (imprimible / PDF) |
 | `ia.py` | Asistente IA: Anthropic / OpenAI / DeepSeek, claves cifradas, prompt de diagnosis |
@@ -192,4 +193,4 @@ la fórmula que envía la propia ECU. Si una fórmula no está en la tabla se mu
 
 ## Licencia
 
-MIT. Ver [LICENSE](LICENSE). Proyecto independiente, sin relación con SEAT, Volkswagen Group ni los fabricantes de los adaptadores; se ofrece sin garantía.
+MIT. Ver [LICENSE](LICENSE). Los títulos de los códigos genéricos OBD2 vienen de [OBDex](https://github.com/foerbsnavi/OBDex) (dominio público, CC0 1.0). Proyecto independiente, sin relación con SEAT, Volkswagen Group ni los fabricantes de los adaptadores; se ofrece sin garantía.

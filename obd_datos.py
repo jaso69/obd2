@@ -235,6 +235,11 @@ def describe_dtc(code):
         from vag_datos import DTCS_P1
         if int(code[1:]) in DTCS_P1:
             return DTCS_P1[int(code[1:])] + " (VAG)"
+    # Códigos genéricos SAE J2012 (P0, P2, P3, B0, C0, U0, U3): obd_codigos.py, de OBDex
+    from obd_codigos import CODIGOS
+    if code in CODIGOS:
+        en, es = CODIGOS[code]
+        return es if idioma.actual() == "es" and es else en
     if len(code) == 5 and code[1] in "13":
         return tr("Código específico del fabricante")
     return tr("Código no incluido en la tabla")

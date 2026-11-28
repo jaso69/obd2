@@ -27,13 +27,16 @@ const MAX = 30;
 let indice = null;
 let cargando = null;
 
-const normal = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const normal = (s) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 function cargar() {
   if (!cargando) {
     cargando = fetch(entrada.dataset.indice)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((datos) => { indice = datos.map((d) => ({ vag: d[0], p: d[1], desc: d[2], url: d[3], texto: normal(d[2]) })); })
+      .then((datos) => {
+        const base = new URL(entrada.dataset.indice, location.href);
+        indice = datos.map((d) => ({ vag: d[0], p: d[1], desc: d[2], url: new URL(d[3], base).href, texto: normal(d[2]) }));
+      })
       .catch(() => { salida.textContent = T.fallo; });
   }
   return cargando;
@@ -43,11 +46,13 @@ function buscar(q) {
   q = normal(q.trim());
   if (!q) return [];
   const cifras = q.replace(/\s/g, "");
-  if (/^\d+$/.test(cifras)) {
+  if (/^\d+$/.test(cifras) && indice.some((d) => d.vag)) {
     // 5 cifras o el principio; se aceptan sin ceros a la izquierda (532 = 00532)
     return indice.filter((d) => d.vag.startsWith(cifras) || d.vag.replace(/^0+/, "").startsWith(cifras.replace(/^0+/, "")));
   }
-  if (/^p\d+$/.test(cifras)) return indice.filter((d) => normal(d.p).startsWith(cifras));
+  if (/^\d+$/.test(cifras)) return indice.filter((d) => normal(d.p).slice(1).startsWith(cifras));   // «0420» = P0420
+  // código OBD (P0420, U0100, c0035…): por el principio
+  if (/^[pbcu][0-9a-f]*\d[0-9a-f]*$/.test(cifras)) return indice.filter((d) => normal(d.p).startsWith(cifras));
   const palabras = q.split(/\s+/);
   return indice.filter((d) => palabras.every((w) => d.texto.includes(w)));
 }
@@ -64,7 +69,7 @@ function mostrar() {
     const a = document.createElement("a");
     a.href = d.url;
     const cod = document.createElement("strong");
-    cod.textContent = d.p ? `${d.vag} · ${d.p}` : d.vag;
+    cod.textContent = [d.vag, d.p].filter(Boolean).join(" · ");
     a.append(cod, " ", d.desc);
     li.append(a);
     lista.append(li);
