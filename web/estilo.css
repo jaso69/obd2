@@ -122,6 +122,9 @@ pre code { background: none; padding: 0; }
 .extras { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; list-style: none; padding: 0; margin: 0; }
 .extras li { padding-left: 22px; position: relative; color: #c5cbd5; }
 .extras li::before { content: "●"; color: var(--acento); position: absolute; left: 0; font-size: .7em; top: .45em; }
+.subtitulo-ia { margin: 0 0 16px; }
+.extras-ia { margin-bottom: 48px; }
+.nuevo { display: inline-block; background: var(--acento); color: #111; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 1px 7px; border-radius: 4px; margin-right: 4px; vertical-align: 2px; }
 
 /* ---- pasos ---- */
 .pasos { list-style: none; padding: 0; margin: 0 0 48px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }

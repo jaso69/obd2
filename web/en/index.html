@@ -177,6 +177,18 @@
       <li><span>4</span><div><h3>Reasoned diagnosis</h3><p>Causes ranked by probability with the evidence, what to do from cheapest to most expensive, and whether the car is safe to drive. If you ask, it leaves the report ready to print with its diagnosis.</p></div></li>
     </ol>
 
+    <h3 class="subtitulo-ia">What the assistant can do</h3>
+    <ul class="extras extras-ia">
+      <li><strong>Read the fault codes</strong> from the control unit, with freeze frame data and monitors on OBD2.</li>
+      <li><strong>Read live values</strong>: a single reading or a series of up to 40 during a rev.</li>
+      <li><span class="nuevo">New</span> <strong>Record values</strong> for up to 2 minutes (for example, while the engine warms up) and analyse the minimum, average and maximum. The recording is saved as a CSV you can open yourself in the viewer.</li>
+      <li><span class="nuevo">New</span> <strong>Check the car's history</strong>: which fault codes are new, which came back after clearing and which have been there for a long time.</li>
+      <li><span class="nuevo">New</span> <strong>Generate the report</strong> with its diagnosis included, ready to print or save as PDF and take to the workshop.</li>
+      <li><strong>Ask you to do something</strong> (start the engine, hold 2500 rpm, look at a hose) and wait until you have done it.</li>
+      <li><strong>Clear the fault codes</strong>, always with your confirmation, and check which ones come back.</li>
+      <li><strong>Look at the program log</strong> if the connection fails, to tell you what is going on.</li>
+    </ul>
+
     <div class="dos-capturas">
       <figure class="captura"><a href="../img/en/ia-accion.webp" class="ampliar"><img src="../img/en/ia-accion.webp" width="2015" height="1200" loading="lazy" alt="The assistant asks the user to start the engine and rev it"></a>
         <figcaption>The assistant asks for an action and waits for you to do it.</figcaption></figure>
@@ -377,7 +389,7 @@ sudo usermod -aG dialout $USER</code></pre>
     <ul class="lista-ok">
       <li>Verified on real cars, including the new features in v0.3.0 (module scan, freeze frame data, monitors and report) and v0.5.0 (fuel consumption and 0-100, graphs, CSV viewer and history).</li>
       <li>Automated test suite with the built-in simulators: KKL cable with several VAG control units (EDC15 engine, ABS, airbag and instrument cluster), and ELM327 with a simulated OBD2 car.</li>
-      <li>AI assistant validated with the real Claude and DeepSeek APIs.</li>
+      <li>AI assistant validated with the real Claude and DeepSeek APIs; its new v0.5.0 features (recording values, checking the history and generating the report), with the DeepSeek API.</li>
       <li>Compatible with Windows 10/11 and Linux (Ubuntu, Debian, Fedora, Arch and openSUSE).</li>
     </ul>
     <ul class="lista-no">
