@@ -458,6 +458,8 @@ Hecha el 2026-11-21 en Fedora 44 (Python 3.14, Tk 9.0, Wayland): pruebas de prot
 
 **Web de la v0.5.0 publicada (2026-11-27)**: bloques nuevos «Consumo y cronómetro 0-100» e «Historial de cada coche», «Valores medidos, gráficas y grabación» con selector «Gráfica en vivo / Visor de CSV», pasos del asistente con historial e informe, estado con las novedades «probadas con los simuladores; pendientes de verificar en coche». Capturas regeneradas (miden 2025×1200 en español y 2015×1200 en inglés: la pestaña nueva ensancha la ventana; los `width` del HTML lo reflejan). **Publicarla solo cuando exista la release v0.5.0** (si no, anuncia funciones que la descarga no trae); si se prueba en coche antes, quitar la línea «pendientes de verificar en coche».
 
+**Sección «Estado del proyecto» (`#estado`) quitada de la web el 2026-11-28** a petición del usuario (ya no tenía pendientes). Lo que queda por probar ya no se cuenta en la web; si hiciera falta avisar de algo sin probar, decirlo en el artículo de la función o en las notas de la release.
+
 ### 12.1 Público y tono
 Aficionados a la mecánica y dueños de coches VAG antiguos (y de cualquier coche con
 OBD2) que quieren diagnosticar en casa. Español de España, cercano y claro, técnico
