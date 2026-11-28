@@ -1921,13 +1921,39 @@ class App:
         self.motor_cb.pack(anchor="w", fill="x", pady=(2, 8))
         self.motor_cb.bind("<<ComboboxSelected>>",
                            lambda e: self._poner_motor(list(MOTORES)[self.motor_cb.current()]))
-        self.grupos_frame = ttk.Frame(self.side_vag, style="Card.TFrame")
-        self.grupos_frame.pack(anchor="w", fill="x")
+        # «Otros grupos» abajo; las casillas ocupan el resto y se desplazan si no caben (gasolina: 15 grupos)
+        self.extra_groups = ttk.Entry(self.side_vag, width=22)
+        self.extra_groups.pack(side="bottom", anchor="w", fill="x")
+        ttk.Label(self.side_vag, text=tr("Otros grupos (ej. 5, 20)"),
+                  style="Muted.TLabel").pack(side="bottom", anchor="w", pady=(12, 4))
+        zona = ttk.Frame(self.side_vag, style="Card.TFrame")
+        zona.pack(fill="both", expand=True)
+        cv = self.grupos_canvas = tk.Canvas(zona, bg=CARD, bd=0, highlightthickness=0, height=1)
+        sb_g = ttk.Scrollbar(zona, orient="vertical", command=cv.yview)
+        cv.configure(yscrollcommand=sb_g.set)
+        cv.pack(side="left", fill="both", expand=True)
+        self.grupos_frame = ttk.Frame(cv, style="Card.TFrame")
+        cv.create_window(0, 0, window=self.grupos_frame, anchor="nw")
+
+        def ajustar(_e=None):
+            cv.configure(scrollregion=(0, 0, self.grupos_frame.winfo_reqwidth(), self.grupos_frame.winfo_reqheight()),
+                         width=self.grupos_frame.winfo_reqwidth())
+            if self.grupos_frame.winfo_reqheight() > cv.winfo_height() > 1:
+                sb_g.pack(side="right", fill="y", before=cv)
+            else:
+                sb_g.pack_forget()
+                cv.yview_moveto(0)
+        self.grupos_frame.bind("<Configure>", ajustar)
+        cv.bind("<Configure>", ajustar)
+
+        def rueda(e):
+            w = cv.winfo_containing(e.x_root, e.y_root)
+            if sb_g.winfo_ismapped() and w is not None and str(w).startswith(str(cv)):
+                cv.yview_scroll(-1 if (e.num == 4 or (e.num != 5 and e.delta > 0)) else 1, "units")
+        for s in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+            cv.bind_all(s, rueda, add="+")
         self.group_vars = {}
         self._poner_motor(self.motor)
-        ttk.Label(self.side_vag, text=tr("Otros grupos (ej. 5, 20)"), style="Muted.TLabel").pack(anchor="w", pady=(12, 4))
-        self.extra_groups = ttk.Entry(self.side_vag, width=22)
-        self.extra_groups.pack(anchor="w", fill="x")
 
         # Selección OBD2
         self.side_obd = ttk.Frame(side, style="Card.TFrame")

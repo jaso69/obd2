@@ -257,6 +257,32 @@ vh.win.destroy()
 app.nb.select(app.tab_ecu)
 capturar("vehiculo-obd")
 
+print("Ayuda")
+app.nb.select(app.tab_ayuda)
+app.ayuda_lista.selection_set(0)
+capturar("ayuda")
+
+print("KKL con un motor de gasolina")
+import simulador                    # noqa: E402
+simulador.GASOLINA = True
+conectar(gui.KKL)
+app.toggle_live("panel")
+pausa(25)
+app.nb.select(app.tab_panel)
+capturar("panel-gasolina")
+app._stop_live()
+app.nb.select(app.tab_vals)
+for g, v in app.group_vars.items():
+    v.set(g in (2, 3, 5))
+app.rec_lbl.configure(text="")
+app.toggle_live("vals")
+pausa(3)
+app.tree.selection_set([app.tree_items[(2, 1)], app.tree_items[(3, 2)]])   # gráfica: carga y mariposa
+pausa(30)
+capturar("valores-gasolina")
+app._stop_live()
+simulador.GASOLINA = False
+
 app.toggle_connect()
 esperar(lambda: not app.connected, 10)
 app.on_close()

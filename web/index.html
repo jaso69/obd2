@@ -34,7 +34,9 @@
       <a href="#ia">Asistente IA</a>
       <a href="#hardware">Qué cable</a>
       <a href="#descargar">Descargar</a>
+      <a href="#compatibles">Compatibles</a>
       <a href="#guia">Guía</a>
+      <a href="#novedades">Novedades</a>
       <a href="#faq">Problemas</a>
       <a class="idioma" href="en/" hreflang="en" lang="en" data-idioma="en" title="English">EN</a>
       <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
@@ -63,7 +65,7 @@
     <div class="tres">
       <div class="tarjeta">
         <h3>VAG antiguos por KKL</h3>
-        <p>Habla <strong>KW1281</strong>, el protocolo de SEAT, VW, Audi y Skoda hasta ~2004, que un lector OBD2 normal no entiende. Pensado para el 1.9 TDI con EDC15, y <strong>escanea todos los módulos</strong> (motor, ABS, airbag, cuadro…) de una vez.</p>
+        <p>Habla <strong>KW1281</strong>, el protocolo de SEAT, VW, Audi y Skoda hasta ~2004, que un lector OBD2 normal no entiende. Con los grupos de valores medidos de los TDI de bomba rotativa e inyector-bomba y de los gasolina, y <strong>escanea todos los módulos</strong> (motor, ABS, airbag, cuadro…) de una vez.</p>
       </div>
       <div class="tarjeta">
         <h3>Cualquier OBD2 con ELM327</h3>
@@ -74,6 +76,7 @@
         <p>Cuéntale el síntoma: la IA <strong>lee ella misma</strong> las averías y los valores, te pide que arranques o aceleres y te da un diagnóstico razonado.</p>
       </div>
     </div>
+    <ul class="cifras"><li><strong>21</strong><span>centralitas VAG por cable KKL</span></li><li><strong>631</strong><span>averías VAG descritas</span></li><li><strong>50</strong><span>valores OBD2 en directo</span></li><li><strong>36</strong><span>grupos VAG con nombre, en 3 tipos de motor</span></li><li><strong>3</strong><span>proveedores de IA</span></li><li><strong>2</strong><span>idiomas: español e inglés</span></li></ul>
   </div>
 </section>
 
@@ -89,6 +92,7 @@
         <div class="selector" role="tablist" data-grupo="panel">
           <button role="tab" aria-selected="true" data-img="img/panel-kkl.webp" data-alt="Panel en modo KKL con turbo y masa de aire">KKL · VAG</button>
           <button role="tab" aria-selected="false" data-img="img/panel-obd.webp" data-alt="Panel en modo OBD2 con régimen, velocidad, refrigerante y carga">ELM327 · OBD2</button>
+          <button role="tab" aria-selected="false" data-img="img/panel-gasolina.webp" data-alt="Panel de un VAG de gasolina por KKL: régimen, carga, temperaturas, avance y mariposa">KKL · gasolina</button>
         </div>
       </div>
       <figure class="captura"><a href="img/panel-kkl.webp" class="ampliar" data-grupo="panel"><img src="img/panel-kkl.webp" width="2025" height="1200" loading="lazy" alt="Panel en modo KKL con turbo y masa de aire"></a></figure>
@@ -153,6 +157,33 @@
       <figure class="captura"><a href="img/vehiculo-kkl.webp" class="ampliar" data-grupo="vehiculo"><img src="img/vehiculo-kkl.webp" width="2025" height="1200" loading="lazy" alt="Identificación de la centralita del motor"></a></figure>
     </div>
 
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Diésel y gasolina VAG <span class="nuevo">Nuevo</span></h3>
+        <p>Cada centralita VAG da sus valores medidos en grupos de cuatro, y lo que significa cada casilla depende del motor. OBD2Desk trae los grupos habituales de <strong>tres tipos de motor</strong>, con el nombre de cada valor:</p>
+        <ul class="lista-ok">
+          <li><strong>TDI de bomba rotativa</strong> (Bosch EDC15V, como el 1.9 TDI de 90 y 110 CV): inyección, turbo, caudalímetro y EGR, comienzo de inyección, limitaciones de caudal.</li>
+          <li><strong>TDI inyector-bomba</strong> (PD): además, el tiempo de inyección, el estado y la conmutación de cada inyector-bomba y los pedales.</li>
+          <li><strong>Gasolina</strong>: carga, encendido y avance, picado por cilindro, sondas lambda, adaptación de la mezcla y turbo.</li>
+        </ul>
+        <p>Al conectar, el programa reconoce el motor por la identificación de la centralita y lo elige solo. En un gasolina, el Panel muestra sus propios relojes y la pestaña de consumo calcula los L/100 km y mide el 0-100 con la velocidad de la centralita.</p>
+        <div class="selector" role="tablist" data-grupo="motor">
+          <button role="tab" aria-selected="true" data-img="img/valores-gasolina.webp" data-alt="Valores medidos de un VAG de gasolina: grupos 002, 003 y 005 con el selector de motor">Valores medidos</button>
+          <button role="tab" aria-selected="false" data-img="img/panel-gasolina.webp" data-alt="Panel de un VAG de gasolina por KKL">Panel</button>
+        </div>
+      </div>
+      <figure class="captura"><a href="img/valores-gasolina.webp" class="ampliar" data-grupo="motor"><img src="img/valores-gasolina.webp" width="2025" height="1200" loading="lazy" alt="Valores medidos de un VAG de gasolina: grupos 002, 003 y 005 con el selector de motor"></a></figure>
+    </div>
+
+    <div class="fila-funcion invertida">
+      <div class="texto-funcion">
+        <h3>Manual dentro del programa <span class="nuevo">Nuevo</span></h3>
+        <p>La pestaña <em>Ayuda</em> explica cada parte del programa: qué cable usar y cómo conectarlo, qué muestra cada pestaña, cómo se calcula el consumo, qué hace el asistente IA con tus datos y dónde se guardan las grabaciones, los informes y el historial.</p>
+        <p>Está en español y en inglés, como el resto del programa, y no necesita internet.</p>
+      </div>
+      <figure class="captura"><a href="img/ayuda.webp" class="ampliar"><img src="img/ayuda.webp" width="2025" height="1200" loading="lazy" alt="Pestaña Ayuda con el índice de secciones y el manual"></a></figure>
+    </div>
+
     <ul class="extras">
       <li><span class="nuevo">Nuevo</span> <strong>Ayuda integrada</strong>: una pestaña con el manual de cada parte del programa.</li>
       <li><strong>Simulador incluido</strong>: prueba todo sin coche eligiendo el puerto «Simulador (sin coche)».</li>
@@ -167,7 +198,37 @@
 </section>
 
 <!-- ============ IA ============ -->
-<section id="ia" class="seccion seccion-alterna">
+<!-- ============ CADA CABLE ============ -->
+<section id="cables" class="seccion seccion-alterna">
+  <div class="contenedor">
+    <h2>Qué puedes hacer con cada cable</h2>
+    <p class="intro">El cable KKL habla el protocolo propio de los VAG antiguos y entra en todas sus centralitas; el ELM327 habla OBD2, el estándar de emisiones que tienen todos los coches modernos. Esto es lo que hace OBD2Desk con cada uno.</p>
+    <div class="tabla-scroll">
+    <table class="tabla tabla-cables">
+      <thead><tr><th>Función</th><th>Cable KKL · VAG KW1281</th><th>ELM327 · OBD2</th></tr></thead>
+      <tbody>
+        <tr><td>Leer y borrar averías</td><td class="si">✓ <span>códigos VAG de 5 cifras, con tipo de fallo e intermitente</span></td><td class="si">✓ <span>memorizadas, pendientes y permanentes; P1 de VAG descritas</span></td></tr>
+        <tr><td>Escanear todas las centralitas</td><td class="si">✓ <span>21 direcciones: motor, ABS, airbag, cuadro, confort…</span></td><td class="no">—</td></tr>
+        <tr><td>Datos congelados de la avería</td><td class="no">—</td><td class="si">✓</td></tr>
+        <tr><td>Monitores de preparación (ITV)</td><td class="no">—</td><td class="si">✓</td></tr>
+        <tr><td>Identificación</td><td class="si">✓ <span>referencia, software y codificación de la centralita</span></td><td class="si">✓ <span>VIN descifrado, calibración (CALID/CVN) y tensión</span></td></tr>
+        <tr><td>Panel con relojes y gráficas</td><td class="si">✓ <span>TDI y gasolina</span></td><td class="si">✓</td></tr>
+        <tr><td>Valores medidos en tabla y gráfica</td><td class="si">✓ <span>grupos, con nombre según el motor</span></td><td class="si">✓ <span>hasta 50 PIDs, los que dé el coche</span></td></tr>
+        <tr><td>Grabar CSV y visor de grabaciones</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Consumo del trayecto</td><td class="si">✓ <span>TDI en L/h; gasolina en L/100 km</span></td><td class="si">✓ <span>L/100 km</span></td></tr>
+        <tr><td>Cronómetro 0-100 km/h</td><td class="si">✓ <span>gasolina (el TDI no da la velocidad)</span></td><td class="si">✓</td></tr>
+        <tr><td>Historial de cada coche</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Informe para imprimir o PDF</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Asistente IA con diagnóstico guiado</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Simulador para probar sin coche</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Adaptaciones, codificación, test de actuadores</td><td class="no">—</td><td class="no">—</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section id="ia" class="seccion">
   <div class="contenedor">
     <h2>✦ Asistente IA: diagnóstico guiado</h2>
     <p class="intro">No es un chat que adivina: el asistente usa el programa para comprobar sus hipótesis con datos de tu coche.</p>
@@ -183,9 +244,9 @@
     <ul class="extras extras-ia">
       <li><strong>Leer las averías</strong> de la centralita, con los datos congelados y los monitores en OBD2.</li>
       <li><strong>Leer valores en directo</strong> (presión del turbo, masa de aire, temperaturas…), una vez o varias veces seguidas para ver cómo cambian, por ejemplo durante un acelerón.</li>
-      <li><span class="nuevo">Nuevo</span> <strong>Grabar valores</strong> hasta 2 minutos (por ejemplo, mientras se calienta el motor) y analizar el mínimo, la media y el máximo. La grabación queda en un CSV que puedes abrir tú en el visor.</li>
-      <li><span class="nuevo">Nuevo</span> <strong>Consultar el historial</strong> del coche: qué averías son nuevas, cuáles volvieron después de borrarlas y cuáles vienen de lejos.</li>
-      <li><span class="nuevo">Nuevo</span> <strong>Generar el informe</strong> con su diagnóstico incluido, listo para imprimir o guardar en PDF y llevar al taller.</li>
+      <li><strong>Grabar valores</strong> hasta 2 minutos (por ejemplo, mientras se calienta el motor) y analizar el mínimo, la media y el máximo. La grabación queda en un CSV que puedes abrir tú en el visor.</li>
+      <li><strong>Consultar el historial</strong> del coche: qué averías son nuevas, cuáles volvieron después de borrarlas y cuáles vienen de lejos.</li>
+      <li><strong>Generar el informe</strong> con su diagnóstico incluido, listo para imprimir o guardar en PDF y llevar al taller.</li>
       <li><strong>Pedirte una acción</strong> (arrancar, mantener 2500 rpm, mirar un manguito) y esperar a que la hagas.</li>
       <li><strong>Borrar las averías</strong>, siempre con tu confirmación, y comprobar cuáles vuelven a salir.</li>
       <li><strong>Revisar el registro</strong> del programa si falla la conexión, para decirte qué pasa.</li>
@@ -222,7 +283,7 @@
 </section>
 
 <!-- ============ HARDWARE ============ -->
-<section id="hardware" class="seccion">
+<section id="hardware" class="seccion seccion-alterna">
   <div class="contenedor">
     <h2>Qué cable necesitas</h2>
     <p class="intro">Depende del coche. Si es un VAG anterior a 2004 (sobre todo diésel), casi seguro necesitas el cable KKL: muchos no responden a OBD2 genérico aunque tengan el conector.</p>
@@ -288,6 +349,40 @@
 </section>
 
 <!-- ============ DESCARGAR ============ -->
+<!-- ============ COMPATIBLES ============ -->
+<section id="compatibles" class="seccion">
+  <div class="contenedor">
+    <h2>Coches y centralitas compatibles</h2>
+    <p class="intro">Todo lo que sigue sale de las tablas del propio programa.</p>
+    <div class="dos">
+      <div class="tarjeta tarjeta-grande">
+        <p class="etiqueta">Cable KKL · KW1281</p>
+        <h3>SEAT, Volkswagen, Audi y Skoda hasta ~2004</h3>
+        <p>Los VAG con el protocolo KW1281, sobre todo los anteriores al OBD2 obligatorio en diésel. Si una centralita habla el protocolo más moderno (KWP2000), el programa lo detecta y te lo dice: entonces usa un ELM327.</p>
+        <p><strong>Las 21 centralitas que puede leer y escanear:</strong></p>
+        <ul class="modulos"><li><code>01</code> Electrónica del motor</li><li><code>02</code> Cambio automático</li><li><code>03</code> ABS</li><li><code>08</code> Climatronic</li><li><code>09</code> Electrónica central</li><li><code>21</code> Airbag</li><li><code>22</code> Columna de dirección</li><li><code>23</code> Cuadro de instrumentos</li><li><code>25</code> Gateway (bus de datos)</li><li><code>34</code> Tracción total (Haldex)</li><li><code>37</code> Inmovilizador</li><li><code>53</code> Cierre centralizado</li><li><code>54</code> Memoria asiento conductor</li><li><code>55</code> Navegación</li><li><code>69</code> Alarma / habitáculo</li><li><code>70</code> Módulo central de confort</li><li><code>85</code> Faros (alcance / xenón)</li><li><code>86</code> Radio</li><li><code>101</code> Presión de neumáticos</li><li><code>118</code> Ayuda al aparcamiento</li><li><code>119</code> Teléfono</li></ul>
+      </div>
+      <div class="tarjeta tarjeta-grande">
+        <p class="etiqueta">ELM327 · OBD2 / EOBD</p>
+        <h3>Cualquier marca con OBD2</h3>
+        <p>En Europa, gasolina desde 2001 y diésel desde 2003-2004; en EE. UU., desde 1996. Busca el protocolo solo (CAN, KWP2000, ISO 9141 o J1850, según el adaptador) y, si no lo encuentra, prueba uno a uno los de línea K.</p>
+        <ul class="lista-ok">
+          <li>Las 107 averías genéricas (P0) más comunes con su descripción, y las <strong>538 averías P1 de VAG</strong> si el VIN es de SEAT, VW, Audi o Skoda.</li>
+          <li>VIN descifrado para 64 fabricantes, con el modelo en los VAG.</li>
+        </ul>
+        <details class="grupos"><summary>Los 50 valores OBD2 que puede leer</summary><ul class="modulos"><li>Carga del motor</li><li>Temp. refrigerante</li><li>Corrección corto plazo B1</li><li>Corrección largo plazo B1</li><li>Corrección corto plazo B2</li><li>Corrección largo plazo B2</li><li>Presión combustible</li><li>Presión colector (MAP)</li><li>Régimen motor</li><li>Velocidad</li><li>Avance encendido</li><li>Temp. aire admisión</li><li>Caudal de aire (MAF)</li><li>Posición mariposa</li><li>Sonda O2 B1S1</li><li>Sonda O2 B1S2</li><li>Sonda O2 B1S3</li><li>Sonda O2 B1S4</li><li>Sonda O2 B2S1</li><li>Sonda O2 B2S2</li><li>Tiempo desde arranque</li><li>Distancia con testigo MIL</li><li>Presión rail (rel. vacío)</li><li>Presión rail combustible</li><li>Lambda sonda B1S1 (banda ancha)</li><li>EGR comandada</li><li>Error EGR</li><li>Purga EVAP comandada</li><li>Nivel de combustible</li><li>Calentamientos desde borrado</li><li>Distancia desde borrado</li><li>Presión barométrica</li><li>Lambda sonda B1S1 (corriente)</li><li>Temp. catalizador B1S1</li><li>Temp. catalizador B2S1</li><li>Tensión módulo de control</li><li>Carga absoluta</li><li>Lambda comandada</li><li>Mariposa relativa</li><li>Temp. ambiente</li><li>Mariposa absoluta B</li><li>Pedal acelerador D</li><li>Pedal acelerador E</li><li>Actuador mariposa comandado</li><li>Tiempo con testigo MIL</li><li>Tiempo desde borrado</li><li>Etanol en combustible</li><li>Pedal acelerador relativo</li><li>Temp. aceite</li><li>Consumo de combustible</li></ul></details>
+      </div>
+    </div>
+    <h3 class="titulo-bloque">Grupos de valores medidos VAG por tipo de motor</h3>
+    <p>Orientativo: los nombres pueden variar según la centralita. Las unidades las calcula el programa con la fórmula que envía la propia centralita, así que se leen también los grupos que no están en la lista.</p>
+    <div class="motores">
+        <details class="grupos"><summary>TDI bomba rotativa (EDC15V) · 9 grupos</summary><table class="tabla"><thead><tr><th>Grupo</th><th>Qué muestra</th></tr></thead><tbody><tr><td>001</td><td><strong>Inyección</strong><br>Régimen · Caudal inyectado · Tensión dosificador/émbolo · Temp. refrigerante</td></tr><tr><td>002</td><td><strong>Acelerador</strong><br>Régimen · Pedal acelerador · Estado de funcionamiento · Temp. refrigerante</td></tr><tr><td>003</td><td><strong>EGR / caudalímetro</strong><br>Régimen · Masa aire teórica · Masa aire real · Ciclo válvula EGR</td></tr><tr><td>004</td><td><strong>Comienzo de inyección</strong><br>Régimen · Comienzo inyección teórico · Comienzo inyección real · Ciclo válvula</td></tr><tr><td>007</td><td><strong>Temperaturas</strong><br>Temp. combustible · Valor 2 · Valor 3 · Temp. refrigerante</td></tr><tr><td>008</td><td><strong>Limitación de caudal</strong><br>Régimen · Caudal solicitado · Limitación por régimen · Limitación por masa aire</td></tr><tr><td>010</td><td><strong>Aire / presiones</strong><br>Masa de aire · Presión atmosférica · Presión colector · Pedal acelerador</td></tr><tr><td>011</td><td><strong>Turbo</strong><br>Régimen · Presión sobrealim. teórica · Presión sobrealim. real · Ciclo N75</td></tr><tr><td>013</td><td><strong>Marcha suave (cilindros)</strong><br>Cilindro 1 · Cilindro 2 · Cilindro 3 · Cilindro 4</td></tr></tbody></table></details>
+        <details class="grupos"><summary>TDI inyector-bomba (PD) · 12 grupos</summary><table class="tabla"><thead><tr><th>Grupo</th><th>Qué muestra</th></tr></thead><tbody><tr><td>001</td><td><strong>Inyección</strong><br>Régimen · Caudal inyectado · Tiempo de inyección teórico · Temp. refrigerante</td></tr><tr><td>002</td><td><strong>Acelerador</strong><br>Régimen · Pedal acelerador · Estado de funcionamiento · Temp. refrigerante</td></tr><tr><td>003</td><td><strong>EGR / caudalímetro</strong><br>Régimen · Masa aire teórica · Masa aire real · Ciclo válvula EGR</td></tr><tr><td>004</td><td><strong>Inyectores-bomba</strong><br>Régimen · Comienzo inyección teórico · Tiempo de inyección real · Ángulo de sincronización</td></tr><tr><td>006</td><td><strong>Pedales y regulador de velocidad</strong><br>Velocidad · Interruptores de freno y embrague · Pedal acelerador · Regulador de velocidad</td></tr><tr><td>007</td><td><strong>Temperaturas</strong><br>Temp. combustible · Valor 2 · Temp. colector de admisión · Temp. refrigerante</td></tr><tr><td>008</td><td><strong>Limitación de caudal</strong><br>Régimen · Caudal solicitado · Limitación al cambiar de marcha · Limitación por humos</td></tr><tr><td>010</td><td><strong>Aire / presiones</strong><br>Masa de aire · Presión atmosférica · Presión colector · Pedal acelerador</td></tr><tr><td>011</td><td><strong>Turbo</strong><br>Régimen · Presión sobrealim. teórica · Presión sobrealim. real · Ciclo N75</td></tr><tr><td>013</td><td><strong>Marcha suave (cilindros)</strong><br>Cilindro 1 · Cilindro 2 · Cilindro 3 · Cilindro 4</td></tr><tr><td>018</td><td><strong>Estado de los inyectores-bomba</strong><br>Inyector 1 · Inyector 2 · Inyector 3 · Inyector 4</td></tr><tr><td>023</td><td><strong>Conmutación de los inyectores-bomba</strong><br>Cilindro 1 · Cilindro 2 · Cilindro 3 · Cilindro 4</td></tr></tbody></table></details>
+        <details class="grupos"><summary>Gasolina (grupos estándar) · 15 grupos</summary><table class="tabla"><thead><tr><th>Grupo</th><th>Qué muestra</th></tr></thead><tbody><tr><td>001</td><td><strong>Datos generales</strong><br>Régimen · Temp. refrigerante · Regulación lambda · Condiciones del ajuste básico (o lambda banco 2)</td></tr><tr><td>002</td><td><strong>Carga e inyección</strong><br>Régimen · Carga · Tiempo de inyección medio · Masa de aire (o presión colector)</td></tr><tr><td>003</td><td><strong>Aire y encendido</strong><br>Régimen · Masa de aire (o presión colector) · Ángulo de la mariposa · Avance de encendido</td></tr><tr><td>004</td><td><strong>Tensión y temperaturas</strong><br>Régimen · Tensión · Temp. refrigerante · Temp. aire de admisión</td></tr><tr><td>005</td><td><strong>Estado de funcionamiento</strong><br>Régimen · Carga · Velocidad · Estado de funcionamiento</td></tr><tr><td>010</td><td><strong>Encendido</strong><br>Régimen · Carga · Ángulo de la mariposa · Avance de encendido</td></tr><tr><td>011</td><td><strong>Encendido y temperaturas</strong><br>Régimen · Temp. refrigerante · Temp. aire de admisión · Avance de encendido</td></tr><tr><td>020</td><td><strong>Picado: retraso del encendido</strong><br>Cilindro 1 · Cilindro 2 · Cilindro 3 · Cilindro 4</td></tr><tr><td>022</td><td><strong>Picado: cilindros 1 y 2</strong><br>Régimen · Carga · Retraso cilindro 1 · Retraso cilindro 2</td></tr><tr><td>023</td><td><strong>Picado: cilindros 3 y 4</strong><br>Régimen · Carga · Retraso cilindro 3 · Retraso cilindro 4</td></tr><tr><td>031</td><td><strong>Sondas lambda</strong><br>Banco 1, sonda 1 · Banco 1, sonda 2 · Banco 2, sonda 1 · Banco 2, sonda 2</td></tr><tr><td>032</td><td><strong>Adaptación de la mezcla</strong><br>Banco 1, ralentí · Banco 1, carga parcial · Banco 2, ralentí · Banco 2, carga parcial</td></tr><tr><td>033</td><td><strong>Regulación lambda</strong><br>Regulación lambda banco 1 · Tensión sonda banco 1 · Regulación lambda banco 2 · Tensión sonda banco 2</td></tr><tr><td>115</td><td><strong>Turbo</strong><br>Régimen · Carga · Presión turbo teórica · Presión turbo real</td></tr><tr><td>118</td><td><strong>Turbo: válvula y temperatura</strong><br>Régimen · Temp. aire de admisión · Ciclo válvula del turbo · Presión antes de la mariposa</td></tr></tbody></table></details>
+    </div>
+  </div>
+</section>
+
 <section id="descargar" class="seccion seccion-alterna">
   <div class="contenedor">
     <h2>Descargar e instalar</h2>
@@ -334,21 +429,10 @@ sudo usermod -aG dialout $USER</code></pre>
         <li><span>4</span><div><h3>Mira los valores</h3><p><em>Panel</em> para el vistazo rápido; <em>Valores medidos</em> para elegir grupos o PIDs, verlos en gráfica y grabar un CSV; <em>Consumo y 0-100</em> para el trayecto.</p></div></li>
         <li><span>5</span><div><h3>Pide ayuda a la IA</h3><p>En <em>✦ Asistente IA</em>, guarda tu clave, describe el problema y deja que haga las comprobaciones.</p></div></li>
       </ol>
-      <div>
-        <h3>Grupos útiles en el 1.9 TDI (EDC15)</h3>
-        <table class="tabla">
-          <thead><tr><th>Grupo</th><th>Qué muestra</th></tr></thead>
-          <tbody>
-            <tr><td>001</td><td>Régimen, caudal inyectado (mg/H), tensión del dosificador, temperatura del refrigerante</td></tr>
-            <tr><td>003</td><td>Régimen, masa de aire teórica y real, ciclo de la válvula EGR → caudalímetro y EGR</td></tr>
-            <tr><td>004</td><td>Comienzo de inyección teórico y real (bomba rotativa)</td></tr>
-            <tr><td>008</td><td>Caudal solicitado y limitaciones por régimen y por masa de aire</td></tr>
-            <tr><td>010</td><td>Masa de aire, presión atmosférica, presión del colector, pedal</td></tr>
-            <tr><td>011</td><td>Régimen, presión de turbo teórica y real (mbar), ciclo de la N75 → turbo</td></tr>
-            <tr><td>013</td><td>Marcha suave por cilindro (si lo soporta)</td></tr>
-          </tbody>
-        </table>
-        <p class="aclaracion">Orientativo: los nombres pueden variar según el motor. Las unidades las calcula el programa con la fórmula que envía la propia centralita.</p>
+      <div class="tarjeta">
+        <h3>¿Qué grupos miro?</h3>
+        <p>En <em>Valores medidos</em>, elige tu tipo de motor en <em>Motor</em> y marca los grupos. Para empezar: el <strong>001</strong> (inyección) y el <strong>011</strong> (turbo) en un TDI, y el <strong>002</strong> (carga) y el <strong>003</strong> (aire y encendido) en un gasolina.</p>
+        <p>La lista completa de cada motor está en <a href="#compatibles">Coches y centralitas compatibles</a>.</p>
       </div>
     </div>
   </div>
@@ -384,7 +468,62 @@ sudo usermod -aG dialout $USER</code></pre>
 </section>
 
 <!-- ============ ESTADO ============ -->
-<section id="estado" class="seccion">
+<!-- ============ NOVEDADES ============ -->
+<section id="novedades" class="seccion">
+  <div class="contenedor contenedor-estrecho">
+    <h2>Novedades por versión</h2>
+    <p class="intro">Lo que ha ido llegando a OBD2Desk. El detalle de cada versión está en <a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.</p>
+    <div class="version">
+      <h3>v0.6.0 <span>28 de noviembre de 2026</span></h3>
+      <ul>
+        <li>Pestaña <strong>Ayuda</strong> con el manual de cada parte del programa.</li>
+        <li><strong>538 averías P1 de VAG</strong> descritas (antes 21), también al leerlas con un ELM327 si el coche es VAG.</li>
+        <li><strong>Selector de motor</strong> en Valores medidos: TDI de bomba rotativa, TDI inyector-bomba o gasolina, con los grupos habituales y el nombre de cada valor. Se elige solo al conectar.</li>
+        <li><strong>VAG de gasolina por KKL</strong>: Panel propio, consumo en L/100 km, distancia y cronómetro 0-100.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.5.0 <span>27 de noviembre de 2026</span></h3>
+      <ul>
+        <li>Pestaña <strong>Consumo y 0-100</strong>: consumo instantáneo y medio, litros, distancia y cronómetro 0-100 km/h con paso por 50.</li>
+        <li><strong>Gráfica en vivo</strong> de cualquier valor y <strong>visor de CSV</strong> con zoom y mínimo, media y máximo.</li>
+        <li><strong>Historial de cada coche</strong>: qué averías son nuevas, cuáles ya no salen y cuáles se repiten.</li>
+        <li>El asistente IA puede <strong>grabar valores</strong>, <strong>consultar el historial</strong> y <strong>generar el informe</strong>.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.4.0 <span>27 de noviembre de 2026</span></h3>
+      <ul>
+        <li>Toledo Diagnosis pasa a llamarse <strong>OBD2Desk</strong>.</li>
+        <li>Interfaz, informe y descripciones de averías <strong>en inglés</strong>; el asistente IA responde en el idioma elegido.</li>
+        <li>Al actualizar se conserva la configuración, API keys incluidas.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.3.0 <span>22 de noviembre de 2026</span></h3>
+      <ul>
+        <li><strong>Escaneo de todos los módulos VAG</strong> y tabla de averías VAG mucho más grande.</li>
+        <li>En OBD2: <strong>datos congelados</strong>, averías permanentes, <strong>monitores de preparación</strong>, VIN descifrado y calibración.</li>
+        <li><strong>Informe de diagnóstico</strong> para imprimir o guardar en PDF, <strong>ELM327 WiFi</strong> y aviso de versión nueva.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.2.0 <span>22 de noviembre de 2026</span></h3>
+      <ul>
+        <li><strong>Versión para Linux</strong> (Ubuntu, Debian, Mint, Fedora, openSUSE, Arch).</li>
+        <li>ELM327: prueba uno a uno los protocolos de línea K de los coches anteriores a CAN.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.1.0 <span>21 de noviembre de 2026</span></h3>
+      <ul>
+        <li>Primera versión: cable KKL para VAG y ELM327 para OBD2, Panel, valores medidos con grabación CSV, asistente IA y simulador.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="estado" class="seccion seccion-alterna">
   <div class="contenedor contenedor-estrecho">
     <h2>Estado del proyecto</h2>
     <p>OBD2Desk está en desarrollo activo. Esto es lo que está verificado y lo que queda por cubrir en la versión actual:</p>

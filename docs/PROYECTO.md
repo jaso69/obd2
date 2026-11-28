@@ -344,6 +344,9 @@ Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windo
 - Release «OBD2Desk v0.6.0» publicada como «Latest» con notas en español e inglés; dicen que el `.exe` llega en breve (enlazan el de la v0.5.0). **Falta**: compilar `OBD2Desk.exe` en Windows desde `v0.6.0`, subirlo y quitar «en breve» de las notas (§8.3, pasos 5-6).
 - Web: textos de la v0.6.0 y capturas rehechas (barra de pestañas con «Ayuda»).
 
+- Después de publicar (2026-11-28, en `main`, **no está en la v0.6.0**): la lista de casillas de grupos de Valores medidos se desplaza con la rueda si no cabe (con los 15 grupos de gasolina el botón «Abrir CSV...» quedaba fuera de la ventana).
+- Web ampliada (2026-11-28): franja de cifras, tabla «Qué puedes hacer con cada cable», sección «Coches y centralitas compatibles» (21 módulos, 50 PIDs y grupos de los 3 motores, sacados de las tablas del programa), filas «Diésel y gasolina VAG» y «Manual dentro del programa» con capturas nuevas (`panel-gasolina`, `valores-gasolina`, `ayuda`, hechas por `web/capturas.py`) y «Novedades por versión». **Al sacar una versión, añadir su bloque en `#novedades` de las dos páginas.**
+
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py`, `.venv/bin/python tests/prueba_idioma.py`, `xvfb-run -a .venv/bin/python tests/prueba_gui.py` y `OBD2DESK_IDIOMA=en xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO» (las dos de GUI una detrás de otra: a la vez chocan en el nombre del CSV).

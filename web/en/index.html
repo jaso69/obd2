@@ -33,7 +33,9 @@
       <a href="#ia">AI assistant</a>
       <a href="#hardware">Which cable</a>
       <a href="#descargar">Download</a>
+      <a href="#compatibles">Compatibility</a>
       <a href="#guia">Guide</a>
+      <a href="#novedades">What's new</a>
       <a href="#faq">Troubleshooting</a>
       <a class="idioma" href="../" hreflang="es" lang="es" data-idioma="es" title="Español">ES</a>
       <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
@@ -62,7 +64,7 @@
     <div class="tres">
       <div class="tarjeta">
         <h3>Older VAG cars via KKL</h3>
-        <p>Speaks <strong>KW1281</strong>, the protocol used by SEAT, VW, Audi and Skoda up to ~2004, which a regular OBD2 reader does not understand. Designed for the 1.9 TDI with EDC15, and it <strong>scans every module</strong> (engine, ABS, airbag, instrument cluster…) in one go.</p>
+        <p>Speaks <strong>KW1281</strong>, the protocol used by SEAT, VW, Audi and Skoda up to ~2004, which a regular OBD2 reader does not understand. With the measuring blocks of distributor-pump and unit-injector TDIs and of petrol engines, and it <strong>scans every module</strong> (engine, ABS, airbag, instrument cluster…) in one go.</p>
       </div>
       <div class="tarjeta">
         <h3>Any OBD2 car with an ELM327</h3>
@@ -73,6 +75,7 @@
         <p>Describe the symptom: the AI <strong>reads the fault codes and values itself</strong>, asks you to start the engine or rev it, and gives you a reasoned diagnosis.</p>
       </div>
     </div>
+    <ul class="cifras"><li><strong>21</strong><span>VAG control units via KKL cable</span></li><li><strong>631</strong><span>described VAG fault codes</span></li><li><strong>50</strong><span>live OBD2 values</span></li><li><strong>36</strong><span>named VAG measuring blocks for 3 engine types</span></li><li><strong>3</strong><span>AI providers</span></li><li><strong>2</strong><span>languages: English and Spanish</span></li></ul>
   </div>
 </section>
 
@@ -88,6 +91,7 @@
         <div class="selector" role="tablist" data-grupo="panel">
           <button role="tab" aria-selected="true" data-img="../img/en/panel-kkl.webp" data-alt="Dashboard in KKL mode with boost and air mass">KKL · VAG</button>
           <button role="tab" aria-selected="false" data-img="../img/en/panel-obd.webp" data-alt="Dashboard in OBD2 mode with RPM, speed, coolant and load">ELM327 · OBD2</button>
+          <button role="tab" aria-selected="false" data-img="../img/en/panel-gasolina.webp" data-alt="Dashboard of a petrol VAG via KKL: RPM, load, temperatures, timing and throttle">KKL · petrol</button>
         </div>
       </div>
       <figure class="captura"><a href="../img/en/panel-kkl.webp" class="ampliar" data-grupo="panel"><img src="../img/en/panel-kkl.webp" width="2015" height="1200" loading="lazy" alt="Dashboard in KKL mode with boost and air mass"></a></figure>
@@ -152,6 +156,33 @@
       <figure class="captura"><a href="../img/en/vehiculo-kkl.webp" class="ampliar" data-grupo="vehiculo"><img src="../img/en/vehiculo-kkl.webp" width="2015" height="1200" loading="lazy" alt="Engine control unit identification"></a></figure>
     </div>
 
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>VAG diesel and petrol <span class="nuevo">New</span></h3>
+        <p>Every VAG control unit gives its measured values in blocks of four, and what each field means depends on the engine. OBD2Desk includes the usual blocks of <strong>three engine types</strong>, with the name of every value:</p>
+        <ul class="lista-ok">
+          <li><strong>TDI distributor pump</strong> (Bosch EDC15V, like the 90 and 110 hp 1.9 TDI): injection, boost, MAF and EGR, start of injection, quantity limits.</li>
+          <li><strong>TDI unit injector</strong> (PD): also injection time, the status and switching of each unit injector, and the pedals.</li>
+          <li><strong>Petrol</strong>: load, ignition and timing, knock per cylinder, lambda probes, mixture adaptation and boost.</li>
+        </ul>
+        <p>When you connect, the program recognises the engine from the control unit identification and picks it for you. On a petrol engine the Dashboard shows its own gauges and the fuel tab calculates L/100 km and times the 0-100 using the control unit's road speed.</p>
+        <div class="selector" role="tablist" data-grupo="motor">
+          <button role="tab" aria-selected="true" data-img="../img/en/valores-gasolina.webp" data-alt="Measured values of a petrol VAG: blocks 002, 003 and 005 with the engine selector">Measured values</button>
+          <button role="tab" aria-selected="false" data-img="../img/en/panel-gasolina.webp" data-alt="Dashboard of a petrol VAG via KKL">Dashboard</button>
+        </div>
+      </div>
+      <figure class="captura"><a href="../img/en/valores-gasolina.webp" class="ampliar" data-grupo="motor"><img src="../img/en/valores-gasolina.webp" width="2015" height="1200" loading="lazy" alt="Measured values of a petrol VAG: blocks 002, 003 and 005 with the engine selector"></a></figure>
+    </div>
+
+    <div class="fila-funcion invertida">
+      <div class="texto-funcion">
+        <h3>Built-in manual <span class="nuevo">New</span></h3>
+        <p>The <em>Help</em> tab explains every part of the program: which cable to use and how to connect it, what each tab shows, how fuel consumption is calculated, what the AI assistant does with your data and where recordings, reports and history are saved.</p>
+        <p>It is in English and Spanish, like the rest of the program, and works offline.</p>
+      </div>
+      <figure class="captura"><a href="../img/en/ayuda.webp" class="ampliar"><img src="../img/en/ayuda.webp" width="2015" height="1200" loading="lazy" alt="Help tab with the section index and the manual"></a></figure>
+    </div>
+
     <ul class="extras">
       <li><span class="nuevo">New</span> <strong>Built-in help</strong>: a tab with the manual for every part of the program.</li>
       <li><strong>Built-in simulator</strong>: try everything without a car by choosing the port “Simulator (no car)”.</li>
@@ -166,7 +197,37 @@
 </section>
 
 <!-- ============ AI ============ -->
-<section id="ia" class="seccion seccion-alterna">
+<!-- ============ EACH CABLE ============ -->
+<section id="cables" class="seccion seccion-alterna">
+  <div class="contenedor">
+    <h2>What you can do with each cable</h2>
+    <p class="intro">The KKL cable speaks the proprietary protocol of older VAG cars and reaches all their control units; the ELM327 speaks OBD2, the emissions standard every modern car has. This is what OBD2Desk does with each one.</p>
+    <div class="tabla-scroll">
+    <table class="tabla tabla-cables">
+      <thead><tr><th>Feature</th><th>KKL cable · VAG KW1281</th><th>ELM327 · OBD2</th></tr></thead>
+      <tbody>
+        <tr><td>Read and clear fault codes</td><td class="si">✓ <span>5-digit VAG codes, with fault type and intermittent flag</span></td><td class="si">✓ <span>stored, pending and permanent; VAG P1 codes described</span></td></tr>
+        <tr><td>Scan every control unit</td><td class="si">✓ <span>21 addresses: engine, ABS, airbag, instrument cluster, comfort…</span></td><td class="no">—</td></tr>
+        <tr><td>Freeze frame data</td><td class="no">—</td><td class="si">✓</td></tr>
+        <tr><td>Readiness monitors (emissions test)</td><td class="no">—</td><td class="si">✓</td></tr>
+        <tr><td>Identification</td><td class="si">✓ <span>control unit part number, software and coding</span></td><td class="si">✓ <span>decoded VIN, calibration (CALID/CVN) and voltage</span></td></tr>
+        <tr><td>Dashboard with gauges and charts</td><td class="si">✓ <span>TDI and petrol</span></td><td class="si">✓</td></tr>
+        <tr><td>Measured values in a table and graph</td><td class="si">✓ <span>blocks, named for the engine</span></td><td class="si">✓ <span>up to 50 PIDs, those the car supports</span></td></tr>
+        <tr><td>CSV logging and recording viewer</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Trip fuel consumption</td><td class="si">✓ <span>TDI in L/h; petrol in L/100 km</span></td><td class="si">✓ <span>L/100 km</span></td></tr>
+        <tr><td>0-100 km/h timer</td><td class="si">✓ <span>petrol (the TDI does not report road speed)</span></td><td class="si">✓</td></tr>
+        <tr><td>History of each car</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Report to print or save as PDF</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>AI assistant with guided diagnosis</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Simulator to try it without a car</td><td class="si">✓</td><td class="si">✓</td></tr>
+        <tr><td>Adaptations, coding, output tests</td><td class="no">—</td><td class="no">—</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section id="ia" class="seccion">
   <div class="contenedor">
     <h2>✦ AI assistant: guided diagnosis</h2>
     <p class="intro">Not a chatbot that guesses: the assistant uses the program to test its hypotheses against your car's data.</p>
@@ -182,9 +243,9 @@
     <ul class="extras extras-ia">
       <li><strong>Read the fault codes</strong> from the control unit, with freeze frame data and monitors on OBD2.</li>
       <li><strong>Read live values</strong> (boost pressure, air mass, temperatures…), once or several times in a row to see how they change, for example during a rev.</li>
-      <li><span class="nuevo">New</span> <strong>Record values</strong> for up to 2 minutes (for example, while the engine warms up) and analyse the minimum, average and maximum. The recording is saved as a CSV you can open yourself in the viewer.</li>
-      <li><span class="nuevo">New</span> <strong>Check the car's history</strong>: which fault codes are new, which came back after clearing and which have been there for a long time.</li>
-      <li><span class="nuevo">New</span> <strong>Generate the report</strong> with its diagnosis included, ready to print or save as PDF and take to the workshop.</li>
+      <li><strong>Record values</strong> for up to 2 minutes (for example, while the engine warms up) and analyse the minimum, average and maximum. The recording is saved as a CSV you can open yourself in the viewer.</li>
+      <li><strong>Check the car's history</strong>: which fault codes are new, which came back after clearing and which have been there for a long time.</li>
+      <li><strong>Generate the report</strong> with its diagnosis included, ready to print or save as PDF and take to the workshop.</li>
       <li><strong>Ask you to do something</strong> (start the engine, hold 2500 rpm, look at a hose) and wait until you have done it.</li>
       <li><strong>Clear the fault codes</strong>, always with your confirmation, and check which ones come back.</li>
       <li><strong>Look at the program log</strong> if the connection fails, to tell you what is going on.</li>
@@ -221,7 +282,7 @@
 </section>
 
 <!-- ============ HARDWARE ============ -->
-<section id="hardware" class="seccion">
+<section id="hardware" class="seccion seccion-alterna">
   <div class="contenedor">
     <h2>Which cable you need</h2>
     <p class="intro">It depends on the car. If it is a VAG car from before 2004 (especially diesels), you almost certainly need the KKL cable: many of them don't answer generic OBD2 even though they have the connector.</p>
@@ -287,6 +348,40 @@
 </section>
 
 <!-- ============ DOWNLOAD ============ -->
+<!-- ============ COMPATIBILITY ============ -->
+<section id="compatibles" class="seccion">
+  <div class="contenedor">
+    <h2>Compatible cars and control units</h2>
+    <p class="intro">Everything below comes straight from the program's own tables.</p>
+    <div class="dos">
+      <div class="tarjeta tarjeta-grande">
+        <p class="etiqueta">KKL cable · KW1281</p>
+        <h3>SEAT, Volkswagen, Audi and Skoda up to ~2004</h3>
+        <p>VAG cars using the KW1281 protocol, especially those built before OBD2 became mandatory for diesels. If a control unit speaks the newer protocol (KWP2000), the program detects it and tells you: use an ELM327 then.</p>
+        <p><strong>The 21 control units it can read and scan:</strong></p>
+        <ul class="modulos"><li><code>01</code> Engine electronics</li><li><code>02</code> Automatic gearbox</li><li><code>03</code> ABS</li><li><code>08</code> Climatronic</li><li><code>09</code> Central electronics</li><li><code>21</code> Airbag</li><li><code>22</code> Steering column</li><li><code>23</code> Instrument cluster</li><li><code>25</code> Gateway (data bus)</li><li><code>34</code> All-wheel drive (Haldex)</li><li><code>37</code> Immobiliser</li><li><code>53</code> Central locking</li><li><code>54</code> Driver seat memory</li><li><code>55</code> Navigation</li><li><code>69</code> Alarm / interior monitoring</li><li><code>70</code> Central comfort module</li><li><code>85</code> Headlights (range / xenon)</li><li><code>86</code> Radio</li><li><code>101</code> Tyre pressure</li><li><code>118</code> Parking aid</li><li><code>119</code> Telephone</li></ul>
+      </div>
+      <div class="tarjeta tarjeta-grande">
+        <p class="etiqueta">ELM327 · OBD2 / EOBD</p>
+        <h3>Any make with OBD2</h3>
+        <p>In Europe, petrol cars from 2001 and diesels from 2003-2004; in the USA, from 1996. It finds the protocol by itself (CAN, KWP2000, ISO 9141 or J1850, depending on the adapter) and, if that fails, tries the K-line ones one by one.</p>
+        <ul class="lista-ok">
+          <li>The 107 most common generic (P0) fault codes with their description, plus the <strong>538 VAG P1 codes</strong> if the VIN belongs to a SEAT, VW, Audi or Skoda.</li>
+          <li>Decoded VIN for 64 manufacturers, with the model for VAG cars.</li>
+        </ul>
+        <details class="grupos"><summary>The 50 OBD2 values it can read</summary><ul class="modulos"><li>Engine load</li><li>Coolant temp.</li><li>Short-term fuel trim B1</li><li>Long-term fuel trim B1</li><li>Short-term fuel trim B2</li><li>Long-term fuel trim B2</li><li>Fuel pressure</li><li>Manifold pressure (MAP)</li><li>Engine speed</li><li>Speed</li><li>Ignition advance</li><li>Intake air temp.</li><li>Air flow (MAF)</li><li>Throttle position</li><li>O2 sensor B1S1</li><li>O2 sensor B1S2</li><li>O2 sensor B1S3</li><li>O2 sensor B1S4</li><li>O2 sensor B2S1</li><li>O2 sensor B2S2</li><li>Time since start</li><li>Distance with MIL on</li><li>Rail pressure (rel. vacuum)</li><li>Fuel rail pressure</li><li>Lambda sensor B1S1 (wideband)</li><li>Commanded EGR</li><li>EGR error</li><li>Commanded EVAP purge</li><li>Fuel level</li><li>Warm-ups since codes cleared</li><li>Distance since codes cleared</li><li>Barometric pressure</li><li>Lambda sensor B1S1 (current)</li><li>Catalyst temp. B1S1</li><li>Catalyst temp. B2S1</li><li>Control module voltage</li><li>Absolute load</li><li>Commanded lambda</li><li>Relative throttle</li><li>Ambient temp.</li><li>Absolute throttle B</li><li>Accelerator pedal D</li><li>Accelerator pedal E</li><li>Commanded throttle actuator</li><li>Time with MIL on</li><li>Time since codes cleared</li><li>Ethanol in fuel</li><li>Relative accelerator pedal</li><li>Oil temp.</li><li>Fuel consumption</li></ul></details>
+      </div>
+    </div>
+    <h3 class="titulo-bloque">VAG measuring blocks by engine type</h3>
+    <p>For guidance: the names may vary between control units. The program calculates the units with the formula sent by the control unit itself, so blocks that are not on the list can be read as well.</p>
+    <div class="motores">
+        <details class="grupos"><summary>TDI distributor pump (EDC15V) · 9 blocks</summary><table class="tabla"><thead><tr><th>Block</th><th>What it shows</th></tr></thead><tbody><tr><td>001</td><td><strong>Injection</strong><br>RPM · Injected quantity · Quantity adjuster voltage · Coolant temp.</td></tr><tr><td>002</td><td><strong>Accelerator</strong><br>RPM · Accelerator pedal · Operating state · Coolant temp.</td></tr><tr><td>003</td><td><strong>EGR / MAF</strong><br>RPM · Specified air mass · Actual air mass · EGR valve duty cycle</td></tr><tr><td>004</td><td><strong>Start of injection</strong><br>RPM · Specified start of injection · Actual start of injection · Valve duty cycle</td></tr><tr><td>007</td><td><strong>Temperatures</strong><br>Fuel temp. · Value 2 · Value 3 · Coolant temp.</td></tr><tr><td>008</td><td><strong>Quantity limitation</strong><br>RPM · Requested quantity · Limitation by RPM · Limitation by air mass</td></tr><tr><td>010</td><td><strong>Air / pressures</strong><br>Air mass · Atmospheric pressure · Manifold pressure · Accelerator pedal</td></tr><tr><td>011</td><td><strong>Turbo</strong><br>RPM · Specified boost pressure · Actual boost pressure · N75 duty cycle</td></tr><tr><td>013</td><td><strong>Smooth running (cylinders)</strong><br>Cylinder 1 · Cylinder 2 · Cylinder 3 · Cylinder 4</td></tr></tbody></table></details>
+        <details class="grupos"><summary>TDI unit injector (PD) · 12 blocks</summary><table class="tabla"><thead><tr><th>Block</th><th>What it shows</th></tr></thead><tbody><tr><td>001</td><td><strong>Injection</strong><br>RPM · Injected quantity · Specified injection time · Coolant temp.</td></tr><tr><td>002</td><td><strong>Accelerator</strong><br>RPM · Accelerator pedal · Operating state · Coolant temp.</td></tr><tr><td>003</td><td><strong>EGR / MAF</strong><br>RPM · Specified air mass · Actual air mass · EGR valve duty cycle</td></tr><tr><td>004</td><td><strong>Unit injectors</strong><br>RPM · Specified start of injection · Actual injection time · Synchronisation angle</td></tr><tr><td>006</td><td><strong>Pedals and cruise control</strong><br>Speed · Brake and clutch switches · Accelerator pedal · Cruise control</td></tr><tr><td>007</td><td><strong>Temperatures</strong><br>Fuel temp. · Value 2 · Intake manifold temp. · Coolant temp.</td></tr><tr><td>008</td><td><strong>Quantity limitation</strong><br>RPM · Requested quantity · Limitation during gear change · Smoke limitation</td></tr><tr><td>010</td><td><strong>Air / pressures</strong><br>Air mass · Atmospheric pressure · Manifold pressure · Accelerator pedal</td></tr><tr><td>011</td><td><strong>Turbo</strong><br>RPM · Specified boost pressure · Actual boost pressure · N75 duty cycle</td></tr><tr><td>013</td><td><strong>Smooth running (cylinders)</strong><br>Cylinder 1 · Cylinder 2 · Cylinder 3 · Cylinder 4</td></tr><tr><td>018</td><td><strong>Unit injector status</strong><br>Injector 1 · Injector 2 · Injector 3 · Injector 4</td></tr><tr><td>023</td><td><strong>Unit injector switching time</strong><br>Cylinder 1 · Cylinder 2 · Cylinder 3 · Cylinder 4</td></tr></tbody></table></details>
+        <details class="grupos"><summary>Petrol (standard groups) · 15 blocks</summary><table class="tabla"><thead><tr><th>Block</th><th>What it shows</th></tr></thead><tbody><tr><td>001</td><td><strong>General data</strong><br>RPM · Coolant temp. · Lambda control · Basic setting conditions (or lambda bank 2)</td></tr><tr><td>002</td><td><strong>Load and injection</strong><br>RPM · Load · Mean injection time · Air mass (or manifold pressure)</td></tr><tr><td>003</td><td><strong>Air and ignition</strong><br>RPM · Air mass (or manifold pressure) · Throttle angle · Ignition timing</td></tr><tr><td>004</td><td><strong>Voltage and temperatures</strong><br>RPM · Voltage · Coolant temp. · Intake air temp.</td></tr><tr><td>005</td><td><strong>Operating state</strong><br>RPM · Load · Speed · Operating state</td></tr><tr><td>010</td><td><strong>Ignition</strong><br>RPM · Load · Throttle angle · Ignition timing</td></tr><tr><td>011</td><td><strong>Ignition and temperatures</strong><br>RPM · Coolant temp. · Intake air temp. · Ignition timing</td></tr><tr><td>020</td><td><strong>Knock: ignition retard</strong><br>Cylinder 1 · Cylinder 2 · Cylinder 3 · Cylinder 4</td></tr><tr><td>022</td><td><strong>Knock: cylinders 1 and 2</strong><br>RPM · Load · Retard cylinder 1 · Retard cylinder 2</td></tr><tr><td>023</td><td><strong>Knock: cylinders 3 and 4</strong><br>RPM · Load · Retard cylinder 3 · Retard cylinder 4</td></tr><tr><td>031</td><td><strong>Oxygen sensors</strong><br>Bank 1, sensor 1 · Bank 1, sensor 2 · Bank 2, sensor 1 · Bank 2, sensor 2</td></tr><tr><td>032</td><td><strong>Mixture adaptation</strong><br>Bank 1, idle · Bank 1, part load · Bank 2, idle · Bank 2, part load</td></tr><tr><td>033</td><td><strong>Lambda control</strong><br>Lambda control bank 1 · Sensor voltage bank 1 · Lambda control bank 2 · Sensor voltage bank 2</td></tr><tr><td>115</td><td><strong>Turbo</strong><br>RPM · Load · Specified boost pressure · Actual boost pressure</td></tr><tr><td>118</td><td><strong>Boost: valve and temperature</strong><br>RPM · Intake air temp. · Boost control valve duty cycle · Pressure before throttle</td></tr></tbody></table></details>
+    </div>
+  </div>
+</section>
+
 <section id="descargar" class="seccion seccion-alterna">
   <div class="contenedor">
     <h2>Download and install</h2>
@@ -333,21 +428,10 @@ sudo usermod -aG dialout $USER</code></pre>
         <li><span>4</span><div><h3>Watch the values</h3><p><em>Dashboard</em> for a quick look; <em>Measured values</em> to pick blocks or PIDs, graph them and record a CSV; <em>Fuel &amp; 0-100</em> for the trip.</p></div></li>
         <li><span>5</span><div><h3>Ask the AI for help</h3><p>In <em>✦ AI assistant</em>, save your key, describe the problem and let it run the checks.</p></div></li>
       </ol>
-      <div>
-        <h3>Useful blocks on the 1.9 TDI (EDC15)</h3>
-        <table class="tabla">
-          <thead><tr><th>Block</th><th>What it shows</th></tr></thead>
-          <tbody>
-            <tr><td>001</td><td>RPM, injected quantity (mg/stroke), quantity adjuster voltage, coolant temperature</td></tr>
-            <tr><td>003</td><td>RPM, specified and actual air mass, EGR valve duty cycle → MAF and EGR</td></tr>
-            <tr><td>004</td><td>Specified and actual start of injection (rotary pump)</td></tr>
-            <tr><td>008</td><td>Requested quantity and limits by RPM and by air mass</td></tr>
-            <tr><td>010</td><td>Air mass, atmospheric pressure, intake manifold pressure, pedal</td></tr>
-            <tr><td>011</td><td>RPM, specified and actual boost pressure (mbar), N75 duty cycle → turbo</td></tr>
-            <tr><td>013</td><td>Smooth running per cylinder (if supported)</td></tr>
-          </tbody>
-        </table>
-        <p class="aclaracion">For guidance only: names may vary by engine. The program computes the units with the formula sent by the control unit itself.</p>
+      <div class="tarjeta">
+        <h3>Which blocks should I look at?</h3>
+        <p>In <em>Measured values</em>, choose your engine type under <em>Engine</em> and tick the blocks. To start with: <strong>001</strong> (injection) and <strong>011</strong> (boost) on a TDI, and <strong>002</strong> (load) and <strong>003</strong> (air and ignition) on a petrol engine.</p>
+        <p>The full list for every engine is in <a href="#compatibles">Compatible cars and control units</a>.</p>
       </div>
     </div>
   </div>
@@ -383,7 +467,62 @@ sudo usermod -aG dialout $USER</code></pre>
 </section>
 
 <!-- ============ STATUS ============ -->
-<section id="estado" class="seccion">
+<!-- ============ WHAT'S NEW ============ -->
+<section id="novedades" class="seccion">
+  <div class="contenedor contenedor-estrecho">
+    <h2>What's new in each version</h2>
+    <p class="intro">What has been added to OBD2Desk over time. Full details of every version are on <a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.</p>
+    <div class="version">
+      <h3>v0.6.0 <span>28 November 2026</span></h3>
+      <ul>
+        <li><strong>Help</strong> tab with the manual for every part of the program.</li>
+        <li><strong>538 VAG P1 fault codes</strong> described (previously 21), also when read with an ELM327 on a VAG car.</li>
+        <li><strong>Engine selector</strong> in Measured values: TDI distributor pump, TDI unit injector or petrol, with the usual blocks and the name of every value. Chosen automatically when you connect.</li>
+        <li><strong>Petrol VAG via KKL</strong>: its own Dashboard, consumption in L/100 km, distance and 0-100 timer.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.5.0 <span>27 November 2026</span></h3>
+      <ul>
+        <li><strong>Fuel &amp; 0-100</strong> tab: instant and average consumption, litres, distance and a 0-100 km/h timer with the 50 km/h split.</li>
+        <li><strong>Live graph</strong> of any value and a <strong>CSV viewer</strong> with zoom and minimum, average and maximum.</li>
+        <li><strong>History of each car</strong>: which fault codes are new, which are gone and which keep coming back.</li>
+        <li>The AI assistant can <strong>record values</strong>, <strong>check the history</strong> and <strong>generate the report</strong>.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.4.0 <span>27 November 2026</span></h3>
+      <ul>
+        <li>Toledo Diagnosis is renamed <strong>OBD2Desk</strong>.</li>
+        <li>Interface, report and fault code descriptions <strong>in English</strong>; the AI assistant answers in the chosen language.</li>
+        <li>Your settings, API keys included, are kept when you upgrade.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.3.0 <span>22 November 2026</span></h3>
+      <ul>
+        <li><strong>Scan of every VAG module</strong> and a much larger VAG fault code table.</li>
+        <li>On OBD2: <strong>freeze frame data</strong>, permanent codes, <strong>readiness monitors</strong>, decoded VIN and calibration.</li>
+        <li><strong>Diagnostic report</strong> to print or save as PDF, <strong>WiFi ELM327</strong> and new version notice.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.2.0 <span>22 November 2026</span></h3>
+      <ul>
+        <li><strong>Linux version</strong> (Ubuntu, Debian, Mint, Fedora, openSUSE, Arch).</li>
+        <li>ELM327: tries the K-line protocols of pre-CAN cars one by one.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.1.0 <span>21 November 2026</span></h3>
+      <ul>
+        <li>First version: KKL cable for VAG and ELM327 for OBD2, Dashboard, measured values with CSV logging, AI assistant and simulator.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="estado" class="seccion seccion-alterna">
   <div class="contenedor contenedor-estrecho">
     <h2>Project status</h2>
     <p>OBD2Desk is under active development. Here is what has been verified and what remains to be covered in the current version:</p>
