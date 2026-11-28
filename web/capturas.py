@@ -89,6 +89,9 @@ def capturar(nombre, ventana=None):
     subprocess.run(["import", "-window", "root", "-crop", f"{w}x{h}+{x}+{y}", "+repage", png], check=True)
     destino = os.path.join(SALIDA, nombre + ".webp")
     subprocess.run(["magick", png, "-quality", "88", destino], check=True)
+    # versión de 1000 px para pantallas pequeñas (srcset de la web)
+    subprocess.run(["magick", png, "-resize", "1000x", "-quality", "85",
+                    os.path.join(SALIDA, nombre + "-1000.webp")], check=True)
     print(f"  {destino} ({os.path.getsize(destino) // 1024} KB)")
 
 

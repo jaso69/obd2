@@ -14,7 +14,7 @@ git clone -q "$REPO" "$TMP/web"
 cd "$TMP/web"
 git rm -rq --ignore-unmatch .            # todo fuera; se copia la web encima
 cd - >/dev/null
-tar -c --exclude=capturas.py --exclude=generar_averias.py --exclude=publicar.sh --exclude=indexnow.sh --exclude=__pycache__ . | tar -x -C "$TMP/web"
+tar -c --exclude='*.py' --exclude=publicar.sh --exclude=indexnow.sh --exclude=__pycache__ . | tar -x -C "$TMP/web"
 cd "$TMP/web"
 git add -A
 if git diff --cached --quiet; then

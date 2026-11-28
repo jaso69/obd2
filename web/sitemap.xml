@@ -144,4 +144,52 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/averias-vag/p18xx/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/vag-fault-codes/p18xx/"/>
   </url>
+  <url>
+    <loc>https://www.obd2desk.com/guias/</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/"/>
+  </url>
+  <url>
+    <loc>https://www.obd2desk.com/en/guides/</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/"/>
+  </url>
+  <url>
+    <loc>https://www.obd2desk.com/guias/cable-kkl/</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/cable-kkl/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/kkl-cable/"/>
+  </url>
+  <url>
+    <loc>https://www.obd2desk.com/en/guides/kkl-cable/</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/cable-kkl/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/kkl-cable/"/>
+  </url>
+  <url>
+    <loc>https://www.obd2desk.com/guias/elm327-bluetooth-wifi/</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/elm327-bluetooth-wifi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/elm327-bluetooth-wifi/"/>
+  </url>
+  <url>
+    <loc>https://www.obd2desk.com/en/guides/elm327-bluetooth-wifi/</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/elm327-bluetooth-wifi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/elm327-bluetooth-wifi/"/>
+  </url>
+  <url>
+    <loc>https://www.obd2desk.com/guias/grupos-1-9-tdi/</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/grupos-1-9-tdi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/"/>
+  </url>
+  <url>
+    <loc>https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/</loc>
+    <lastmod>2026-11-28</lastmod>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/grupos-1-9-tdi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/"/>
+  </url>
 </urlset>

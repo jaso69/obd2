@@ -1,11 +1,13 @@
 """
-Genera las páginas de códigos de avería VAG de la web a partir de las tablas del programa
-(vag_datos.py, vag_p1.py, obd_datos.py y las traducciones de textos_en.py), en español
-(web/averias-vag/) y en inglés (web/en/vag-fault-codes/), su índice para el buscador
-(codigos.json) y el sitemap.xml completo.
+Genera las páginas secundarias de la web, en español e inglés:
+- códigos de avería VAG (/averias-vag/, /en/vag-fault-codes/) a partir de las tablas del programa
+  (vag_datos.py, vag_p1.py, obd_datos.py y las traducciones de textos_en.py), con su índice para
+  el buscador (codigos.json);
+- guías (/guias/, /en/guides/), con el texto de guias.py;
+- la página 404 (404.html) y el sitemap.xml completo.
 
-Uso: python3 web/generar_averias.py   (volver a ejecutarlo si cambian las tablas)
-No se publica (lo excluye publicar.sh).
+Uso: python3 web/generar_paginas.py   (volver a ejecutarlo si cambian las tablas o las guías)
+No se publica (publicar.sh excluye los .py).
 """
 import html
 import json
@@ -20,6 +22,7 @@ import obd_datos  # noqa: E402
 import vag_datos  # noqa: E402
 import vag_p1  # noqa: E402
 from textos_en import EN  # noqa: E402
+from guias import GUIAS  # noqa: E402
 
 DOMINIO = "https://www.obd2desk.com"
 FECHA = "2026-11-28"
@@ -154,6 +157,12 @@ L = {
         pie_licencia='<strong>OBD2Desk</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.',
         pie_legal="Proyecto independiente, sin relación con SEAT, Volkswagen Group ni Bosch. Las marcas pertenecen a sus propietarios. La información se ofrece tal cual, sin garantía; para reparar, sigue el manual de taller.",
         tabla_region="Tabla de códigos",
+        guias="/guias/", nav_guias="Guías",
+        guias_titulo="Guías de diagnóstico", guias_title="Guías de diagnóstico del coche: cable KKL, ELM327 y 1.9 TDI · OBD2Desk",
+        guias_desc="Guías prácticas para diagnosticar tu coche desde el portátil: qué cable KKL comprar para VAG, cómo conectar un ELM327 Bluetooth o WiFi y qué grupos mirar en un 1.9 TDI.",
+        guias_intro="Guías prácticas para diagnosticar tu coche desde el portátil, escritas a partir de lo que hemos aprendido desarrollando y probando OBD2Desk.",
+        guias_codigos="¿Buscas qué significa un código? Mira la <a href=\"/averias-vag/\">lista de códigos de avería VAG</a>.",
+        grupo="Grupo", muestra="Qué muestra",
     ),
     "en": dict(
         base="/en/vag-fault-codes/", inicio="/en/", otro="es", otro_nombre="Español", otro_corto="ES",
@@ -179,6 +188,12 @@ L = {
         pie_licencia='<strong>OBD2Desk</strong> is free software under the <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">MIT license</a>. Source code at <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.',
         pie_legal="Independent project, not affiliated with Volkswagen Group, SEAT or Bosch. Trademarks belong to their owners. Information is provided as is, without warranty; to repair, follow the workshop manual.",
         tabla_region="Code table",
+        guias="/en/guides/", nav_guias="Guides",
+        guias_titulo="Diagnostic guides", guias_title="Car diagnostic guides: KKL cable, ELM327 and 1.9 TDI · OBD2Desk",
+        guias_desc="Practical guides to diagnose your car from a laptop: which KKL cable to buy for VAG cars, how to connect a Bluetooth or WiFi ELM327 and which groups to check on a 1.9 TDI.",
+        guias_intro="Practical guides to diagnose your car from a laptop, written from what we have learned building and testing OBD2Desk.",
+        guias_codigos="Looking up what a code means? See the <a href=\"/en/vag-fault-codes/\">list of VAG fault codes</a>.",
+        grupo="Group", muestra="What it shows",
     ),
 }
 
@@ -190,16 +205,22 @@ def url_fam(lang, f):
 # ---------------------------------------------------------------------------
 # Plantilla
 # ---------------------------------------------------------------------------
-def pagina(lang, ruta, ruta_otro, title, desc, migas, cuerpo):
+def pagina(lang, ruta, ruta_otro, title, desc, migas, cuerpo, articulo=None):
     t = L[lang]
     ld = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
         {"@type": "ListItem", "position": i + 1, "name": n, "item": DOMINIO + u} for i, (n, u) in enumerate(migas)]}
+    if articulo:
+        ld = [ld, {"@context": "https://schema.org", "@type": "TechArticle", "headline": articulo, "inLanguage": lang,
+                   "description": desc, "url": DOMINIO + ruta, "dateModified": FECHA,
+                   "author": {"@type": "Organization", "name": "OBD2Desk", "url": DOMINIO + "/"},
+                   "publisher": {"@type": "Organization", "name": "OBD2Desk", "url": DOMINIO + "/"}}]
     es_url, en_url = (ruta, ruta_otro) if lang == "es" else (ruta_otro, ruta)
     migas_html = " <span aria-hidden=\"true\">›</span> ".join(
         f'<a href="{u}">{e(n)}</a>' if i < len(migas) - 1 else f'<span aria-current="page">{e(n)}</span>'
         for i, (n, u) in enumerate(migas))
     nav = "\n      ".join(f'<a href="{u}">{e(n)}</a>' for u, n in t["nav_links"])
     actual = ' aria-current="page"' if ruta == t["base"] else ""
+    actual_g = ' aria-current="page"' if ruta == t["guias"] else ""
     return f"""<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -238,6 +259,7 @@ def pagina(lang, ruta, ruta_otro, title, desc, migas, cuerpo):
     <nav id="menu" class="menu" aria-label="{t['nav']}">
       {nav}
       <a href="{t['base']}"{actual}>{t['nav_averias']}</a>
+      <a href="{t['guias']}"{actual_g}>{t['nav_guias']}</a>
       <a class="idioma" href="{ruta_otro}" hreflang="{t['otro']}" lang="{t['otro']}" data-idioma="{t['otro']}" title="{t['otro_nombre']}">{t['otro_corto']}</a>
       <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
     </nav>
@@ -410,6 +432,110 @@ def escribir(ruta_web, contenido):
         fh.write(contenido)
 
 
+def url_guia(lang, g):
+    return L[lang]["guias"] + g["slug_" + lang] + "/"
+
+
+def tabla_grupos(lang, grupos, nombre):
+    t = L[lang]
+    tr_ = (lambda s: s) if lang == "es" else en
+    filas = "\n".join(
+        f'<tr><th scope="row">{n:03d}</th><td><strong>{e(tr_(titulo))}</strong><br>{" · ".join(e(tr_(c)) for c in campos)}</td></tr>'
+        for n, (titulo, campos) in sorted(grupos.items()))
+    return (f'<div class="tabla-scroll" tabindex="0" role="region" aria-label="{e(nombre)}">'
+            f'<table class="tabla tabla-codigos"><thead><tr><th scope="col">{t["grupo"]}</th><th scope="col">{t["muestra"]}</th></tr></thead>'
+            f'<tbody>\n{filas}\n</tbody></table></div>')
+
+
+def guias(lang):
+    """Escribe las guías y su índice; devuelve las parejas de URL (es, en) para el sitemap."""
+    t = L[lang]
+    otro = "en" if lang == "es" else "es"
+    urls = []
+    for g in GUIAS:
+        cuerpo = g[lang]
+        cuerpo = cuerpo.replace("{GRUPOS_EDC15}", tabla_grupos(lang, vag_datos.GRUPOS_EDC15, "TDI EDC15V"))
+        cuerpo = cuerpo.replace("{GRUPOS_PD}", tabla_grupos(lang, vag_datos.GRUPOS_PD, "TDI PD"))
+        for otra in GUIAS:
+            cuerpo = cuerpo.replace("{guia:" + otra["slug_es"] + "}", url_guia(lang, otra))
+        assert "{" not in cuerpo, (g["slug_es"], cuerpo[cuerpo.index("{"):][:40])
+        mas = "".join(f'<li><a href="{url_guia(lang, o)}">{e(o["h1_" + lang])}</a></li>' for o in GUIAS if o is not g)
+        cuerpo = f"""<article>
+<h1>{e(g['h1_' + lang])}</h1>
+{cuerpo}
+<p class="aclaracion">{t['guias_codigos']}</p>
+</article>
+{descarga(lang)}
+<section aria-labelledby="mas-h"><h2 id="mas-h">{t['nav_guias']}</h2><ul class="lista-familias">{mas}</ul></section>"""
+        ruta = url_guia(lang, g)
+        escribir(ruta, pagina(lang, ruta, url_guia(otro, g), g["title_" + lang], g["desc_" + lang],
+                              [(t["migas_inicio"], t["inicio"]), (t["nav_guias"], t["guias"]), (g["corto_" + lang], ruta)],
+                              cuerpo, articulo=g["h1_" + lang]))
+        urls.append((url_guia("es", g), url_guia("en", g)))
+    tarjetas = "\n".join(
+        f'<li class="tarjeta"><a href="{url_guia(lang, g)}"><strong>{e(g["h1_" + lang])}</strong></a><span>{e(g["resumen_" + lang])}</span></li>'
+        for g in GUIAS)
+    cuerpo = f"""<h1>{t['guias_titulo']}</h1>
+<p class="intro">{t['guias_intro']}</p>
+<ul class="familias">
+{tarjetas}
+</ul>
+<p class="aclaracion">{t['guias_codigos']}</p>
+{descarga(lang)}"""
+    escribir(t["guias"], pagina(lang, t["guias"], L[otro]["guias"], t["guias_title"], t["guias_desc"],
+                                [(t["migas_inicio"], t["inicio"]), (t["nav_guias"], t["guias"])], cuerpo))
+    return [(L["es"]["guias"], L["en"]["guias"])] + urls
+
+
+def pagina_404():
+    """404.html bilingüe (Vercel la sirve para cualquier ruta que no exista)."""
+    contenido = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página no encontrada · Page not found · OBD2Desk</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#111418">
+<link rel="icon" type="image/png" href="/img/icono.png">
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="/"><img src="/img/icono.png" alt="" width="32" height="32"> OBD2Desk</a>
+  </div>
+</header>
+<main id="contenido">
+<div class="contenedor contenedor-codigos pagina-404">
+<p class="etiqueta">Error 404</p>
+<h1>Esta página no existe</h1>
+<p class="intro">Puede que el enlace esté mal escrito o que la página se haya movido.</p>
+<ul class="lista-familias">
+<li><a href="/">Página principal de OBD2Desk</a></li>
+<li><a href="/averias-vag/">Códigos de avería VAG</a></li>
+<li><a href="/guias/">Guías de diagnóstico</a></li>
+<li><a href="/#descargar">Descargar el programa</a></li>
+</ul>
+<div lang="en">
+<h2>This page does not exist</h2>
+<p>The link may be mistyped or the page may have moved.</p>
+<ul class="lista-familias">
+<li><a href="/en/">OBD2Desk home page</a></li>
+<li><a href="/en/vag-fault-codes/">VAG fault codes</a></li>
+<li><a href="/en/guides/">Diagnostic guides</a></li>
+<li><a href="/en/#descargar">Download the program</a></li>
+</ul>
+</div>
+</div>
+</main>
+</body>
+</html>
+"""
+    with open(os.path.join(WEB, "404.html"), "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(contenido)
+
+
 def main():
     fams = familias()
     total = sum(len(f["filas"]) for f in fams)
@@ -469,8 +595,12 @@ def main():
         destino = os.path.join(WEB, t["base"].strip("/"), "codigos.json")
         with open(destino, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(datos, fh, ensure_ascii=False, separators=(",", ":"))
+    for lang in ("es", "en"):
+        pares_guias = guias(lang)
+    pagina_404()
     urls.append((L["es"]["base"], L["en"]["base"]))
     urls += [(url_fam("es", f), url_fam("en", f)) for f in fams]
+    urls += pares_guias
     # sitemap completo
     entradas = []
     for es_u, en_u in urls:
@@ -484,7 +614,8 @@ def main():
     with open(os.path.join(WEB, "sitemap.xml"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
                  'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' + "\n".join(entradas) + "\n</urlset>\n")
-    print(f"{total} códigos en {len(fams)} listas, español e inglés; sitemap con {len(urls) * 2} URL.")
+    print(f"{total} códigos en {len(fams)} listas, {len(GUIAS)} guías, español e inglés, 404.html; "
+          f"sitemap con {len(urls) * 2} URL.")
 
 
 if __name__ == "__main__":

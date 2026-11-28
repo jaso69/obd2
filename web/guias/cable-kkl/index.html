@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cable KKL 409.1 para VAG: cómo elegir uno que funcione (FTDI o CH340) · OBD2Desk</title>
+<meta name="description" content="Qué cable KKL VAG-COM 409.1 comprar para diagnosticar SEAT, VW, Audi y Skoda anteriores a 2004 (KW1281): chip FTDI o CH340, cómo comprobarlo, interruptor de 4 posiciones y qué hacer si no conecta.">
+<meta name="theme-color" content="#111418">
+<link rel="icon" type="image/png" href="/img/icono.png">
+<link rel="apple-touch-icon" href="/img/icono.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OBD2Desk">
+<meta property="og:title" content="Cable KKL 409.1 para VAG: cómo elegir uno que funcione (FTDI o CH340) · OBD2Desk">
+<meta property="og:description" content="Qué cable KKL VAG-COM 409.1 comprar para diagnosticar SEAT, VW, Audi y Skoda anteriores a 2004 (KW1281): chip FTDI o CH340, cómo comprobarlo, interruptor de 4 posiciones y qué hacer si no conecta.">
+<meta property="og:image" content="https://www.obd2desk.com/img/og.jpg">
+<meta property="og:url" content="https://www.obd2desk.com/guias/cable-kkl/">
+<meta property="og:locale" content="es_ES">
+<link rel="canonical" href="https://www.obd2desk.com/guias/cable-kkl/">
+<link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/cable-kkl/">
+<link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/kkl-cable/">
+<link rel="alternate" hreflang="x-default" href="https://www.obd2desk.com/guias/cable-kkl/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+[{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://www.obd2desk.com/"}, {"@type": "ListItem", "position": 2, "name": "Guías", "item": "https://www.obd2desk.com/guias/"}, {"@type": "ListItem", "position": 3, "name": "Cable KKL 409.1", "item": "https://www.obd2desk.com/guias/cable-kkl/"}]}, {"@context": "https://schema.org", "@type": "TechArticle", "headline": "Cable KKL 409.1 para VAG: cómo elegir uno que funcione", "inLanguage": "es", "description": "Qué cable KKL VAG-COM 409.1 comprar para diagnosticar SEAT, VW, Audi y Skoda anteriores a 2004 (KW1281): chip FTDI o CH340, cómo comprobarlo, interruptor de 4 posiciones y qué hacer si no conecta.", "url": "https://www.obd2desk.com/guias/cable-kkl/", "dateModified": "2026-11-28", "author": {"@type": "Organization", "name": "OBD2Desk", "url": "https://www.obd2desk.com/"}, "publisher": {"@type": "Organization", "name": "OBD2Desk", "url": "https://www.obd2desk.com/"}}]
+</script>
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="/"><img src="/img/icono.png" alt="" width="32" height="32"> OBD2Desk</a>
+    <button class="menu-boton" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">☰</button>
+    <nav id="menu" class="menu" aria-label="Principal">
+      <a href="/#funciones">Funciones</a>
+      <a href="/#hardware">Qué cable</a>
+      <a href="/#descargar">Descargar</a>
+      <a href="/averias-vag/">Averías VAG</a>
+      <a href="/guias/">Guías</a>
+      <a class="idioma" href="/en/guides/kkl-cable/" hreflang="en" lang="en" data-idioma="en" title="English">EN</a>
+      <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenido">
+<div class="contenedor contenedor-codigos">
+<nav class="migas" aria-label="Ruta"><a href="/">Inicio</a> <span aria-hidden="true">›</span> <a href="/guias/">Guías</a> <span aria-hidden="true">›</span> <span aria-current="page">Cable KKL 409.1</span></nav>
+<article>
+<h1>Cable KKL 409.1 para VAG: cómo elegir uno que funcione</h1>
+
+<p class="intro">Para diagnosticar un SEAT, Volkswagen, Audi o Skoda de antes de ~2004 hace falta un <strong>cable KKL</strong> (también llamado «VAG-COM 409.1»). Es un adaptador USB barato, de unos 10-20 €, pero no todos funcionan: lo que importa es el chip que llevan dentro.</p>
+
+<h2>Para qué sirve y por qué no vale un ELM327</h2>
+<p>Los VAG antiguos hablan <strong>KW1281</strong>, el protocolo propio del grupo, por la <strong>línea K</strong> (pin 7 del conector de diagnóstico). Es muy distinto del OBD2: el ordenador tiene que despertar la centralita enviando su dirección a 5 baudios y, después, confirmar cada byte que recibe devolviendo su complemento, con tiempos de unos pocos milisegundos.</p>
+<p>Un <strong>ELM327</strong> no puede hacer esa confirmación byte a byte, así que no sirve para KW1281. El cable KKL, en cambio, solo convierte la línea K en un puerto serie y deja que el programa haga todo el protocolo. Por eso con él se entra en <strong>todas las centralitas</strong>: motor, cambio, ABS, airbag, cuadro, confort, radio…</p>
+
+<h2>¿Lo necesito?</h2>
+<ul class="lista-ok">
+<li>Si tu VAG es <strong>anterior a 2004</strong>, sobre todo si es <strong>diésel</strong>: en Europa el EOBD fue obligatorio en gasolina desde 2001 y en diésel desde 2003-2004. Un 1.9 TDI del año 2000 tiene el conector de 16 pines, pero normalmente no responde a un lector OBD2.</li>
+<li>Si un ELM327 te dice que «el vehículo no responde a OBD2» con el contacto puesto.</li>
+<li>Si quieres entrar en centralitas que el OBD2 no ve (ABS, airbag, cuadro, confort) o hacer test de actuadores, ajustes básicos, adaptación o codificación.</li>
+</ul>
+
+<h2>El chip es lo que importa: FTDI sí, CH340 no</h2>
+<p>El arranque a 5 baudios exige controlar con precisión la señal <em>break</em> del puerto serie. Los chips <strong>FTDI FT232RL o FT232RQ</strong> lo hacen bien; los <strong>CH340/CH341</strong> y los <strong>PL2303</strong>, no: el cable aparece en el sistema, pero la centralita no contesta.</p>
+<p>Cómo saber qué chip lleva el tuyo:</p>
+<ul class="lista-ok">
+<li><strong>Windows</strong>: <em>Administrador de dispositivos → Puertos (COM y LPT) → el puerto del cable → Propiedades → Detalles → Id. de hardware</em>. <code>VID_0403&amp;PID_6001</code> es FTDI; <code>VID_1A86</code> es CH340; <code>VID_067B</code> es PL2303.</li>
+<li><strong>Linux</strong>: ejecuta <code>lsusb</code> con el cable enchufado. <code>0403:6001 Future Technology Devices</code> es FTDI; <code>1a86:7523</code> es CH340.</li>
+</ul>
+<p>Al comprar, busca «KKL 409.1 FTDI» o «FT232RL» en la descripción, y desconfía de los que no dicen el chip.</p>
+
+<h2>FTDI falsos</h2>
+<p>Muchos cables baratos llevan chips FTDI falsificados. Algunos drivers oficiales los detectan y los dejan inservibles: el puerto aparece, pero no comunica. Suele arreglarse instalando un driver de FTDI anterior. Si puedes, compra en una tienda que acepte devoluciones.</p>
+
+<h2>Cables con interruptor de 4 posiciones</h2>
+<p>Los cables «KKL 409.1 + Fiat ECU Scan» traen un interruptor de 4 posiciones que cambia a qué pines del conector va la línea K. Valen para VAG en la <strong>posición 1</strong> (línea K al pin 7). Si no responde, prueba las demás.</p>
+
+<h2>Lo que no sirve</h2>
+<ul class="lista-no">
+<li>Los <strong>ELM327 con interruptor HS-CAN/MS-CAN</strong>: son para Ford (FORScan); su chip USB va al ELM327, no a la línea K.</li>
+<li>El <strong>«VAG K+CAN Commander»</strong>: está pensado para inmovilizador y llaves, y su parte de línea K no está garantizada. No lo recomendamos.</li>
+<li>No existe un cable KKL inalámbrico de serie: Bluetooth y WiFi añaden demasiado retraso para los tiempos del KW1281.</li>
+</ul>
+
+<h2>Configurarlo</h2>
+<ul class="lista-ok">
+<li><strong>Windows</strong>: el driver lo instala Windows Update. Pon la latencia a 1 ms en <em>Administrador de dispositivos → Puertos → USB Serial Port → Propiedades → Configuración de puerto → Opciones avanzadas → Temporizador de latencia</em>. Evita que la sesión se corte. Hay que hacerlo en cada ordenador.</li>
+<li><strong>Linux</strong>: no hace falta driver y OBD2Desk ajusta la latencia solo. Tu usuario debe estar en el grupo del puerto: <code>sudo usermod -aG dialout $USER</code> (en Arch, <code>uucp</code>) y volver a iniciar sesión. En Ubuntu y Mint, si el cable no aparece como <code>/dev/ttyUSB0</code>, quita el lector braille: <code>sudo apt remove brltty</code>.</li>
+</ul>
+
+<h2>Si no conecta</h2>
+<ul class="lista-ok">
+<li><strong>Contacto puesto</strong> (para leer averías basta con el motor parado) y el puerto correcto elegido en el programa.</li>
+<li><strong>«Sin byte de sincronismo 0x55»</strong>: la centralita no ha contestado. Revisa el chip, el interruptor y el driver. Una <strong>radio no original</strong> puede bloquear la línea K: desconéctala para probar.</li>
+<li><strong>«Keywords KWP2000»</strong>: esa centralita no habla KW1281 sino KWP2000, más moderno. Usa un ELM327 en modo OBD2.</li>
+<li>Prueba antes el programa con el puerto «Simulador (sin coche)» para descartar que el problema sea del ordenador.</li>
+</ul>
+
+<p class="aclaracion">¿Buscas qué significa un código? Mira la <a href="/averias-vag/">lista de códigos de avería VAG</a>.</p>
+</article>
+<section class="tarjeta tarjeta-grande descarga-codigos" aria-labelledby="descarga-h">
+  <h2 id="descarga-h">Lee y borra estas averías con OBD2Desk</h2>
+  <p>OBD2Desk es un programa gratuito y de código abierto para Windows y Linux. Con un cable KKL lee las averías de los VAG antiguos (KW1281) de todas las centralitas; con un ELM327, las de cualquier coche OBD2, y describe los P1 de VAG si el VIN es de SEAT, VW, Audi o Skoda.</p>
+  <div class="botones botones-izq">
+    <a class="boton boton-principal" href="/#descargar">Descargar OBD2Desk</a>
+    <a class="boton boton-secundario" href="/#funciones">Ver qué hace</a>
+  </div>
+</section>
+<section aria-labelledby="mas-h"><h2 id="mas-h">Guías</h2><ul class="lista-familias"><li><a href="/guias/elm327-bluetooth-wifi/">Conectar un ELM327 Bluetooth o WiFi al portátil</a></li><li><a href="/guias/grupos-1-9-tdi/">Valores medidos del 1.9 TDI: qué grupos mirar</a></li></ul></section>
+</div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p><strong>OBD2Desk</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p class="legal">Proyecto independiente, sin relación con SEAT, Volkswagen Group ni Bosch. Las marcas pertenecen a sus propietarios. La información se ofrece tal cual, sin garantía; para reparar, sigue el manual de taller.</p>
+  </div>
+</footer>
+
+<script src="/averias.js"></script>
+</body>
+</html>

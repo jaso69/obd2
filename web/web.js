@@ -36,8 +36,10 @@ document.querySelectorAll(".selector").forEach((sel) => {
     b.addEventListener("click", () => {
       sel.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
       enlace.href = b.dataset.img;
-      enlace.querySelector("img").src = b.dataset.img;
-      enlace.querySelector("img").alt = b.dataset.alt;
+      const img = enlace.querySelector("img");
+      if (img.srcset) img.srcset = `${b.dataset.img.replace(/\.webp$/, "-1000.webp")} 1000w, ${b.dataset.img} ${img.getAttribute("width")}w`;
+      img.src = b.dataset.img;
+      img.alt = b.dataset.alt;
     });
   });
 });

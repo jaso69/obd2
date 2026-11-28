@@ -292,3 +292,6 @@ details.grupos .tabla td:first-child { color: var(--acento); font-family: var(--
 .descarga-codigos { margin-top: 48px; }
 .descarga-codigos h2 { margin-top: 0; }
 .botones-izq { justify-content: flex-start; margin: 18px 0 0; }
+.pagina-404 { min-height: 60vh; }
+.pagina-404 h1 { margin-top: 4px; }
+article h3 { margin-top: 24px; }

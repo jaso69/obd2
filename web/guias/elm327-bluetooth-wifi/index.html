@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conectar un ELM327 Bluetooth o WiFi al portátil (Windows y Linux) · OBD2Desk</title>
+<meta name="description" content="Paso a paso para conectar un adaptador OBD2 ELM327 Bluetooth o WiFi a un portátil con Windows 10/11 o Linux: emparejar, encontrar el puerto COM o /dev/rfcomm0 y solucionar problemas.">
+<meta name="theme-color" content="#111418">
+<link rel="icon" type="image/png" href="/img/icono.png">
+<link rel="apple-touch-icon" href="/img/icono.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OBD2Desk">
+<meta property="og:title" content="Conectar un ELM327 Bluetooth o WiFi al portátil (Windows y Linux) · OBD2Desk">
+<meta property="og:description" content="Paso a paso para conectar un adaptador OBD2 ELM327 Bluetooth o WiFi a un portátil con Windows 10/11 o Linux: emparejar, encontrar el puerto COM o /dev/rfcomm0 y solucionar problemas.">
+<meta property="og:image" content="https://www.obd2desk.com/img/og.jpg">
+<meta property="og:url" content="https://www.obd2desk.com/guias/elm327-bluetooth-wifi/">
+<meta property="og:locale" content="es_ES">
+<link rel="canonical" href="https://www.obd2desk.com/guias/elm327-bluetooth-wifi/">
+<link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/elm327-bluetooth-wifi/">
+<link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/elm327-bluetooth-wifi/">
+<link rel="alternate" hreflang="x-default" href="https://www.obd2desk.com/guias/elm327-bluetooth-wifi/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+[{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://www.obd2desk.com/"}, {"@type": "ListItem", "position": 2, "name": "Guías", "item": "https://www.obd2desk.com/guias/"}, {"@type": "ListItem", "position": 3, "name": "ELM327 Bluetooth y WiFi", "item": "https://www.obd2desk.com/guias/elm327-bluetooth-wifi/"}]}, {"@context": "https://schema.org", "@type": "TechArticle", "headline": "Conectar un ELM327 Bluetooth o WiFi al portátil", "inLanguage": "es", "description": "Paso a paso para conectar un adaptador OBD2 ELM327 Bluetooth o WiFi a un portátil con Windows 10/11 o Linux: emparejar, encontrar el puerto COM o /dev/rfcomm0 y solucionar problemas.", "url": "https://www.obd2desk.com/guias/elm327-bluetooth-wifi/", "dateModified": "2026-11-28", "author": {"@type": "Organization", "name": "OBD2Desk", "url": "https://www.obd2desk.com/"}, "publisher": {"@type": "Organization", "name": "OBD2Desk", "url": "https://www.obd2desk.com/"}}]
+</script>
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="/"><img src="/img/icono.png" alt="" width="32" height="32"> OBD2Desk</a>
+    <button class="menu-boton" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">☰</button>
+    <nav id="menu" class="menu" aria-label="Principal">
+      <a href="/#funciones">Funciones</a>
+      <a href="/#hardware">Qué cable</a>
+      <a href="/#descargar">Descargar</a>
+      <a href="/averias-vag/">Averías VAG</a>
+      <a href="/guias/">Guías</a>
+      <a class="idioma" href="/en/guides/elm327-bluetooth-wifi/" hreflang="en" lang="en" data-idioma="en" title="English">EN</a>
+      <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenido">
+<div class="contenedor contenedor-codigos">
+<nav class="migas" aria-label="Ruta"><a href="/">Inicio</a> <span aria-hidden="true">›</span> <a href="/guias/">Guías</a> <span aria-hidden="true">›</span> <span aria-current="page">ELM327 Bluetooth y WiFi</span></nav>
+<article>
+<h1>Conectar un ELM327 Bluetooth o WiFi al portátil</h1>
+
+<p class="intro">Un ELM327 es el adaptador OBD2 más barato y común: sirve para cualquier coche con OBD2/EOBD (en Europa, gasolina desde 2001 y diésel desde 2003-2004). Los hay USB, Bluetooth y WiFi. Esta guía explica cómo conectarlos a un portátil.</p>
+
+<h2>Cómo funciona: un puerto serie sin cable</h2>
+<p>Un ELM327 Bluetooth se comporta como un <strong>cable serie sin cable</strong>. Al emparejarlo, el sistema crea un <strong>puerto serie virtual</strong>: un puerto COM en Windows o <code>/dev/rfcomm0</code> en Linux. El programa habla con ese puerto igual que con un adaptador USB. Por eso en un programa de diagnóstico no se elige «el Bluetooth», sino <strong>ese puerto</strong>.</p>
+<p>Un ELM327 WiFi crea su propia red; el portátil se conecta a ella y el programa habla con el adaptador por una dirección IP y un puerto, casi siempre <code>192.168.0.10:35000</code>.</p>
+
+<h2>Qué tipo comprar</h2>
+<ul class="lista-ok">
+<li><strong>USB</strong>: el más fiable y el más rápido. Aparece directamente como puerto COM o <code>/dev/ttyUSB0</code>.</li>
+<li><strong>Bluetooth clásico</strong> (SPP): cómodo y funciona bien en Windows y Linux.</li>
+<li><strong>WiFi</strong>: funciona, pero mientras estás conectado a su red el portátil se queda sin internet.</li>
+</ul>
+<ul class="lista-no">
+<li>Los <strong>solo BLE</strong> (Bluetooth de bajo consumo, algunos vendidos para iPhone) no crean puerto serie en el ordenador.</li>
+<li>Muchos clones dicen «v2.1» y son versiones antiguas incompletas. Suelen funcionar, pero alguno falla con ciertos coches.</li>
+</ul>
+
+<h2>Windows 10 y 11</h2>
+<ol class="lista-pasos">
+<li>Enchufa el ELM327 al conector OBD y pon el contacto: se enciende su luz.</li>
+<li>Ve a <em>Configuración → Bluetooth y dispositivos → Agregar dispositivo → Bluetooth</em> y elige el adaptador. Suele llamarse <strong>OBDII</strong>, <strong>OBD2</strong> o <strong>V-LINK</strong>. Si pide PIN, prueba <code>1234</code>, <code>0000</code> o <code>6789</code>.</li>
+<li>Mira qué puerto le ha dado: <em>Más opciones de Bluetooth → pestaña Puertos COM</em>, el de dirección <strong>Saliente</strong> (por ejemplo, COM5). También aparece en <em>Administrador de dispositivos → Puertos (COM y LPT)</em> como «Vínculo serie estándar a través de Bluetooth».</li>
+<li>En el programa, elige ese puerto y pulsa Conectar.</li>
+</ol>
+<p>Es normal que Windows lo muestre como «Emparejado» y no como «Conectado»: la conexión se abre cuando el programa abre el puerto. Windows suele crear <strong>dos puertos COM</strong>; si uno no responde, prueba el otro.</p>
+
+<h2>Linux</h2>
+<ol class="lista-pasos">
+<li>Enchufa el ELM327 y pon el contacto.</li>
+<li>Empareja desde los ajustes de Bluetooth del escritorio o en un terminal con <code>bluetoothctl</code>: <code>scan on</code>, y cuando aparezca, <code>pair AA:BB:CC:DD:EE:FF</code> y <code>trust AA:BB:CC:DD:EE:FF</code> (la MAC es la que sale al buscar).</li>
+<li>Linux no crea el puerto serie solo. Créalo con <code>sudo rfcomm bind 0 AA:BB:CC:DD:EE:FF</code> y tendrás <code>/dev/rfcomm0</code>. Hay que repetirlo después de reiniciar.</li>
+<li>Tu usuario necesita permiso para usar puertos serie: <code>sudo usermod -aG dialout $USER</code> (en Arch, <code>uucp</code>) y volver a iniciar sesión.</li>
+<li>En el programa, elige <code>/dev/rfcomm0</code> y pulsa Conectar.</li>
+</ol>
+<p>Si no tienes el comando <code>rfcomm</code>: en Fedora está en el paquete <code>bluez-deprecated</code>; en Arch, en <code>bluez-deprecated-tools</code>. En Debian, Ubuntu y Mint ya viene con <code>bluez</code>.</p>
+
+<h2>ELM327 WiFi</h2>
+<ol class="lista-pasos">
+<li>Enchufa el adaptador y pon el contacto. Crea una red WiFi llamada, por ejemplo, «WiFi_OBDII», «OBDII» o «V-LINK».</li>
+<li>Conecta el portátil a esa red.</li>
+<li>En OBD2Desk, elige el puerto «WiFi · 192.168.0.10:35000». Si tu adaptador usa otra dirección (por ejemplo, 192.168.1.10), escríbela con el formato <code>ip:puerto</code>.</li>
+</ol>
+<p>Mientras estés en la red del adaptador no tendrás internet, así que el asistente de IA no funcionará a la vez.</p>
+
+<h2>Si no responde</h2>
+<ul class="lista-ok">
+<li><strong>Solo admite una conexión a la vez.</strong> Si lo has usado con el móvil (Torque, Car Scanner…), cierra esa app o apaga el Bluetooth del móvil.</li>
+<li><strong>«El vehículo no responde a OBD2»</strong>: pon el contacto. Si es un VAG anterior a 2004, probablemente no tenga OBD2 genérico y necesites un <a href="/guias/cable-kkl/">cable KKL</a>.</li>
+<li><strong>Coches anteriores a CAN</strong> (hasta ~2005-2007): hablan OBD2 por la línea K y la búsqueda automática del ELM327 a veces falla. OBD2Desk prueba después KWP2000 e ISO 9141 uno a uno; tarda hasta un minuto.</li>
+<li>Si nada funciona, el adaptador puede ser un clon que no maneja bien la línea K. Con uno USB de calidad se descarta.</li>
+</ul>
+
+<p class="aclaracion">¿Buscas qué significa un código? Mira la <a href="/averias-vag/">lista de códigos de avería VAG</a>.</p>
+</article>
+<section class="tarjeta tarjeta-grande descarga-codigos" aria-labelledby="descarga-h">
+  <h2 id="descarga-h">Lee y borra estas averías con OBD2Desk</h2>
+  <p>OBD2Desk es un programa gratuito y de código abierto para Windows y Linux. Con un cable KKL lee las averías de los VAG antiguos (KW1281) de todas las centralitas; con un ELM327, las de cualquier coche OBD2, y describe los P1 de VAG si el VIN es de SEAT, VW, Audi o Skoda.</p>
+  <div class="botones botones-izq">
+    <a class="boton boton-principal" href="/#descargar">Descargar OBD2Desk</a>
+    <a class="boton boton-secundario" href="/#funciones">Ver qué hace</a>
+  </div>
+</section>
+<section aria-labelledby="mas-h"><h2 id="mas-h">Guías</h2><ul class="lista-familias"><li><a href="/guias/cable-kkl/">Cable KKL 409.1 para VAG: cómo elegir uno que funcione</a></li><li><a href="/guias/grupos-1-9-tdi/">Valores medidos del 1.9 TDI: qué grupos mirar</a></li></ul></section>
+</div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p><strong>OBD2Desk</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p class="legal">Proyecto independiente, sin relación con SEAT, Volkswagen Group ni Bosch. Las marcas pertenecen a sus propietarios. La información se ofrece tal cual, sin garantía; para reparar, sigue el manual de taller.</p>
+  </div>
+</footer>
+
+<script src="/averias.js"></script>
+</body>
+</html>

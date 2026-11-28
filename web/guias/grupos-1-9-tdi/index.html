@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Valores medidos del 1.9 TDI: qué grupos mirar (EDC15 e inyector-bomba) · OBD2Desk</title>
+<meta name="description" content="Qué muestra cada grupo de valores medidos del 1.9 TDI de bomba rotativa (Bosch EDC15V) e inyector-bomba, y cuáles mirar según el síntoma: falta de potencia, humo negro, tirones o arranque difícil.">
+<meta name="theme-color" content="#111418">
+<link rel="icon" type="image/png" href="/img/icono.png">
+<link rel="apple-touch-icon" href="/img/icono.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OBD2Desk">
+<meta property="og:title" content="Valores medidos del 1.9 TDI: qué grupos mirar (EDC15 e inyector-bomba) · OBD2Desk">
+<meta property="og:description" content="Qué muestra cada grupo de valores medidos del 1.9 TDI de bomba rotativa (Bosch EDC15V) e inyector-bomba, y cuáles mirar según el síntoma: falta de potencia, humo negro, tirones o arranque difícil.">
+<meta property="og:image" content="https://www.obd2desk.com/img/og.jpg">
+<meta property="og:url" content="https://www.obd2desk.com/guias/grupos-1-9-tdi/">
+<meta property="og:locale" content="es_ES">
+<link rel="canonical" href="https://www.obd2desk.com/guias/grupos-1-9-tdi/">
+<link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/grupos-1-9-tdi/">
+<link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/">
+<link rel="alternate" hreflang="x-default" href="https://www.obd2desk.com/guias/grupos-1-9-tdi/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+[{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://www.obd2desk.com/"}, {"@type": "ListItem", "position": 2, "name": "Guías", "item": "https://www.obd2desk.com/guias/"}, {"@type": "ListItem", "position": 3, "name": "Valores medidos del 1.9 TDI", "item": "https://www.obd2desk.com/guias/grupos-1-9-tdi/"}]}, {"@context": "https://schema.org", "@type": "TechArticle", "headline": "Valores medidos del 1.9 TDI: qué grupos mirar", "inLanguage": "es", "description": "Qué muestra cada grupo de valores medidos del 1.9 TDI de bomba rotativa (Bosch EDC15V) e inyector-bomba, y cuáles mirar según el síntoma: falta de potencia, humo negro, tirones o arranque difícil.", "url": "https://www.obd2desk.com/guias/grupos-1-9-tdi/", "dateModified": "2026-11-28", "author": {"@type": "Organization", "name": "OBD2Desk", "url": "https://www.obd2desk.com/"}, "publisher": {"@type": "Organization", "name": "OBD2Desk", "url": "https://www.obd2desk.com/"}}]
+</script>
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="/"><img src="/img/icono.png" alt="" width="32" height="32"> OBD2Desk</a>
+    <button class="menu-boton" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">☰</button>
+    <nav id="menu" class="menu" aria-label="Principal">
+      <a href="/#funciones">Funciones</a>
+      <a href="/#hardware">Qué cable</a>
+      <a href="/#descargar">Descargar</a>
+      <a href="/averias-vag/">Averías VAG</a>
+      <a href="/guias/">Guías</a>
+      <a class="idioma" href="/en/guides/1-9-tdi-measuring-blocks/" hreflang="en" lang="en" data-idioma="en" title="English">EN</a>
+      <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenido">
+<div class="contenedor contenedor-codigos">
+<nav class="migas" aria-label="Ruta"><a href="/">Inicio</a> <span aria-hidden="true">›</span> <a href="/guias/">Guías</a> <span aria-hidden="true">›</span> <span aria-current="page">Valores medidos del 1.9 TDI</span></nav>
+<article>
+<h1>Valores medidos del 1.9 TDI: qué grupos mirar</h1>
+
+<p class="intro">La centralita de un 1.9 TDI da sus datos en <strong>grupos de valores medidos</strong>: cada grupo es un número de 3 cifras con cuatro casillas. Saber qué grupo mirar ahorra mucho tiempo: muchas averías se ven comparando un valor <strong>teórico</strong> (lo que la centralita pide) con el <strong>real</strong> (lo que mide).</p>
+
+<h2>Bomba rotativa o inyector-bomba</h2>
+<p>Lo que significa cada casilla depende del motor:</p>
+<ul class="lista-ok">
+<li><strong>Bomba rotativa</strong> con centralita <strong>Bosch EDC15V</strong>: los 1.9 TDI de 90 y 110 CV de finales de los 90 y principios de los 2000 (por ejemplo, ALH, AGR, AHF y ASV).</li>
+<li><strong>Inyector-bomba</strong> (PD, «Pumpe-Düse»), con EDC15P o EDC16: los TDI posteriores, como el ARL de 150 CV. En lugar de una bomba hay un inyector-bomba por cilindro.</li>
+</ul>
+<p>OBD2Desk reconoce el motor por la identificación de la centralita y elige solo los nombres correctos. Los nombres son orientativos y pueden variar según la versión; las unidades las calcula el programa con la fórmula que envía la propia centralita.</p>
+
+<h2>Grupos del TDI de bomba rotativa (EDC15V)</h2>
+<div class="tabla-scroll" tabindex="0" role="region" aria-label="TDI EDC15V"><table class="tabla tabla-codigos"><thead><tr><th scope="col">Grupo</th><th scope="col">Qué muestra</th></tr></thead><tbody>
+<tr><th scope="row">001</th><td><strong>Inyección</strong><br>Régimen · Caudal inyectado · Tensión dosificador/émbolo · Temp. refrigerante</td></tr>
+<tr><th scope="row">002</th><td><strong>Acelerador</strong><br>Régimen · Pedal acelerador · Estado de funcionamiento · Temp. refrigerante</td></tr>
+<tr><th scope="row">003</th><td><strong>EGR / caudalímetro</strong><br>Régimen · Masa aire teórica · Masa aire real · Ciclo válvula EGR</td></tr>
+<tr><th scope="row">004</th><td><strong>Comienzo de inyección</strong><br>Régimen · Comienzo inyección teórico · Comienzo inyección real · Ciclo válvula</td></tr>
+<tr><th scope="row">007</th><td><strong>Temperaturas</strong><br>Temp. combustible · Valor 2 · Valor 3 · Temp. refrigerante</td></tr>
+<tr><th scope="row">008</th><td><strong>Limitación de caudal</strong><br>Régimen · Caudal solicitado · Limitación por régimen · Limitación por masa aire</td></tr>
+<tr><th scope="row">010</th><td><strong>Aire / presiones</strong><br>Masa de aire · Presión atmosférica · Presión colector · Pedal acelerador</td></tr>
+<tr><th scope="row">011</th><td><strong>Turbo</strong><br>Régimen · Presión sobrealim. teórica · Presión sobrealim. real · Ciclo N75</td></tr>
+<tr><th scope="row">013</th><td><strong>Marcha suave (cilindros)</strong><br>Cilindro 1 · Cilindro 2 · Cilindro 3 · Cilindro 4</td></tr>
+</tbody></table></div>
+
+<h2>Grupos del TDI inyector-bomba (PD)</h2>
+<div class="tabla-scroll" tabindex="0" role="region" aria-label="TDI PD"><table class="tabla tabla-codigos"><thead><tr><th scope="col">Grupo</th><th scope="col">Qué muestra</th></tr></thead><tbody>
+<tr><th scope="row">001</th><td><strong>Inyección</strong><br>Régimen · Caudal inyectado · Tiempo de inyección teórico · Temp. refrigerante</td></tr>
+<tr><th scope="row">002</th><td><strong>Acelerador</strong><br>Régimen · Pedal acelerador · Estado de funcionamiento · Temp. refrigerante</td></tr>
+<tr><th scope="row">003</th><td><strong>EGR / caudalímetro</strong><br>Régimen · Masa aire teórica · Masa aire real · Ciclo válvula EGR</td></tr>
+<tr><th scope="row">004</th><td><strong>Inyectores-bomba</strong><br>Régimen · Comienzo inyección teórico · Tiempo de inyección real · Ángulo de sincronización</td></tr>
+<tr><th scope="row">006</th><td><strong>Pedales y regulador de velocidad</strong><br>Velocidad · Interruptores de freno y embrague · Pedal acelerador · Regulador de velocidad</td></tr>
+<tr><th scope="row">007</th><td><strong>Temperaturas</strong><br>Temp. combustible · Valor 2 · Temp. colector de admisión · Temp. refrigerante</td></tr>
+<tr><th scope="row">008</th><td><strong>Limitación de caudal</strong><br>Régimen · Caudal solicitado · Limitación al cambiar de marcha · Limitación por humos</td></tr>
+<tr><th scope="row">010</th><td><strong>Aire / presiones</strong><br>Masa de aire · Presión atmosférica · Presión colector · Pedal acelerador</td></tr>
+<tr><th scope="row">011</th><td><strong>Turbo</strong><br>Régimen · Presión sobrealim. teórica · Presión sobrealim. real · Ciclo N75</td></tr>
+<tr><th scope="row">013</th><td><strong>Marcha suave (cilindros)</strong><br>Cilindro 1 · Cilindro 2 · Cilindro 3 · Cilindro 4</td></tr>
+<tr><th scope="row">018</th><td><strong>Estado de los inyectores-bomba</strong><br>Inyector 1 · Inyector 2 · Inyector 3 · Inyector 4</td></tr>
+<tr><th scope="row">023</th><td><strong>Conmutación de los inyectores-bomba</strong><br>Cilindro 1 · Cilindro 2 · Cilindro 3 · Cilindro 4</td></tr>
+</tbody></table></div>
+
+<h2>Qué grupos mirar según el síntoma</h2>
+<h3>Falta de potencia o modo de emergencia</h3>
+<ul class="lista-ok">
+<li><strong>011 · turbo</strong>: compara la presión de sobrealimentación teórica con la real en plena carga. Si la real no llega a la teórica, busca fugas en los manguitos, la válvula N75 o el varillaje del turbo; si se pasa, el turbo puede estar agarrotado. El ciclo de la N75 dice cuánto está intentando corregir la centralita.</li>
+<li><strong>003 · masa de aire</strong>: si la real queda muy por debajo de la teórica con la EGR cerrada (al acelerar), el caudalímetro puede estar mal.</li>
+<li><strong>008 · limitación de caudal</strong>: dice si la centralita está recortando el gasóleo y por qué (por régimen, por masa de aire o, en los PD, por humos).</li>
+</ul>
+<h3>Humo negro</h3>
+<ul class="lista-ok">
+<li><strong>003</strong>: demasiado poco aire para el gasóleo inyectado. Una EGR que se queda abierta o un caudalímetro que mide de menos dan humo.</li>
+<li><strong>011</strong>: si el turbo no da presión, también falta aire.</li>
+</ul>
+<h3>Tirones, ralentí irregular o vibraciones</h3>
+<ul class="lista-ok">
+<li><strong>013 · marcha suave</strong>: la corrección de caudal de cada cilindro al ralentí. Un cilindro con una desviación mucho mayor que los demás apunta a ese inyector.</li>
+<li>En los PD, <strong>018</strong> y <strong>023</strong> muestran el estado y la conmutación de cada inyector-bomba.</li>
+</ul>
+<h3>Arranque difícil o ruido de inyección</h3>
+<ul class="lista-ok">
+<li><strong>004 · comienzo de inyección</strong> (bomba rotativa): compara el teórico con el real. Si se separan mucho, puede faltar el calado de la bomba, que se hace en ajustes básicos.</li>
+<li><strong>001</strong> y <strong>007</strong>: temperaturas del refrigerante y del combustible. Un transmisor que marca de más o de menos hace que la centralita calcule mal la inyección en frío.</li>
+</ul>
+
+<h2>Cómo leerlos con OBD2Desk</h2>
+<ol class="lista-pasos">
+<li>Conecta con un <a href="/guias/cable-kkl/">cable KKL</a>, contacto puesto o motor en marcha.</li>
+<li>En <em>Valores medidos</em>, comprueba el tipo de motor en <em>Motor</em> y marca los grupos que quieras.</li>
+<li>Haz clic en una fila para verla en la <strong>gráfica en vivo</strong>; con Ctrl+clic comparas hasta cuatro, por ejemplo la presión de turbo teórica y la real.</li>
+<li>Pulsa <strong>Grabar CSV</strong> para guardar una prueba y analizarla después en el visor. Las pruebas en marcha, siempre con un acompañante que maneje el portátil y donde se pueda hacer con seguridad.</li>
+</ol>
+<p>Si algo no cuadra, el asistente de IA del programa puede leer estos grupos por su cuenta y decirte qué mirar.</p>
+
+<p class="aclaracion">¿Buscas qué significa un código? Mira la <a href="/averias-vag/">lista de códigos de avería VAG</a>.</p>
+</article>
+<section class="tarjeta tarjeta-grande descarga-codigos" aria-labelledby="descarga-h">
+  <h2 id="descarga-h">Lee y borra estas averías con OBD2Desk</h2>
+  <p>OBD2Desk es un programa gratuito y de código abierto para Windows y Linux. Con un cable KKL lee las averías de los VAG antiguos (KW1281) de todas las centralitas; con un ELM327, las de cualquier coche OBD2, y describe los P1 de VAG si el VIN es de SEAT, VW, Audi o Skoda.</p>
+  <div class="botones botones-izq">
+    <a class="boton boton-principal" href="/#descargar">Descargar OBD2Desk</a>
+    <a class="boton boton-secundario" href="/#funciones">Ver qué hace</a>
+  </div>
+</section>
+<section aria-labelledby="mas-h"><h2 id="mas-h">Guías</h2><ul class="lista-familias"><li><a href="/guias/cable-kkl/">Cable KKL 409.1 para VAG: cómo elegir uno que funcione</a></li><li><a href="/guias/elm327-bluetooth-wifi/">Conectar un ELM327 Bluetooth o WiFi al portátil</a></li></ul></section>
+</div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p><strong>OBD2Desk</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p class="legal">Proyecto independiente, sin relación con SEAT, Volkswagen Group ni Bosch. Las marcas pertenecen a sus propietarios. La información se ofrece tal cual, sin garantía; para reparar, sigue el manual de taller.</p>
+  </div>
+</footer>
+
+<script src="/averias.js"></script>
+</body>
+</html>

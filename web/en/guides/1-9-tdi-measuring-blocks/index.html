@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1.9 TDI measuring blocks: which groups to check (EDC15 and PD) · OBD2Desk</title>
+<meta name="description" content="What each measuring block of the 1.9 TDI with distributor pump (Bosch EDC15V) and unit injectors (PD) shows, and which to check for each symptom: lack of power, black smoke, hesitation or hard starting.">
+<meta name="theme-color" content="#111418">
+<link rel="icon" type="image/png" href="/img/icono.png">
+<link rel="apple-touch-icon" href="/img/icono.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OBD2Desk">
+<meta property="og:title" content="1.9 TDI measuring blocks: which groups to check (EDC15 and PD) · OBD2Desk">
+<meta property="og:description" content="What each measuring block of the 1.9 TDI with distributor pump (Bosch EDC15V) and unit injectors (PD) shows, and which to check for each symptom: lack of power, black smoke, hesitation or hard starting.">
+<meta property="og:image" content="https://www.obd2desk.com/img/en/og.jpg">
+<meta property="og:url" content="https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/">
+<meta property="og:locale" content="en_US">
+<link rel="canonical" href="https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/">
+<link rel="alternate" hreflang="es" href="https://www.obd2desk.com/guias/grupos-1-9-tdi/">
+<link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/">
+<link rel="alternate" hreflang="x-default" href="https://www.obd2desk.com/guias/grupos-1-9-tdi/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+[{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.obd2desk.com/en/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://www.obd2desk.com/en/guides/"}, {"@type": "ListItem", "position": 3, "name": "1.9 TDI measuring blocks", "item": "https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/"}]}, {"@context": "https://schema.org", "@type": "TechArticle", "headline": "1.9 TDI measuring blocks: which groups to check", "inLanguage": "en", "description": "What each measuring block of the 1.9 TDI with distributor pump (Bosch EDC15V) and unit injectors (PD) shows, and which to check for each symptom: lack of power, black smoke, hesitation or hard starting.", "url": "https://www.obd2desk.com/en/guides/1-9-tdi-measuring-blocks/", "dateModified": "2026-11-28", "author": {"@type": "Organization", "name": "OBD2Desk", "url": "https://www.obd2desk.com/"}, "publisher": {"@type": "Organization", "name": "OBD2Desk", "url": "https://www.obd2desk.com/"}}]
+</script>
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Skip to content</a>
+
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="/en/"><img src="/img/icono.png" alt="" width="32" height="32"> OBD2Desk</a>
+    <button class="menu-boton" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu">☰</button>
+    <nav id="menu" class="menu" aria-label="Main">
+      <a href="/en/#funciones">Features</a>
+      <a href="/en/#hardware">Which cable</a>
+      <a href="/en/#descargar">Download</a>
+      <a href="/en/vag-fault-codes/">VAG fault codes</a>
+      <a href="/en/guides/">Guides</a>
+      <a class="idioma" href="/guias/grupos-1-9-tdi/" hreflang="es" lang="es" data-idioma="es" title="Español">ES</a>
+      <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenido">
+<div class="contenedor contenedor-codigos">
+<nav class="migas" aria-label="Breadcrumb"><a href="/en/">Home</a> <span aria-hidden="true">›</span> <a href="/en/guides/">Guides</a> <span aria-hidden="true">›</span> <span aria-current="page">1.9 TDI measuring blocks</span></nav>
+<article>
+<h1>1.9 TDI measuring blocks: which groups to check</h1>
+
+<p class="intro">A 1.9 TDI control unit gives its data in <strong>measuring blocks</strong> (groups): each group is a 3-digit number with four fields. Knowing which group to check saves a lot of time: many faults show up by comparing a <strong>specified</strong> value (what the control unit asks for) with the <strong>actual</strong> one (what it measures).</p>
+
+<h2>Distributor pump or unit injector</h2>
+<p>What each field means depends on the engine:</p>
+<ul class="lista-ok">
+<li><strong>Distributor pump</strong> with a <strong>Bosch EDC15V</strong> control unit: the 90 and 110 hp 1.9 TDIs of the late 90s and early 2000s (for example ALH, AGR, AHF and ASV).</li>
+<li><strong>Unit injector</strong> (PD, “Pumpe-Düse”), with EDC15P or EDC16: later TDIs such as the 150 hp ARL. Instead of one pump there is a unit injector per cylinder.</li>
+</ul>
+<p>OBD2Desk recognises the engine from the control unit identification and picks the right names itself. The names are for guidance and can vary between versions; the program works out the units with the formula the control unit itself sends.</p>
+
+<h2>TDI distributor pump groups (EDC15V)</h2>
+<div class="tabla-scroll" tabindex="0" role="region" aria-label="TDI EDC15V"><table class="tabla tabla-codigos"><thead><tr><th scope="col">Group</th><th scope="col">What it shows</th></tr></thead><tbody>
+<tr><th scope="row">001</th><td><strong>Injection</strong><br>RPM · Injected quantity · Quantity adjuster voltage · Coolant temp.</td></tr>
+<tr><th scope="row">002</th><td><strong>Accelerator</strong><br>RPM · Accelerator pedal · Operating state · Coolant temp.</td></tr>
+<tr><th scope="row">003</th><td><strong>EGR / MAF</strong><br>RPM · Specified air mass · Actual air mass · EGR valve duty cycle</td></tr>
+<tr><th scope="row">004</th><td><strong>Start of injection</strong><br>RPM · Specified start of injection · Actual start of injection · Valve duty cycle</td></tr>
+<tr><th scope="row">007</th><td><strong>Temperatures</strong><br>Fuel temp. · Value 2 · Value 3 · Coolant temp.</td></tr>
+<tr><th scope="row">008</th><td><strong>Quantity limitation</strong><br>RPM · Requested quantity · Limitation by RPM · Limitation by air mass</td></tr>
+<tr><th scope="row">010</th><td><strong>Air / pressures</strong><br>Air mass · Atmospheric pressure · Manifold pressure · Accelerator pedal</td></tr>
+<tr><th scope="row">011</th><td><strong>Turbo</strong><br>RPM · Specified boost pressure · Actual boost pressure · N75 duty cycle</td></tr>
+<tr><th scope="row">013</th><td><strong>Smooth running (cylinders)</strong><br>Cylinder 1 · Cylinder 2 · Cylinder 3 · Cylinder 4</td></tr>
+</tbody></table></div>
+
+<h2>TDI unit injector groups (PD)</h2>
+<div class="tabla-scroll" tabindex="0" role="region" aria-label="TDI PD"><table class="tabla tabla-codigos"><thead><tr><th scope="col">Group</th><th scope="col">What it shows</th></tr></thead><tbody>
+<tr><th scope="row">001</th><td><strong>Injection</strong><br>RPM · Injected quantity · Specified injection time · Coolant temp.</td></tr>
+<tr><th scope="row">002</th><td><strong>Accelerator</strong><br>RPM · Accelerator pedal · Operating state · Coolant temp.</td></tr>
+<tr><th scope="row">003</th><td><strong>EGR / MAF</strong><br>RPM · Specified air mass · Actual air mass · EGR valve duty cycle</td></tr>
+<tr><th scope="row">004</th><td><strong>Unit injectors</strong><br>RPM · Specified start of injection · Actual injection time · Synchronisation angle</td></tr>
+<tr><th scope="row">006</th><td><strong>Pedals and cruise control</strong><br>Speed · Brake and clutch switches · Accelerator pedal · Cruise control</td></tr>
+<tr><th scope="row">007</th><td><strong>Temperatures</strong><br>Fuel temp. · Value 2 · Intake manifold temp. · Coolant temp.</td></tr>
+<tr><th scope="row">008</th><td><strong>Quantity limitation</strong><br>RPM · Requested quantity · Limitation during gear change · Smoke limitation</td></tr>
+<tr><th scope="row">010</th><td><strong>Air / pressures</strong><br>Air mass · Atmospheric pressure · Manifold pressure · Accelerator pedal</td></tr>
+<tr><th scope="row">011</th><td><strong>Turbo</strong><br>RPM · Specified boost pressure · Actual boost pressure · N75 duty cycle</td></tr>
+<tr><th scope="row">013</th><td><strong>Smooth running (cylinders)</strong><br>Cylinder 1 · Cylinder 2 · Cylinder 3 · Cylinder 4</td></tr>
+<tr><th scope="row">018</th><td><strong>Unit injector status</strong><br>Injector 1 · Injector 2 · Injector 3 · Injector 4</td></tr>
+<tr><th scope="row">023</th><td><strong>Unit injector switching time</strong><br>Cylinder 1 · Cylinder 2 · Cylinder 3 · Cylinder 4</td></tr>
+</tbody></table></div>
+
+<h2>Which groups to check for each symptom</h2>
+<h3>Lack of power or limp mode</h3>
+<ul class="lista-ok">
+<li><strong>011 · turbo</strong>: compare specified and actual boost pressure at full load. If the actual pressure does not reach the specified one, look for leaking hoses, the N75 valve or the turbo linkage; if it overshoots, the turbo may be sticking. The N75 duty cycle tells you how hard the control unit is trying to correct it.</li>
+<li><strong>003 · air mass</strong>: if the actual air mass stays well below the specified one with the EGR closed (when accelerating), the MAF sensor may be faulty.</li>
+<li><strong>008 · fuel quantity limitation</strong>: tells you whether the control unit is cutting fuel and why (engine speed, air mass or, on PD engines, smoke).</li>
+</ul>
+<h3>Black smoke</h3>
+<ul class="lista-ok">
+<li><strong>003</strong>: too little air for the injected fuel. An EGR valve stuck open or a MAF sensor reading low causes smoke.</li>
+<li><strong>011</strong>: if the turbo does not build boost, air is short as well.</li>
+</ul>
+<h3>Hesitation, rough idle or vibration</h3>
+<ul class="lista-ok">
+<li><strong>013 · smooth running</strong>: the fuel correction for each cylinder at idle. One cylinder with a much larger deviation than the others points to that injector.</li>
+<li>On PD engines, <strong>018</strong> and <strong>023</strong> show the status and switching of each unit injector.</li>
+</ul>
+<h3>Hard starting or injection noise</h3>
+<ul class="lista-ok">
+<li><strong>004 · start of injection</strong> (distributor pump): compare specified and actual. If they are far apart, the pump timing may need setting, which is done in basic settings.</li>
+<li><strong>001</strong> and <strong>007</strong>: coolant and fuel temperatures. A sender that reads too high or too low makes the control unit get cold-start injection wrong.</li>
+</ul>
+
+<h2>How to read them with OBD2Desk</h2>
+<ol class="lista-pasos">
+<li>Connect with a <a href="/en/guides/kkl-cable/">KKL cable</a>, ignition on or engine running.</li>
+<li>In <em>Measured values</em>, check the engine type under <em>Engine</em> and tick the groups you want.</li>
+<li>Click a row to see it in the <strong>live graph</strong>; with Ctrl+click you can compare up to four, for example specified and actual boost.</li>
+<li>Click <strong>Record CSV</strong> to save a test and analyse it later in the viewer. Road tests always with a passenger handling the laptop, and only where it is safe.</li>
+</ol>
+<p>If something does not add up, the program's AI assistant can read these groups itself and tell you what to check.</p>
+
+<p class="aclaracion">Looking up what a code means? See the <a href="/en/vag-fault-codes/">list of VAG fault codes</a>.</p>
+</article>
+<section class="tarjeta tarjeta-grande descarga-codigos" aria-labelledby="descarga-h">
+  <h2 id="descarga-h">Read and clear these faults with OBD2Desk</h2>
+  <p>OBD2Desk is a free, open-source program for Windows and Linux. With a KKL cable it reads the fault codes of older VAG cars (KW1281) from every control unit; with an ELM327, those of any OBD2 car, and it describes VAG P1 codes when the VIN is from VW, Audi, SEAT or Skoda.</p>
+  <div class="botones botones-izq">
+    <a class="boton boton-principal" href="/en/#descargar">Download OBD2Desk</a>
+    <a class="boton boton-secundario" href="/en/#funciones">See what it does</a>
+  </div>
+</section>
+<section aria-labelledby="mas-h"><h2 id="mas-h">Guides</h2><ul class="lista-familias"><li><a href="/en/guides/kkl-cable/">KKL 409.1 cable for VAG: how to choose one that works</a></li><li><a href="/en/guides/elm327-bluetooth-wifi/">Connect a Bluetooth or WiFi ELM327 to your laptop</a></li></ul></section>
+</div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p><strong>OBD2Desk</strong> is free software under the <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">MIT license</a>. Source code at <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p class="legal">Independent project, not affiliated with Volkswagen Group, SEAT or Bosch. Trademarks belong to their owners. Information is provided as is, without warranty; to repair, follow the workshop manual.</p>
+  </div>
+</footer>
+
+<script src="/averias.js"></script>
+</body>
+</html>
