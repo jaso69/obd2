@@ -29,7 +29,7 @@ Se llamaba *Toledo Diagnosis* hasta la v0.3.0; desde el 2026-11-27 es **OBD2Desk
 - Paquete Linux para publicar: `./linux/build-portable.sh vX.Y.Z` (contenedor Debian 11 con podman/docker) → `dist/OBD2Desk-vX.Y.Z-linux-x86_64.tar.gz`.
 - Autoprueba IA del ejecutable (sin gastar saldo): `OBD2Desk --autotest-ia salida.txt`.
 - Instalar en Linux: `./linux/instalar.sh`.
-- Web (`web/`, ver `docs/PROYECTO.md` §12): capturas con `xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py` (y `... capturas.py en` para las inglesas); ver en local con `python3 -m http.server -d web 8000`. Se publica en https://obd2desk.com con `./web/publicar.sh` (repo `jaso69/obd2desk`, Vercel). Español en `web/index.html`, inglés en `web/en/index.html`.
+- Web (`web/`, ver `docs/PROYECTO.md` §12): capturas con `xvfb-run -a -s "-screen 0 2400x1500x24 -dpi 144" python3 web/capturas.py` (y `... capturas.py en` para las inglesas); ver en local con `python3 -m http.server -d web 8000`. Se publica en https://obd2desk.com con `./web/publicar.sh` (repo `jaso69/obd2desk`, Vercel). Español en `web/index.html`, inglés en `web/en/index.html`. Páginas de códigos de avería VAG: `python3 web/generar_averias.py` (regenerarlas si cambian las tablas de averías; también rehace `sitemap.xml`).
 
 ## Reglas al trabajar
 - Probar contra los simuladores (y `tests/`) antes de dar algo por hecho; decir claramente qué no se ha podido probar (p. ej. coche real).

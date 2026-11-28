@@ -253,3 +253,42 @@ details.grupos .tabla td:first-child { color: var(--acento); font-family: var(--
 .version li { margin-bottom: 4px; }
 @media (max-width: 900px) { .cifras { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 560px) { .cifras { grid-template-columns: repeat(2, 1fr); } .modulos { columns: 1; } .tabla-cables td:first-child { white-space: normal; } }
+
+/* ---------- Páginas de códigos de avería VAG (generar_averias.py) ---------- */
+.contenedor-codigos { max-width: 980px; padding-top: 28px; padding-bottom: 72px; }
+.contenedor-codigos h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin-top: 12px; }
+.contenedor-codigos h2 { font-size: 1.45rem; margin-top: 44px; }
+.migas { color: var(--suave); font-size: .9rem; }
+.migas a { color: var(--suave); text-decoration: underline; text-underline-offset: 2px; }
+.migas [aria-current] { color: var(--texto); }
+.buscador { background: var(--tarjeta); border: 1px solid var(--tarjeta2); border-radius: var(--radio); padding: 20px 22px; margin: 28px 0 8px; }
+.buscador label { display: block; font-weight: 700; margin-bottom: 8px; }
+.buscador input {
+  width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--suave);
+  background: var(--fondo); color: var(--texto); font: 1.05rem var(--fuente);
+}
+.buscador input::placeholder { color: var(--suave); opacity: 1; }
+.buscador .pequeno { margin: 8px 0 0; }
+.resultados ul { list-style: none; padding: 0; margin: 12px 0 0; }
+.resultados li { border-top: 1px solid var(--tarjeta2); }
+.resultados a { display: block; padding: 8px 2px; color: #c5cbd5; text-decoration: none; }
+.resultados a:hover { background: var(--tarjeta2); }
+.resultados strong { color: var(--acento); font-family: var(--mono); margin-right: 6px; }
+.resultados > p { margin: 12px 0 0; }
+.familias { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.familias li { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; }
+.familias a strong { font-size: 1.1rem; }
+.familias span { color: #c5cbd5; }
+.familias .pequeno { color: var(--suave); }
+.tabla-codigos th[scope="row"] { font-family: var(--mono); font-size: .95rem; text-transform: none; letter-spacing: normal; color: var(--acento); font-weight: 600; white-space: nowrap; text-align: left; padding: 10px; border-bottom: 1px solid var(--tarjeta2); vertical-align: top; }
+.tabla-codigos td:first-of-type { white-space: nowrap; }
+.tabla-codigos tr { scroll-margin-top: 80px; }
+.tabla-codigos tr:target, .tabla-codigos tr.resaltado { background: rgba(255, 122, 41, .14); }
+.tabla.tabla-codigos td:first-child { font-family: inherit; color: #c5cbd5; font-weight: 400; }
+.tabla-codigos td span[id] { font-family: var(--mono); color: var(--texto); scroll-margin-top: 80px; }
+.tabla-tipos { max-width: 620px; }
+.lista-familias { padding-left: 20px; color: #c5cbd5; }
+.lista-familias li { margin-bottom: 6px; }
+.descarga-codigos { margin-top: 48px; }
+.descarga-codigos h2 { margin-top: 0; }
+.botones-izq { justify-content: flex-start; margin: 18px 0 0; }

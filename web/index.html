@@ -136,6 +136,7 @@
         <p>Códigos VAG de 5 cifras con el componente, el tipo de fallo y si es intermitente; también los 16xxx-18xxx de los VAG con OBD, traducidos a su código P, con <strong>más de 500 códigos P1</strong> propios de VAG descritos (también al leerlos por OBD2). Con <strong>Escanear todos los módulos</strong> recorre motor, cambio, ABS, airbag, cuadro, confort… y te lista las averías de cada uno.</p>
         <p>En OBD2, averías memorizadas, pendientes y <strong>permanentes</strong>, el testigo MIL y los <strong>datos congelados</strong>: régimen, temperatura, carga y demás valores del motor en el momento exacto en que saltó la avería.</p>
         <p>Puedes borrarlas (siempre pide confirmación) y <strong>generar un informe</strong> para imprimir o guardar en PDF, útil para el taller o al vender el coche. Recuerda: borrar un código no repara la avería.</p>
+        <p>¿Qué significa un código? Búscalo en la <a href="averias-vag/">lista de códigos de avería VAG</a>, con sus 738 descripciones.</p>
         <div class="selector" role="group" aria-label="Elegir captura" data-grupo="averias">
           <button type="button" aria-pressed="true" data-img="img/averias-kkl.webp" data-alt="Escaneo de todos los módulos VAG: motor, ABS, airbag y cuadro con sus averías">KKL · VAG</button>
           <button type="button" aria-pressed="false" data-img="img/averias-obd.webp" data-alt="Averías OBD2 memorizadas, pendiente y permanente, con los datos congelados de la P0171">ELM327 · OBD2</button>
@@ -406,7 +407,7 @@
         <h3>Cualquier marca con OBD2</h3>
         <p>En Europa, gasolina desde 2001 y diésel desde 2003-2004; en EE. UU., desde 1996. Busca el protocolo solo (CAN, KWP2000, ISO 9141 o J1850, según el adaptador) y, si no lo encuentra, prueba uno a uno los de línea K.</p>
         <ul class="lista-ok">
-          <li>Las 107 averías genéricas (P0) más comunes con su descripción, y las <strong>538 averías P1 de VAG</strong> si el VIN es de SEAT, VW, Audi o Skoda.</li>
+          <li>Las 107 averías genéricas (P0) más comunes con su descripción, y las <strong><a href="averias-vag/">538 averías P1 de VAG</a></strong> si el VIN es de SEAT, VW, Audi o Skoda.</li>
           <li>VIN descifrado para 64 fabricantes, con el modelo en los VAG.</li>
         </ul>
         <details class="grupos"><summary>Los 50 valores OBD2 que puede leer</summary><ul class="modulos"><li>Carga del motor</li><li>Temp. refrigerante</li><li>Corrección corto plazo B1</li><li>Corrección largo plazo B1</li><li>Corrección corto plazo B2</li><li>Corrección largo plazo B2</li><li>Presión combustible</li><li>Presión colector (MAP)</li><li>Régimen motor</li><li>Velocidad</li><li>Avance encendido</li><li>Temp. aire admisión</li><li>Caudal de aire (MAF)</li><li>Posición mariposa</li><li>Sonda O2 B1S1</li><li>Sonda O2 B1S2</li><li>Sonda O2 B1S3</li><li>Sonda O2 B1S4</li><li>Sonda O2 B2S1</li><li>Sonda O2 B2S2</li><li>Tiempo desde arranque</li><li>Distancia con testigo MIL</li><li>Presión rail (rel. vacío)</li><li>Presión rail combustible</li><li>Lambda sonda B1S1 (banda ancha)</li><li>EGR comandada</li><li>Error EGR</li><li>Purga EVAP comandada</li><li>Nivel de combustible</li><li>Calentamientos desde borrado</li><li>Distancia desde borrado</li><li>Presión barométrica</li><li>Lambda sonda B1S1 (corriente)</li><li>Temp. catalizador B1S1</li><li>Temp. catalizador B2S1</li><li>Tensión módulo de control</li><li>Carga absoluta</li><li>Lambda comandada</li><li>Mariposa relativa</li><li>Temp. ambiente</li><li>Mariposa absoluta B</li><li>Pedal acelerador D</li><li>Pedal acelerador E</li><li>Actuador mariposa comandado</li><li>Tiempo con testigo MIL</li><li>Tiempo desde borrado</li><li>Etanol en combustible</li><li>Pedal acelerador relativo</li><li>Temp. aceite</li><li>Consumo de combustible</li></ul></details>
@@ -593,7 +594,7 @@ sudo usermod -aG dialout $USER</code></pre>
 
 <footer class="pie">
   <div class="contenedor">
-    <p><strong>OBD2Desk</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p><strong>OBD2Desk</strong> es software libre bajo <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">licencia MIT</a>. Código en <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>. <a href="averias-vag/">Códigos de avería VAG</a>.</p>
     <p class="legal">Proyecto independiente, sin relación con SEAT, Volkswagen Group, Bosch, FTDI, Elm Electronics, Anthropic, OpenAI ni DeepSeek. Las marcas pertenecen a sus propietarios. El programa se ofrece tal cual, sin garantía; úsalo bajo tu responsabilidad. No realices pruebas que distraigan de la conducción. Las sugerencias del asistente de IA son orientativas y no sustituyen a un taller.</p>
   </div>
 </footer>

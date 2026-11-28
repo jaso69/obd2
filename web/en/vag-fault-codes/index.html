@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAG fault codes (VW, Audi, SEAT, Skoda): list and meaning · OBD2Desk</title>
+<meta name="description" content="Meaning of 738 VAG fault codes for Volkswagen, Audi, SEAT and Skoda: classic 5-digit codes, 16xxx (P0) and 17xxx-18xxx (P1), with search and fault types.">
+<meta name="theme-color" content="#111418">
+<link rel="icon" type="image/png" href="/img/icono.png">
+<link rel="apple-touch-icon" href="/img/icono.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OBD2Desk">
+<meta property="og:title" content="VAG fault codes (VW, Audi, SEAT, Skoda): list and meaning · OBD2Desk">
+<meta property="og:description" content="Meaning of 738 VAG fault codes for Volkswagen, Audi, SEAT and Skoda: classic 5-digit codes, 16xxx (P0) and 17xxx-18xxx (P1), with search and fault types.">
+<meta property="og:image" content="https://www.obd2desk.com/img/en/og.jpg">
+<meta property="og:url" content="https://www.obd2desk.com/en/vag-fault-codes/">
+<meta property="og:locale" content="en_US">
+<link rel="canonical" href="https://www.obd2desk.com/en/vag-fault-codes/">
+<link rel="alternate" hreflang="es" href="https://www.obd2desk.com/averias-vag/">
+<link rel="alternate" hreflang="en" href="https://www.obd2desk.com/en/vag-fault-codes/">
+<link rel="alternate" hreflang="x-default" href="https://www.obd2desk.com/averias-vag/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.obd2desk.com/en/"}, {"@type": "ListItem", "position": 2, "name": "VAG fault codes", "item": "https://www.obd2desk.com/en/vag-fault-codes/"}]}
+</script>
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Skip to content</a>
+
+<header class="cabecera">
+  <div class="contenedor cabecera-fila">
+    <a class="marca" href="/en/"><img src="/img/icono.png" alt="" width="32" height="32"> OBD2Desk</a>
+    <button class="menu-boton" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu">☰</button>
+    <nav id="menu" class="menu" aria-label="Main">
+      <a href="/en/#funciones">Features</a>
+      <a href="/en/#hardware">Which cable</a>
+      <a href="/en/#descargar">Download</a>
+      <a href="/en/vag-fault-codes/" aria-current="page">VAG fault codes</a>
+      <a class="idioma" href="/averias-vag/" hreflang="es" lang="es" data-idioma="es" title="Español">ES</a>
+      <a class="boton boton-secundario boton-peque" href="https://github.com/jaso69/obd2">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenido">
+<div class="contenedor contenedor-codigos">
+<nav class="migas" aria-label="Breadcrumb"><a href="/en/">Home</a> <span aria-hidden="true">›</span> <span aria-current="page">VAG fault codes</span></nav>
+<h1>VAG fault codes: list and meaning</h1>
+<p class="intro">Volkswagen Group cars (Volkswagen, Audi, SEAT and Skoda) store fault codes as a 5-digit number. Here is the meaning of <strong>738 codes</strong>, taken from the same tables OBD2Desk uses to describe them.</p>
+<h2>How VAG codes work</h2>
+<ul class="lista-ok">
+<li><strong>00xxx-01xxx · classic.</strong> Used by VAG cars from before OBD2 (KW1281 protocol). The same number means the same in every control unit: 00532 is the supply voltage in the engine as well as in the ABS.</li>
+<li><strong>16xxx · generic OBD2.</strong> These are P0xxx codes written the VAG way: <code>VAG code = 16384 + P0 number</code>. For example, 16684 = P0300 (misfire detected).</li>
+<li><strong>17xxx-18xxx · VAG-specific.</strong> These are the P1xxx codes: <code>VAG code = 16408 + P1 number</code>. For example, 17978 = P1570 (engine control unit locked by the immobilizer).</li>
+</ul>
+<p>An OBD2 reader with an ELM327 shows them as P0xxx and P1xxx; a program that speaks KW1281 with a KKL cable shows the 5 digits. OBD2Desk shows both.</p>
+<div class="buscador" role="search">
+  <label for="buscar">Search for a code</label>
+  <input id="buscar" type="search" placeholder="E.g. 17978, P1570, 00532 or “boost”" autocomplete="off" spellcheck="false"
+    aria-describedby="buscar-ayuda" data-indice="/en/vag-fault-codes/codigos.json">
+  <p id="buscar-ayuda" class="pequeno">Type the 5-digit code, the P code or a word from the description.</p>
+  <noscript><p class="pequeno">Search needs JavaScript; you can browse the lists below.</p></noscript>
+  <div id="resultados" class="resultados" aria-live="polite"></div>
+</div>
+<h2>Code lists</h2>
+<ul class="familias">
+<li class="tarjeta"><a href="/en/vag-fault-codes/classic/"><strong>Classic 00xxx-01xxx</strong></a><span>engine, transmission, ABS, airbag, cluster, convenience and radio</span><span class="pequeno">93 codes · 00258-01334</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p0/"><strong>16xxx = P0xxx</strong></a><span>generic OBD2 codes in VAG format</span><span class="pequeno">107 codes · 16384-17383</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p11xx/"><strong>P11xx</strong></a><span>O2 sensors, fuel trim and load</span><span class="pequeno">87 codes · 17508-17607</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p12xx/"><strong>P12xx</strong></a><span>Injectors, injection timing, turbo and cooling</span><span class="pequeno">63 codes · 17608-17707</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p13xx/"><strong>P13xx</strong></a><span>Ignition, knock and misfires</span><span class="pequeno">67 codes · 17708-17807</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p14xx/"><strong>P14xx</strong></a><span>EGR, EVAP and exhaust temperature</span><span class="pequeno">66 codes · 17808-17907</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p15xx/"><strong>P15xx</strong></a><span>Idle, throttle, boost pressure, camshaft and relays</span><span class="pequeno">87 codes · 17908-18007</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p16xx/"><strong>P16xx</strong></a><span>Power supply, pedal, MIL, control unit and data bus</span><span class="pequeno">69 codes · 18008-18107</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p17xx/"><strong>P17xx</strong></a><span>Automatic transmission</span><span class="pequeno">61 codes · 18108-18207</span></li>
+<li class="tarjeta"><a href="/en/vag-fault-codes/p18xx/"><strong>P18xx</strong></a><span>Automatic transmission and data bus</span><span class="pequeno">38 codes · 18208-18307</span></li>
+</ul>
+<h2 id="tipos">Fault type: the number that follows</h2>
+<p>Besides the code, the control unit gives a <strong>fault type</strong> that says what is wrong with the component. OBD2Desk shows it in brackets: <code>00522 Coolant temperature sender (G62) [05 - Open circuit]</code>.</p>
+<div class="tabla-scroll" tabindex="0" role="region" aria-label="Type">
+<table class="tabla tabla-codigos tabla-tipos"><thead><tr><th scope="col">Type</th><th scope="col">Meaning</th></tr></thead><tbody>
+<tr><th scope="row">01</th><td>Short to positive</td></tr>
+<tr><th scope="row">02</th><td>Short to ground</td></tr>
+<tr><th scope="row">03</th><td>No signal</td></tr>
+<tr><th scope="row">04</th><td>Mechanical malfunction</td></tr>
+<tr><th scope="row">05</th><td>Open circuit</td></tr>
+<tr><th scope="row">06</th><td>Signal too high</td></tr>
+<tr><th scope="row">07</th><td>Signal too low</td></tr>
+<tr><th scope="row">08</th><td>Control limit exceeded</td></tr>
+<tr><th scope="row">09</th><td>Adaptation limit exceeded</td></tr>
+<tr><th scope="row">10</th><td>Adaptation limit not reached</td></tr>
+<tr><th scope="row">11</th><td>Control limit not reached</td></tr>
+<tr><th scope="row">12</th><td>Adaptation limit (mult.) exceeded</td></tr>
+<tr><th scope="row">13</th><td>Adaptation limit (mult.) not reached</td></tr>
+<tr><th scope="row">14</th><td>Adaptation limit (add.) exceeded</td></tr>
+<tr><th scope="row">15</th><td>Adaptation limit (add.) not reached</td></tr>
+<tr><th scope="row">16</th><td>Signal out of tolerance</td></tr>
+<tr><th scope="row">17</th><td>Control difference</td></tr>
+<tr><th scope="row">18</th><td>Upper limit</td></tr>
+<tr><th scope="row">19</th><td>Lower limit</td></tr>
+<tr><th scope="row">20</th><td>Basic setting malfunction</td></tr>
+<tr><th scope="row">21</th><td>Front pressure build-up time too long</td></tr>
+<tr><th scope="row">22</th><td>Front pressure reduction time too long</td></tr>
+<tr><th scope="row">23</th><td>Rear pressure build-up time too long</td></tr>
+<tr><th scope="row">24</th><td>Rear pressure reduction time too long</td></tr>
+<tr><th scope="row">27</th><td>Implausible signal</td></tr>
+</tbody></table></div>
+<p>If it also says <strong>intermittent</strong>, the fault came and went: usually a loose contact or a chafed wire. A short or an open circuit points first to the wiring and connector rather than the part itself.</p>
+<section aria-labelledby="consejos-h">
+<h2 id="consejos-h">Before replacing parts</h2>
+<ul class="lista-ok">
+<li><strong>Write the faults down before clearing them</strong>, with the fault type and, on OBD2, the freeze frame data (engine speed, temperature and load when the fault happened).</li>
+<li><strong>Clear them and see whether they come back.</strong> A fault that does not return after several starts may be old; one that comes back straight away is current.</li>
+<li><strong>Check the wiring and connectors first</strong> when the fault is a short, an open circuit or intermittent.</li>
+<li><strong>Look at the component's measured values</strong> with the engine running: a sender giving an absurd value (−40 °C coolant, for example) confirms the fault.</li>
+</ul>
+</section>
+<p class="aclaracion">Descriptions are for guidance and come from public VAG documentation. The exact meaning can vary with the control unit and year: check it against your car's workshop manual.</p>
+<section class="tarjeta tarjeta-grande descarga-codigos" aria-labelledby="descarga-h">
+  <h2 id="descarga-h">Read and clear these faults with OBD2Desk</h2>
+  <p>OBD2Desk is a free, open-source program for Windows and Linux. With a KKL cable it reads the fault codes of older VAG cars (KW1281) from every control unit; with an ELM327, those of any OBD2 car, and it describes VAG P1 codes when the VIN is from VW, Audi, SEAT or Skoda.</p>
+  <div class="botones botones-izq">
+    <a class="boton boton-principal" href="/en/#descargar">Download OBD2Desk</a>
+    <a class="boton boton-secundario" href="/en/#funciones">See what it does</a>
+  </div>
+</section>
+</div>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <p><strong>OBD2Desk</strong> is free software under the <a href="https://github.com/jaso69/obd2/blob/main/LICENSE">MIT license</a>. Source code at <a href="https://github.com/jaso69/obd2">github.com/jaso69/obd2</a>.</p>
+    <p class="legal">Independent project, not affiliated with Volkswagen Group, SEAT or Bosch. Trademarks belong to their owners. Information is provided as is, without warranty; to repair, follow the workshop manual.</p>
+  </div>
+</footer>
+
+<script src="/averias.js"></script>
+</body>
+</html>
