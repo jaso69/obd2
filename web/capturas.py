@@ -187,6 +187,26 @@ va.terminar()
 esperar(lambda: va.estado == "fin", 20)
 va.cerrar()
 
+print("Adaptación y codificación")
+app.adaptacion()
+vd = app.ventana_adapt
+como_principal(vd.win)
+vd.ok_var.set(True)
+vd.canal_var.set("1")
+vd.leer()
+esperar(lambda: vd.ocupado is None, 10)
+vd.valor_var.set("130")
+vd.probar()
+esperar(lambda: vd.ocupado is None, 10)
+vd.guardar()                                # queda apuntado en el registro de cambios
+esperar(lambda: vd.ocupado is None, 10)
+vd.valor_var.set("132")
+vd.probar()
+esperar(lambda: vd.ocupado is None, 10)
+capturar("adaptacion", vd.win)
+vd.cerrar()
+esperar(lambda: not vd.win.winfo_exists(), 10)
+
 app.nb.select(app.tab_ecu)
 capturar("vehiculo-kkl")
 

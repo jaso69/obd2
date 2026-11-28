@@ -185,19 +185,33 @@
 
     <div class="fila-funcion">
       <div class="texto-funcion">
-        <h3>Output tests and basic settings <span class="nuevo">New</span></h3>
+        <h3>Output tests and basic settings</h3>
         <p>With the KKL cable, OBD2Desk no longer only reads: it can also ask the control unit to <strong>activate its components</strong> or to enter <strong>basic settings</strong>.</p>
         <ul class="lista-ok">
           <li><strong>Output test</strong>: the control unit activates its relays, solenoid valves, injectors and warning lamps one by one so you can check that they work (you hear the click or the lamp lights up). Each one stays active until you move to the next.</li>
           <li><strong>Basic settings</strong>: start of injection (pump timing) and EGR off on the TDI, throttle body adaptation and idle setting on petrol engines, or any block from the workshop manual, with its values live.</li>
         </ul>
-        <p>Before starting, each window explains the conditions (engine off, ignition on…) and asks you to confirm them. It does not write adaptation channels or coding. Tested with the simulators; yet to be tested on a car.</p>
+        <p>Before starting, each window explains the conditions (engine off, ignition on…) and asks you to confirm them. Tested with the simulators and on a car.</p>
         <div class="selector" role="tablist" data-grupo="salidas">
           <button role="tab" aria-selected="true" data-img="../img/en/actuadores.webp" data-alt="Output test on a TDI: the control unit activates the EGR valve N18">Output test</button>
           <button role="tab" aria-selected="false" data-img="../img/en/ajustes.webp" data-alt="Basic setting 098 on a petrol engine: throttle body adaptation with its live values">Basic settings</button>
         </div>
       </div>
       <figure class="captura"><a href="../img/en/actuadores.webp" class="ampliar" data-grupo="salidas"><img src="../img/en/actuadores.webp" width="2015" height="1200" loading="lazy" alt="Output test on a TDI: the control unit activates the EGR valve N18"></a></figure>
+    </div>
+
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Adaptation and coding <span class="nuevo">New</span></h3>
+        <p>With the KKL cable you can read and change the <strong>adaptation channels</strong> and the <strong>coding</strong> of the control unit, with the values from your car's workshop manual.</p>
+        <ul class="lista-ok">
+          <li><strong>Test first, then save</strong>: the control unit uses the new value without saving it so you can check the result; if you close without saving, it goes back to the previous one.</li>
+          <li><strong>With a safety net</strong>: each change asks for confirmation and is recorded with the previous value; "Go back to the previous value" restores it.</li>
+          <li><strong>Login code</strong> for the channels that need it, and workshop code.</li>
+        </ul>
+        <p>It writes to the control unit: only use it with the values from the manual. Tested with the simulators and on a car.</p>
+      </div>
+      <figure class="captura"><a href="../img/en/adaptacion.webp" class="ampliar"><img src="../img/en/adaptacion.webp" width="2015" height="1200" loading="lazy" alt="Adaptation and coding window: channel 01 tested with a new value and the change log with the previous value"></a></figure>
     </div>
 
     <ul class="extras">
@@ -238,7 +252,7 @@
         <tr><td>AI assistant with guided diagnosis</td><td class="si">✓</td><td class="si">✓</td></tr>
         <tr><td>Simulator to try it without a car</td><td class="si">✓</td><td class="si">✓</td></tr>
         <tr><td>Output tests and basic settings</td><td class="si">✓ <span>components one by one; throttle, pump timing, EGR…</span></td><td class="no">—</td></tr>
-        <tr><td>Adaptation channels and coding</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Adaptation channels and coding</td><td class="si">✓ <span>test before saving, login and a log to go back</span></td><td class="no">—</td></tr>
       </tbody>
     </table>
     </div>
@@ -491,6 +505,20 @@ sudo usermod -aG dialout $USER</code></pre>
     <h2>What's new in each version</h2>
     <p class="intro">What has been added to OBD2Desk over time. Full details of every version are on <a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.</p>
     <div class="version">
+      <h3>v0.8.1 <span>28 November 2026</span></h3>
+      <ul>
+        <li>In the adaptation window, the "Go back to the previous value" button is no longer cut off in English.</li>
+      </ul>
+    </div>
+    <div class="version">
+      <h3>v0.8.0 <span>28 November 2026</span></h3>
+      <ul>
+        <li><strong>Adaptation channels</strong> (KKL cable): read, test and save values, with a login code if the channel needs it.</li>
+        <li><strong>Coding</strong> (KKL cable): view and change the coding of the control unit; Vehicle shows the coding and the workshop code.</li>
+        <li>Each change asks for confirmation and is recorded with the previous value so you can go back to it.</li>
+      </ul>
+    </div>
+    <div class="version">
       <h3>v0.7.0 <span>28 November 2026</span></h3>
       <ul>
         <li><strong>Output test</strong> (KKL cable): the control unit activates its components one by one so you can check that they work.</li>
@@ -559,7 +587,7 @@ sudo usermod -aG dialout $USER</code></pre>
     <h2>Project status</h2>
     <p>OBD2Desk is under active development. Here is what has been verified and what remains to be covered in the current version:</p>
     <ul class="lista-ok">
-      <li>Verified on real cars, including the new features in v0.3.0 (module scan, freeze frame data, monitors and report), v0.5.0 (fuel consumption and 0-100, graphs, CSV viewer and history) and v0.7.0 (output tests and basic settings).</li>
+      <li>Verified on real cars, including the new features in v0.3.0 (module scan, freeze frame data, monitors and report), v0.5.0 (fuel consumption and 0-100, graphs, CSV viewer and history), v0.7.0 (output tests and basic settings) and v0.8.0 (adaptation and coding).</li>
       <li>Automated test suite with the built-in simulators: KKL cable with several VAG control units (EDC15 engine, ABS, airbag and instrument cluster), and ELM327 with a simulated OBD2 car.</li>
       <li>AI assistant validated with the real Claude and DeepSeek APIs; its new v0.5.0 features (recording values, checking the history and generating the report), with the DeepSeek API.</li>
       <li>New in v0.6.0 and v0.6.1 (P1 fault codes, TDI unit-injector and petrol measuring blocks, petrol panel and consumption over KKL) verified with the simulators; yet to be tested on a car.</li>
@@ -567,7 +595,7 @@ sudo usermod -aG dialout $USER</code></pre>
     </ul>
     <ul class="lista-no">
       <li>WiFi connection validated with the simulator; yet to be verified with a real WiFi ELM327 adapter.</li>
-      <li>Focused on diagnostics: it does output tests and basic settings, but does not write adaptation channels or coding.</li>
+      <li>Output tests, basic settings, adaptation and coding only with the KKL cable (VAG cars with KW1281); with an ELM327 it is generic OBD2 diagnostics.</li>
     </ul>
     <p>If you use it on your car, your feedback helps improve it: share it on <a href="https://github.com/jaso69/obd2/issues">GitHub Issues</a>.</p>
   </div>
