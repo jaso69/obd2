@@ -159,7 +159,7 @@
 
     <div class="fila-funcion">
       <div class="texto-funcion">
-        <h3>Diésel y gasolina VAG <span class="nuevo">Nuevo</span></h3>
+        <h3>Diésel y gasolina VAG</h3>
         <p>Cada centralita VAG da sus valores medidos en grupos de cuatro, y lo que significa cada casilla depende del motor. OBD2Desk trae los grupos habituales de <strong>tres tipos de motor</strong>, con el nombre de cada valor:</p>
         <ul class="lista-ok">
           <li><strong>TDI de bomba rotativa</strong> (Bosch EDC15V, como el 1.9 TDI de 90 y 110 CV): inyección, turbo, caudalímetro y EGR, comienzo de inyección, limitaciones de caudal.</li>
@@ -177,15 +177,32 @@
 
     <div class="fila-funcion invertida">
       <div class="texto-funcion">
-        <h3>Manual dentro del programa <span class="nuevo">Nuevo</span></h3>
+        <h3>Manual dentro del programa</h3>
         <p>La pestaña <em>Ayuda</em> explica cada parte del programa: qué cable usar y cómo conectarlo, qué muestra cada pestaña, cómo se calcula el consumo, qué hace el asistente IA con tus datos y dónde se guardan las grabaciones, los informes y el historial.</p>
         <p>Está en español y en inglés, como el resto del programa, y no necesita internet.</p>
       </div>
       <figure class="captura"><a href="img/ayuda.webp" class="ampliar"><img src="img/ayuda.webp" width="2025" height="1200" loading="lazy" alt="Pestaña Ayuda con el índice de secciones y el manual"></a></figure>
     </div>
 
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Test de actuadores y ajustes básicos <span class="nuevo">Nuevo</span></h3>
+        <p>Con el cable KKL, OBD2Desk ya no solo lee: también puede pedir a la centralita que <strong>active sus componentes</strong> o que entre en <strong>ajuste básico</strong>.</p>
+        <ul class="lista-ok">
+          <li><strong>Test de actuadores</strong>: la centralita activa uno a uno sus relés, electroválvulas, inyectores y testigos para comprobar que funcionan (se oye el clic o se enciende el testigo). Cada uno sigue activo hasta pasar al siguiente.</li>
+          <li><strong>Ajustes básicos</strong>: comienzo de inyección (calado de la bomba) y EGR desactivada en el TDI, adaptación de la mariposa y ajuste del ralentí en el gasolina, o cualquier grupo del manual de taller, con sus valores en vivo.</li>
+        </ul>
+        <p>Antes de empezar, cada ventana explica las condiciones (motor parado, contacto puesto…) y pide confirmarlas. No escribe canales de adaptación ni codificación. Probado con los simuladores; pendiente de probar en coche.</p>
+        <div class="selector" role="tablist" data-grupo="salidas">
+          <button role="tab" aria-selected="true" data-img="img/actuadores.webp" data-alt="Test de actuadores de un TDI: la centralita activa la válvula EGR N18">Test de actuadores</button>
+          <button role="tab" aria-selected="false" data-img="img/ajustes.webp" data-alt="Ajuste básico 098 de un gasolina: adaptación de la mariposa con sus valores en vivo">Ajustes básicos</button>
+        </div>
+      </div>
+      <figure class="captura"><a href="img/actuadores.webp" class="ampliar" data-grupo="salidas"><img src="img/actuadores.webp" width="2025" height="1200" loading="lazy" alt="Test de actuadores de un TDI: la centralita activa la válvula EGR N18"></a></figure>
+    </div>
+
     <ul class="extras">
-      <li><span class="nuevo">Nuevo</span> <strong>Ayuda integrada</strong>: una pestaña con el manual de cada parte del programa.</li>
+      <li><strong>Ayuda integrada</strong>: una pestaña con el manual de cada parte del programa.</li>
       <li><strong>Simulador incluido</strong>: prueba todo sin coche eligiendo el puerto «Simulador (sin coche)».</li>
       <li><strong>Un solo archivo</strong>: no hay que instalar Python ni nada más.</li>
       <li><strong>Registro</strong> de toda la comunicación, con modo de depuración, por si algo falla.</li>
@@ -221,7 +238,8 @@
         <tr><td>Informe para imprimir o PDF</td><td class="si">✓</td><td class="si">✓</td></tr>
         <tr><td>Asistente IA con diagnóstico guiado</td><td class="si">✓</td><td class="si">✓</td></tr>
         <tr><td>Simulador para probar sin coche</td><td class="si">✓</td><td class="si">✓</td></tr>
-        <tr><td>Adaptaciones, codificación, test de actuadores</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Test de actuadores y ajustes básicos</td><td class="si">✓ <span>componentes uno a uno; mariposa, calado de la bomba, EGR…</span></td><td class="no">—</td></tr>
+        <tr><td>Canales de adaptación y codificación</td><td class="no">—</td><td class="no">—</td></tr>
       </tbody>
     </table>
     </div>
@@ -474,6 +492,14 @@ sudo usermod -aG dialout $USER</code></pre>
     <h2>Novedades por versión</h2>
     <p class="intro">Lo que ha ido llegando a OBD2Desk. El detalle de cada versión está en <a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.</p>
     <div class="version">
+      <h3>v0.7.0 <span>28 de noviembre de 2026</span></h3>
+      <ul>
+        <li><strong>Test de actuadores</strong> (cable KKL): la centralita activa uno a uno sus componentes para comprobar que funcionan.</li>
+        <li><strong>Ajustes básicos</strong> (cable KKL): adaptación de la mariposa, comienzo de inyección, EGR desactivada o cualquier grupo, con los valores en vivo.</li>
+        <li>Las dos funciones piden confirmar las condiciones antes de empezar y, mientras duran, el asistente IA no puede usar la centralita.</li>
+      </ul>
+    </div>
+    <div class="version">
       <h3>v0.6.1 <span>28 de noviembre de 2026</span></h3>
       <ul>
         <li>En Valores medidos, la lista de grupos se desplaza con la rueda del ratón si no cabe en la ventana (con los 15 grupos de gasolina, «Abrir CSV...» quedaba oculto en pantallas pequeñas).</li>
@@ -538,11 +564,12 @@ sudo usermod -aG dialout $USER</code></pre>
       <li>Batería de pruebas automáticas con los simuladores integrados: cable KKL con varias centralitas VAG (motor EDC15, ABS, airbag y cuadro), y ELM327 con un coche OBD2 simulado.</li>
       <li>Asistente IA validado con la API real de Claude y de DeepSeek; sus funciones nuevas de la v0.5.0 (grabar valores, consultar el historial y generar el informe), con la de DeepSeek.</li>
       <li>Novedades de la v0.6.0 y v0.6.1 (averías P1, grupos de TDI inyector-bomba y de gasolina, panel y consumo de gasolina por KKL) verificadas con los simuladores; pendientes de probar en coche.</li>
+      <li>Novedades de la v0.7.0 (test de actuadores y ajustes básicos) verificadas con los simuladores; pendientes de probar en coche.</li>
       <li>Compatible con Windows 10/11 y Linux (Ubuntu, Debian, Fedora, Arch y openSUSE).</li>
     </ul>
     <ul class="lista-no">
       <li>Conexión WiFi validada con el simulador; pendiente de verificar con un adaptador ELM327 WiFi real.</li>
-      <li>Centrado en el diagnóstico (averías y valores medidos): las adaptaciones, ajustes básicos, codificación y test de actuadores no están incluidos en esta versión.</li>
+      <li>Centrado en el diagnóstico: hace test de actuadores y ajustes básicos, pero no escribe canales de adaptación ni codificación.</li>
     </ul>
     <p>Si lo usas en tu coche, tu experiencia ayuda a mejorarlo: compártela en <a href="https://github.com/jaso69/obd2/issues">GitHub Issues</a>.</p>
   </div>

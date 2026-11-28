@@ -158,7 +158,7 @@
 
     <div class="fila-funcion">
       <div class="texto-funcion">
-        <h3>VAG diesel and petrol <span class="nuevo">New</span></h3>
+        <h3>VAG diesel and petrol</h3>
         <p>Every VAG control unit gives its measured values in blocks of four, and what each field means depends on the engine. OBD2Desk includes the usual blocks of <strong>three engine types</strong>, with the name of every value:</p>
         <ul class="lista-ok">
           <li><strong>TDI distributor pump</strong> (Bosch EDC15V, like the 90 and 110 hp 1.9 TDI): injection, boost, MAF and EGR, start of injection, quantity limits.</li>
@@ -176,15 +176,32 @@
 
     <div class="fila-funcion invertida">
       <div class="texto-funcion">
-        <h3>Built-in manual <span class="nuevo">New</span></h3>
+        <h3>Built-in manual</h3>
         <p>The <em>Help</em> tab explains every part of the program: which cable to use and how to connect it, what each tab shows, how fuel consumption is calculated, what the AI assistant does with your data and where recordings, reports and history are saved.</p>
         <p>It is in English and Spanish, like the rest of the program, and works offline.</p>
       </div>
       <figure class="captura"><a href="../img/en/ayuda.webp" class="ampliar"><img src="../img/en/ayuda.webp" width="2015" height="1200" loading="lazy" alt="Help tab with the section index and the manual"></a></figure>
     </div>
 
+    <div class="fila-funcion">
+      <div class="texto-funcion">
+        <h3>Output tests and basic settings <span class="nuevo">New</span></h3>
+        <p>With the KKL cable, OBD2Desk no longer only reads: it can also ask the control unit to <strong>activate its components</strong> or to enter <strong>basic settings</strong>.</p>
+        <ul class="lista-ok">
+          <li><strong>Output test</strong>: the control unit activates its relays, solenoid valves, injectors and warning lamps one by one so you can check that they work (you hear the click or the lamp lights up). Each one stays active until you move to the next.</li>
+          <li><strong>Basic settings</strong>: start of injection (pump timing) and EGR off on the TDI, throttle body adaptation and idle setting on petrol engines, or any block from the workshop manual, with its values live.</li>
+        </ul>
+        <p>Before starting, each window explains the conditions (engine off, ignition on…) and asks you to confirm them. It does not write adaptation channels or coding. Tested with the simulators; yet to be tested on a car.</p>
+        <div class="selector" role="tablist" data-grupo="salidas">
+          <button role="tab" aria-selected="true" data-img="../img/en/actuadores.webp" data-alt="Output test on a TDI: the control unit activates the EGR valve N18">Output test</button>
+          <button role="tab" aria-selected="false" data-img="../img/en/ajustes.webp" data-alt="Basic setting 098 on a petrol engine: throttle body adaptation with its live values">Basic settings</button>
+        </div>
+      </div>
+      <figure class="captura"><a href="../img/en/actuadores.webp" class="ampliar" data-grupo="salidas"><img src="../img/en/actuadores.webp" width="2015" height="1200" loading="lazy" alt="Output test on a TDI: the control unit activates the EGR valve N18"></a></figure>
+    </div>
+
     <ul class="extras">
-      <li><span class="nuevo">New</span> <strong>Built-in help</strong>: a tab with the manual for every part of the program.</li>
+      <li><strong>Built-in help</strong>: a tab with the manual for every part of the program.</li>
       <li><strong>Built-in simulator</strong>: try everything without a car by choosing the port “Simulator (no car)”.</li>
       <li><strong>A single file</strong>: no need to install Python or anything else.</li>
       <li><strong>Full communication log</strong>, with a debug mode, in case something goes wrong.</li>
@@ -220,7 +237,8 @@
         <tr><td>Report to print or save as PDF</td><td class="si">✓</td><td class="si">✓</td></tr>
         <tr><td>AI assistant with guided diagnosis</td><td class="si">✓</td><td class="si">✓</td></tr>
         <tr><td>Simulator to try it without a car</td><td class="si">✓</td><td class="si">✓</td></tr>
-        <tr><td>Adaptations, coding, output tests</td><td class="no">—</td><td class="no">—</td></tr>
+        <tr><td>Output tests and basic settings</td><td class="si">✓ <span>components one by one; throttle, pump timing, EGR…</span></td><td class="no">—</td></tr>
+        <tr><td>Adaptation channels and coding</td><td class="no">—</td><td class="no">—</td></tr>
       </tbody>
     </table>
     </div>
@@ -473,6 +491,14 @@ sudo usermod -aG dialout $USER</code></pre>
     <h2>What's new in each version</h2>
     <p class="intro">What has been added to OBD2Desk over time. Full details of every version are on <a href="https://github.com/jaso69/obd2/releases">GitHub Releases</a>.</p>
     <div class="version">
+      <h3>v0.7.0 <span>28 November 2026</span></h3>
+      <ul>
+        <li><strong>Output test</strong> (KKL cable): the control unit activates its components one by one so you can check that they work.</li>
+        <li><strong>Basic settings</strong> (KKL cable): throttle body adaptation, start of injection, EGR off or any block, with live values.</li>
+        <li>Both features ask you to confirm the conditions before starting and, while they run, the AI assistant cannot use the control unit.</li>
+      </ul>
+    </div>
+    <div class="version">
       <h3>v0.6.1 <span>28 November 2026</span></h3>
       <ul>
         <li>In Measured values, the block list scrolls with the mouse wheel when it does not fit in the window (with the 15 petrol blocks, "Open CSV..." was hidden on small screens).</li>
@@ -537,11 +563,12 @@ sudo usermod -aG dialout $USER</code></pre>
       <li>Automated test suite with the built-in simulators: KKL cable with several VAG control units (EDC15 engine, ABS, airbag and instrument cluster), and ELM327 with a simulated OBD2 car.</li>
       <li>AI assistant validated with the real Claude and DeepSeek APIs; its new v0.5.0 features (recording values, checking the history and generating the report), with the DeepSeek API.</li>
       <li>New in v0.6.0 and v0.6.1 (P1 fault codes, TDI unit-injector and petrol measuring blocks, petrol panel and consumption over KKL) verified with the simulators; yet to be tested on a car.</li>
+      <li>New in v0.7.0 (output tests and basic settings) verified with the simulators; yet to be tested on a car.</li>
       <li>Compatible with Windows 10/11 and Linux (Ubuntu, Debian, Fedora, Arch and openSUSE).</li>
     </ul>
     <ul class="lista-no">
       <li>WiFi connection validated with the simulator; yet to be verified with a real WiFi ELM327 adapter.</li>
-      <li>Focused on diagnostics (fault codes and measured values): adaptations, basic settings, coding and actuator tests are not included in this version.</li>
+      <li>Focused on diagnostics: it does output tests and basic settings, but does not write adaptation channels or coding.</li>
     </ul>
     <p>If you use it on your car, your feedback helps improve it: share it on <a href="https://github.com/jaso69/obd2/issues">GitHub Issues</a>.</p>
   </div>

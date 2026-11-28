@@ -362,6 +362,12 @@ Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windo
 - **Sin probar en coche.** A comprobar: qué título usa la EDC15 al contestar (E7 o F4), que la lectura normal la saque del ajuste básico y los textos de estado de la adaptación de la mariposa (salen como bits o `a=.. b=..` si la fórmula no está en la tabla).
 - No se ha hecho (a propósito): canales de adaptación (0x21/0x2A, escriben valores en la centralita) ni codificación.
 
+### 8.2g Release v0.7.0 (2026-11-28)
+- Test de actuadores (§8.2e) y ajustes básicos (§8.2f). `VERSION = "0.7.0"`. Pruebas antes de etiquetar: simuladores, idioma, consumo, csv, historial y GUI en español e inglés → «TODO CORRECTO». **Sin probar en coche.**
+- Etiqueta `v0.7.0` → `58d47ee`. Paquete `OBD2Desk-v0.7.0-linux-x86_64.tar.gz` (40 572 636 bytes, SHA-256 `3828662ad598842e3afda83741225af95735931ebcb97cbadd1a4d9f870e896b`): autoprueba IA bien (3 proveedores «no válida»); extraído, abre la ventana. Descargado de GitHub con el mismo SHA-256.
+- Release «OBD2Desk v0.7.0» «Latest» con notas en español e inglés; dicen que el `.exe` llega en breve (enlazan el de la v0.6.1; la web también ofrece el de la v0.6.1 mientras tanto). **Falta**: `.exe` de Windows compilado desde `v0.7.0`, subirlo y quitar «en breve» de las notas.
+- Web publicada (`./web/publicar.sh "Web v0.7.0: ..."`): artículo «Test de actuadores y ajustes básicos» con capturas nuevas (`actuadores`, `ajustes`, hechas por `web/capturas.py`), fila en la tabla de cables, bloque v0.7.0 en `#novedades` y estado; quitado «Nuevo» de los artículos de la v0.6.0; todas las capturas rehechas.
+
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py`, `.venv/bin/python tests/prueba_idioma.py`, `xvfb-run -a .venv/bin/python tests/prueba_gui.py` y `OBD2DESK_IDIOMA=en xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO» (las dos de GUI una detrás de otra: a la vez chocan en el nombre del CSV).

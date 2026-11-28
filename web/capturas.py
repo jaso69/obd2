@@ -172,6 +172,21 @@ esperar(lambda: str(app.dtc_read_btn.cget("state")) == "normal", 30)   # ya ha v
 pausa(1)
 capturar("averias-kkl")
 
+print("Test de actuadores")
+app.test_actuadores()
+va = app.ventana_act
+como_principal(va.win)
+va.ok_var.set(True)
+va._botones()
+for _ in range(2):
+    va.siguiente()
+    esperar(lambda: va.estado != "esperando", 10)
+pausa(3.5)
+capturar("actuadores", va.win)
+va.terminar()
+esperar(lambda: va.estado == "fin", 20)
+va.cerrar()
+
 app.nb.select(app.tab_ecu)
 capturar("vehiculo-kkl")
 
@@ -281,6 +296,19 @@ app.tree.selection_set([app.tree_items[(2, 1)], app.tree_items[(3, 2)]])   # gr�
 pausa(30)
 capturar("valores-gasolina")
 app._stop_live()
+
+print("Ajustes básicos (adaptación de la mariposa)")
+app.nb.select(app.tab_dtc)
+app.ajustes_basicos()
+vb = app.ventana_ajustes
+como_principal(vb.win)
+vb.ok_var.set(True)
+vb._botones()
+vb.activar()
+pausa(5)
+capturar("ajustes", vb.win)
+vb.cerrar()
+esperar(lambda: not vb.win.winfo_exists(), 10)
 simulador.GASOLINA = False
 
 app.toggle_connect()
