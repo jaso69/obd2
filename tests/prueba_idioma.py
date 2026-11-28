@@ -25,6 +25,8 @@ import ia          # noqa: E402
 import idioma      # noqa: E402
 import informe     # noqa: E402,F401
 import obd_datos   # noqa: E402
+import vag_datos   # noqa: E402
+import vag_p1      # noqa: E402
 import vin_datos   # noqa: E402
 from textos_en import EN  # noqa: E402
 
@@ -74,8 +76,17 @@ for t in sorted(idioma.faltan):
     print("       falta:", repr(t))
 ok(obd_datos.PIDS[0x0C][0] == "Engine speed" and vin_datos.decodificar_vin("VSSZZZ1MZYR000001")[0][1] == "SEAT",
    "las tablas cambian de idioma")
+ok("Charge Pressure Control Positive Deviation" in vag_datos.componente(17965), "averías P1 de VAG en inglés")
 idioma.poner("es")
 ok(obd_datos.PIDS[0x0C][0] == "Régimen motor", "y vuelven al español")
+ok(vag_datos.componente(17965) == "P1557 · Regulación de la presión de sobrealimentación: desviación positiva "
+   "(sobrepresión)", "averías P1 de VAG en español")
+ok(all(len(v) == 2 and all(v) for v in vag_p1.P1.values()) and len(vag_p1.P1) > 500,
+   f"tabla P1 de VAG completa en los dos idiomas ({len(vag_p1.P1)} códigos)")
+obd_datos.marca_vag = True
+ok(obd_datos.describe_dtc("P1557").endswith("(sobrepresión) (VAG)"), "en OBD2, un P1 de un coche VAG se describe")
+obd_datos.marca_vag = False
+ok(obd_datos.describe_dtc("P1557") == "Código específico del fabricante", "y de otra marca, no")
 
 # huecos {nombre}
 mal = [k for k, v in EN.items() if huecos(k) != huecos(v)]

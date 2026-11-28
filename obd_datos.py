@@ -223,9 +223,18 @@ DTCS = {
 }
 
 
+# True si el coche conectado por OBD2 es del grupo VAG (por el VIN): entonces los
+# códigos P1xxx se describen con la tabla de VAG (vag_p1.py). Lo pone la interfaz al conectar.
+marca_vag = False
+
+
 def describe_dtc(code):
     if code in DTCS:
         return DTCS[code]
+    if marca_vag and len(code) == 5 and code.startswith("P1") and code[1:].isdigit():
+        from vag_datos import DTCS_P1
+        if int(code[1:]) in DTCS_P1:
+            return DTCS_P1[int(code[1:])] + " (VAG)"
     if len(code) == 5 and code[1] in "13":
         return tr("Código específico del fabricante")
     return tr("Código no incluido en la tabla")

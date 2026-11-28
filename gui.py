@@ -25,6 +25,7 @@ import csv_datos
 import historial
 import ia
 import idioma
+import obd_datos
 import informe
 from elm327 import ELM327, ELM327Error
 from idioma import tr
@@ -32,9 +33,9 @@ from kw1281 import KW1281, KW1281Error
 from obd_datos import OBD_STANDARDS, PIDS, decode_pid
 from obd_datos import describe_dtc as describe_obd_dtc
 from toledo import leer_grupo_formateado, texto_id
-from vag_datos import FAULT_TYPES, GRUPOS_EDC15, MODULOS, componente as vag_componente
+from vag_datos import FAULT_TYPES, MODULOS, MOTORES, componente as vag_componente, detectar_motor
 from vag_datos import describe_dtc as vag_describe_dtc
-from vin_datos import decodificar_vin
+from vin_datos import VAG as VIN_VAG, decodificar_vin
 
 # ---------------------------------------------------------------------------
 # Estilo
@@ -587,6 +588,7 @@ class Worker(threading.Thread):
         self.online = False
         self.elm_errors = 0
         self.scan_stop = threading.Event()
+        self.grupos = MOTORES["edc15"][1]    # nombres de los campos de los grupos VAG (según el motor)
 
     def post(self, kind, payload=None):
         self.out.put((kind, payload))
@@ -975,7 +977,7 @@ class Worker(threading.Thread):
         if self.mode == KKL:
             for g in items:
                 try:
-                    data[g] = leer_grupo_formateado(self.ecu, g)
+                    data[g] = leer_grupo_formateado(self.ecu, g, self.grupos)
                 except KW1281Error as e:
                     data[g] = str(e)
                     if not self.ecu.connected:
@@ -1041,6 +1043,7 @@ class Worker(threading.Thread):
                          modulo=MODULOS.get(addr, tr("Módulo {dir}", dir=f"{addr:02X}")), baud=e.baud),
             "title": ident[0].strip(),
             "addr": addr,
+            "motor": detectar_motor(ident) if addr == 0x01 else None,
             "ident": [x.strip() for x in ident if x.strip()],
             "fields": [(tr("Módulo"), f"{addr:02X} · {MODULOS.get(addr, '?')}"),
                        (tr("Referencia"), ident[0].strip() or "—"),
@@ -1058,6 +1061,7 @@ class Worker(threading.Thread):
         self.elm.connect()
         e = self.elm
         vin, volt = e.vin(), e.voltage()
+        obd_datos.marca_vag = bool(vin) and vin[:3] in VIN_VAG
         mil, ndtc = e.mil()
         std = e.obd_standard()
         ident = e.identificacion()
@@ -1869,11 +1873,18 @@ class App:
 
         # Selección VAG
         self.side_vag = ttk.Frame(side, style="Card.TFrame")
+        ttk.Label(self.side_vag, text=tr("Motor"), style="Muted.TLabel").pack(anchor="w")
+        self.motor = "edc15"
+        self.motor_var = tk.StringVar(value=tr(MOTORES[self.motor][0]))
+        self.motor_cb = ttk.Combobox(self.side_vag, textvariable=self.motor_var, state="readonly", width=28,
+                                     values=[tr(m[0]) for m in MOTORES.values()])
+        self.motor_cb.pack(anchor="w", fill="x", pady=(2, 8))
+        self.motor_cb.bind("<<ComboboxSelected>>",
+                           lambda e: self._poner_motor(list(MOTORES)[self.motor_cb.current()]))
+        self.grupos_frame = ttk.Frame(self.side_vag, style="Card.TFrame")
+        self.grupos_frame.pack(anchor="w", fill="x")
         self.group_vars = {}
-        for g, (t, _) in GRUPOS_EDC15.items():
-            v = tk.BooleanVar(value=g in (1, 11))
-            ttk.Checkbutton(self.side_vag, text=f"{g:03d}  {t}", variable=v).pack(anchor="w", pady=2)
-            self.group_vars[g] = v
+        self._poner_motor(self.motor)
         ttk.Label(self.side_vag, text=tr("Otros grupos (ej. 5, 20)"), style="Muted.TLabel").pack(anchor="w", pady=(12, 4))
         self.extra_groups = ttk.Entry(self.side_vag, width=22)
         self.extra_groups.pack(anchor="w", fill="x")
@@ -2367,8 +2378,10 @@ class App:
         if self.connected:
             lineas += [f"{k}: {v}" for k, v in self.vehicle_fields]
             if self.mode == KKL:
-                lineas.append(tr("Grupos habituales EDC15: ") + ", ".join(
-                    f"{g:03d} {t}" for g, (t, _) in GRUPOS_EDC15.items())
+                nombre, grupos, _ = MOTORES[self.motor]
+                lineas.append(tr("Motor elegido para nombrar los grupos: {motor}", motor=tr(nombre)))
+                lineas.append(tr("Grupos habituales: ") + ", ".join(
+                    f"{g:03d} {t}" for g, (t, _) in grupos.items())
                     + tr(". Se pueden pedir otros números de grupo (1-255); si no existen, la centralita lo indica."))
             else:
                 lineas.append(tr("PIDs soportados: ") + ", ".join(f"{p:02X} {PIDS[p][0]}" for p in self.supported))
@@ -2672,6 +2685,24 @@ class App:
             self.status(tr("Conectando con el ELM327..."), WARN)
             self.bar.configure(text=tr("Conectando: la búsqueda del protocolo OBD2 puede tardar hasta 25 s."))
         self.worker.submit("connect", self.mode, port, addr)
+
+    def _poner_motor(self, motor):
+        """Elige el tipo de motor VAG: casillas de sus grupos y nombres de los campos."""
+        nombre, grupos, defecto = MOTORES[motor]
+        cambia = motor != getattr(self, "_motor_casillas", None)
+        self.motor = motor
+        self.motor_var.set(tr(nombre))
+        self.worker.grupos = grupos
+        if not cambia:
+            return
+        self._motor_casillas = motor
+        for w in self.grupos_frame.winfo_children():
+            w.destroy()
+        self.group_vars = {}
+        for g, (t, _) in grupos.items():
+            v = tk.BooleanVar(value=g in defecto)
+            ttk.Checkbutton(self.grupos_frame, text=f"{g:03d}  {t}", variable=v).pack(anchor="w", pady=2)
+            self.group_vars[g] = v
 
     def _selected_items(self):
         if self.mode == ELM:
@@ -3274,6 +3305,8 @@ class App:
                 self.comb_var.set(self._nombre_comb(self.combustible_coche))
             if payload["mode"] == ELM:
                 self._fill_pid_list(self.supported)
+            elif payload.get("motor"):
+                self._poner_motor(payload["motor"])
             self._set_connected(True, payload)
             self._fill_ecu(payload["fields"])
             self._fill_readiness(payload.get("readiness"))

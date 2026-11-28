@@ -7,7 +7,10 @@ algun valor sale raro, el programa muestra tambien el numero de formula y los
 bytes a/b en bruto para poder revisarlo.
 """
 
+import re
+
 import idioma
+import vag_p1
 from idioma import tr
 
 # ---------------------------------------------------------------------------
@@ -246,30 +249,9 @@ DTCS = {
     65535: "Unidad de control averiada",
 }
 
-# Codigos OBD especificos de VAG (P1xxx) en formato de 5 cifras (17xxx-18xxx).
-DTCS_P1 = {
-    1136: "Adaptación aditiva de la mezcla (banco 1): demasiado pobre",
-    1137: "Adaptación aditiva de la mezcla (banco 1): demasiado rica",
-    1297: "Conexión turbo-mariposa: fuga en el tubo de presión",
-    1325: "Regulación de picado, cilindro 1: límite alcanzado",
-    1326: "Regulación de picado, cilindro 2: límite alcanzado",
-    1327: "Regulación de picado, cilindro 3: límite alcanzado",
-    1328: "Regulación de picado, cilindro 4: límite alcanzado",
-    1341: "Etapa final de la bobina de encendido 1: cortocircuito a masa",
-    1410: "Válvula del depósito de carbón activo: cortocircuito a positivo",
-    1505: "Interruptor de mariposa cerrada: no abre",
-    1506: "Interruptor de mariposa cerrada: no cierra",
-    1511: "Válvula de conmutación del colector de admisión: fallo eléctrico",
-    1543: "Potenciómetro de accionamiento de la mariposa: señal demasiado baja",
-    1556: "Regulación de la presión de sobrealimentación: desviación negativa (falta presión)",
-    1557: "Regulación de la presión de sobrealimentación: desviación positiva (sobrepresión)",
-    1570: "Arranque bloqueado por el inmovilizador",
-    1602: "Tensión del borne 30 demasiado baja",
-    1612: "Unidad de control del motor mal codificada",
-    1626: "Bus de datos de tracción: falta mensaje del cambio",
-    1649: "Bus de datos de tracción: falta mensaje del ABS",
-    1650: "Bus de datos de tracción: falta mensaje del cuadro de instrumentos",
-}
+# Codigos OBD especificos de VAG (P1xxx) en formato de 5 cifras (17xxx-18xxx):
+# vag_p1.py, con la descripcion en espanol e ingles (no pasan por textos_en.py).
+DTCS_P1 = dict(vag_p1.P1)
 
 
 def codigo_obd(code):
@@ -324,6 +306,79 @@ GRUPOS_EDC15 = {
     13: ("Marcha suave (cilindros)", ["Cilindro 1", "Cilindro 2", "Cilindro 3", "Cilindro 4"]),
 }
 
+# TDI inyector-bomba (PD, Bosch EDC15P/EDC16). Fuente: manual de taller VAG, «Display group
+# overview» del TDI de inyector-bomba (Audi A3 8L).
+GRUPOS_PD = {
+    1: ("Inyección", ["Régimen", "Caudal inyectado", "Tiempo de inyección teórico", "Temp. refrigerante"]),
+    2: ("Acelerador", ["Régimen", "Pedal acelerador", "Estado de funcionamiento", "Temp. refrigerante"]),
+    3: ("EGR / caudalímetro", ["Régimen", "Masa aire teórica", "Masa aire real", "Ciclo válvula EGR"]),
+    4: ("Inyectores-bomba", ["Régimen", "Comienzo inyección teórico", "Tiempo de inyección real",
+                             "Ángulo de sincronización"]),
+    6: ("Pedales y regulador de velocidad", ["Velocidad", "Interruptores de freno y embrague",
+                                             "Pedal acelerador", "Regulador de velocidad"]),
+    7: ("Temperaturas", ["Temp. combustible", "Valor 2", "Temp. colector de admisión", "Temp. refrigerante"]),
+    8: ("Limitación de caudal", ["Régimen", "Caudal solicitado", "Limitación al cambiar de marcha",
+                                 "Limitación por humos"]),
+    10: ("Aire / presiones", ["Masa de aire", "Presión atmosférica", "Presión colector", "Pedal acelerador"]),
+    11: ("Turbo", ["Régimen", "Presión sobrealim. teórica", "Presión sobrealim. real", "Ciclo N75"]),
+    13: ("Marcha suave (cilindros)", ["Cilindro 1", "Cilindro 2", "Cilindro 3", "Cilindro 4"]),
+    18: ("Estado de los inyectores-bomba", ["Inyector 1", "Inyector 2", "Inyector 3", "Inyector 4"]),
+    23: ("Conmutación de los inyectores-bomba", ["Cilindro 1", "Cilindro 2", "Cilindro 3", "Cilindro 4"]),
+}
+
+# Gasolina: grupos estándar de VAG (Ross-Tech, «Standardized Measuring Blocks»), orientativos
+# para motores de 1999-2000 en adelante. Algunos cambian según el motor (caudalímetro o
+# sensor de presión, uno o dos bancos): el nombre lo indica entre paréntesis.
+GRUPOS_GASOLINA = {
+    1: ("Datos generales", ["Régimen", "Temp. refrigerante", "Regulación lambda",
+                            "Condiciones del ajuste básico (o lambda banco 2)"]),
+    2: ("Carga e inyección", ["Régimen", "Carga", "Tiempo de inyección medio", "Masa de aire (o presión colector)"]),
+    3: ("Aire y encendido", ["Régimen", "Masa de aire (o presión colector)", "Ángulo de la mariposa",
+                             "Avance de encendido"]),
+    4: ("Tensión y temperaturas", ["Régimen", "Tensión", "Temp. refrigerante", "Temp. aire de admisión"]),
+    5: ("Estado de funcionamiento", ["Régimen", "Carga", "Velocidad", "Estado de funcionamiento"]),
+    10: ("Encendido", ["Régimen", "Carga", "Ángulo de la mariposa", "Avance de encendido"]),
+    11: ("Encendido y temperaturas", ["Régimen", "Temp. refrigerante", "Temp. aire de admisión",
+                                      "Avance de encendido"]),
+    20: ("Picado: retraso del encendido", ["Cilindro 1", "Cilindro 2", "Cilindro 3", "Cilindro 4"]),
+    22: ("Picado: cilindros 1 y 2", ["Régimen", "Carga", "Retraso cilindro 1", "Retraso cilindro 2"]),
+    23: ("Picado: cilindros 3 y 4", ["Régimen", "Carga", "Retraso cilindro 3", "Retraso cilindro 4"]),
+    31: ("Sondas lambda", ["Banco 1, sonda 1", "Banco 1, sonda 2", "Banco 2, sonda 1", "Banco 2, sonda 2"]),
+    32: ("Adaptación de la mezcla", ["Banco 1, ralentí", "Banco 1, carga parcial", "Banco 2, ralentí",
+                                    "Banco 2, carga parcial"]),
+    33: ("Regulación lambda", ["Regulación lambda banco 1", "Tensión sonda banco 1", "Regulación lambda banco 2",
+                              "Tensión sonda banco 2"]),
+    115: ("Turbo", ["Régimen", "Carga", "Presión turbo teórica", "Presión turbo real"]),
+    118: ("Turbo: válvula y temperatura", ["Régimen", "Temp. aire de admisión", "Ciclo válvula del turbo",
+                                          "Presión antes de la mariposa"]),
+}
+
+# Tipo de motor -> (nombre, grupos, grupos marcados por defecto)
+MOTORES = {
+    "edc15": ("TDI bomba rotativa (EDC15V)", GRUPOS_EDC15, (1, 11)),
+    "pd": ("TDI inyector-bomba (PD)", GRUPOS_PD, (1, 11)),
+    "gasolina": ("Gasolina (grupos estándar)", GRUPOS_GASOLINA, (2, 3)),
+}
+
+
+def detectar_motor(ident):
+    """Tipo de motor (clave de MOTORES) según la identificación de la centralita de motor, o None.
+
+    Diésel si pone EDC (Bosch EDC15/16); inyector-bomba si la referencia es 038906019, 038906012 o
+    03G906 (las 038906018 son de bomba rotativa). Gasolina si describe el motor (p. ej.
+    «1.8L R4/5VT», «2,0l R4/2V MOTR») sin EDC. Es una estimación: el usuario puede cambiarlo.
+    """
+    textos = [t.strip().upper() for t in ident if t and t.strip()]
+    if not textos:
+        return None
+    todo = " ".join(textos)
+    if "EDC" in todo:
+        ref = textos[0].replace(" ", "")
+        return "pd" if ref.startswith(("038906019", "038906012", "03G906")) else "edc15"
+    if re.search(r"\d[.,]\d\s*L\s*[RV]\d", todo):
+        return "gasolina"
+    return None
+
 
 MODULOS = {
     0x01: "Electrónica del motor",
@@ -350,6 +405,8 @@ MODULOS = {
 }
 
 # Traducción de las tablas al idioma de la interfaz (ver idioma.py)
-for _t in (FAULT_TYPES, DTCS, DTCS_P1, MODULOS):
+for _t in (FAULT_TYPES, DTCS, MODULOS):
     idioma.tabla(_t)
-idioma.tabla(GRUPOS_EDC15, lambda v: (tr(v[0]), [tr(x) for x in v[1]]))
+idioma.tabla(DTCS_P1, lambda v: v[1] if idioma.actual() == "en" else v[0])
+for _t in (GRUPOS_EDC15, GRUPOS_PD, GRUPOS_GASOLINA):
+    idioma.tabla(_t, lambda v: (tr(v[0]), [tr(x) for x in v[1]]))

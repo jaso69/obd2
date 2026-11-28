@@ -44,7 +44,7 @@ Cabecera: selector **Conexión** (KKL · VAG KW1281 / ELM327 · OBD2 genérico),
 | Pestaña (en este orden) | Modo KKL (VAG KW1281) | Modo ELM327 (OBD2) |
 |---|---|---|
 | **Panel** | Relojes: rpm, caudal inyectado (mg/H), presión turbo (con marca de presión teórica), refrigerante. Tarjetas: ciclo N75, ciclo EGR, tensión dosificador, masa de aire. Gráficas 60 s: turbo teórico/real (G011) y masa de aire teórica/real (G003). | Relojes: rpm, velocidad, refrigerante, carga. Tarjetas: temp. admisión, MAF, mariposa, tensión. Gráficas: rpm y carga/mariposa. |
-| **Valores medidos** | Grupos de valores medidos (casillas con los típicos de EDC15 + campo para otros). Tabla en vivo. Botón **Grabar CSV**. | Lista con solo los PIDs que el coche soporta (selección múltiple). Tabla en vivo. Grabar CSV. |
+| **Valores medidos** | Selector **Motor** (TDI bomba rotativa EDC15V / TDI inyector-bomba / gasolina con los grupos estándar de VAG): cambia las casillas de grupos habituales y el nombre de los campos; se elige solo al conectar al módulo 01 según la identificación (`detectar_motor`: EDC + referencia 038906019/012 o 03G906 → inyector-bomba; EDC → bomba rotativa; «1.8L R4/5VT»… sin EDC → gasolina). Campo para otros grupos. Tabla en vivo. Botón **Grabar CSV**. | Lista con solo los PIDs que el coche soporta (selección múltiple). Tabla en vivo. Grabar CSV. |
 | (las dos) | **Gráfica en vivo** debajo de la tabla de las filas elegidas (clic; Ctrl+clic hasta 4, con colores y unidades). Guarda el último minuto de todos los valores, así que al elegir una fila sale su historia. Admite negativos. **Abrir CSV...** abre el **visor de CSV** (ventana aparte, `VisorCSV`): columnas a elegir (hasta 4), gráfica de toda la grabación (`GraficaFija`) con los valores bajo el ratón, zoom arrastrando (doble clic / clic derecho / «Ver todo» para volver) y mínimo/media/máximo del tramo visible. Lee los CSV del programa y de otros (`,` `;` o tabulador; sin columna de tiempo usa el nº de muestra). | |
 | **Averías** | Códigos VAG de 5 cifras, componente, tipo de fallo, intermitente. Leer / Borrar (con confirmación). **Escanear todos los módulos**: prueba las 21 direcciones de `MODULOS` una a una (los ausentes se descartan en ~4 s), lista identificación y averías de cada módulo que responde y vuelve al módulo elegido; se puede detener. **Generar informe**. | Códigos P0xxx memorizados, pendientes y **permanentes** (modo 0A; no se borran) con descripción, estado del testigo MIL. A la derecha, **datos congelados** (modo 02) de la avería que encendió el testigo. Leer / Borrar. **Generar informe**. |
 | (Averías, las dos) | **Historial por coche**: cada lectura, borrado y escaneo se guarda solo en `historial/<id>.json` de la carpeta de configuración (la misma lectura antes de 30 min no se duplica). Coche = VIN; si no hay, en OBD2 la calibración (`CALID-…`) y en VAG el VIN si sale en la identificación o la referencia de la centralita de motor (`VAG-038906018FQ`; el escaneo la descubre aunque se conecte a otro módulo). Debajo de los botones, comparación con el diagnóstico anterior de los mismos módulos: nuevas, ya no aparecen, se repiten (también va al contexto de la IA). **Historial...** abre `VentanaHistorial`: elegir coche, lista de diagnósticos, detalle con su comparación y borrar un diagnóstico. | |
@@ -143,6 +143,15 @@ Otros detalles:
 Los nombres de campo son orientativos; la unidad la calcula el programa con la
 fórmula que envía la propia centralita.
 
+Desde el 2026-11-28 hay también tablas para el **TDI inyector-bomba** (`GRUPOS_PD`, del
+«Display group overview» del manual de taller: 001, 002, 003, 004 con comienzo/tiempo de
+inyección y ángulo de sincronización, 006 pedales, 007, 008 con limitación por humos, 010, 011,
+013, 018 estado de los inyectores-bomba, 023 tiempo de conmutación) y para **gasolina**
+(`GRUPOS_GASOLINA`, grupos estándar de Ross-Tech para motores de 1999-2000 en adelante: 001-005,
+010, 011, 020/022/023 picado, 031-033 lambda, 115 y 118 turbo). En gasolina algunos grupos
+cambian según el motor (caudalímetro o sensor de presión, 1 o 2 bancos): el nombre del campo lo
+indica entre paréntesis. Se eligen con el selector **Motor** de Valores medidos (ver §2).
+
 ---
 
 ## 6. Asistente de IA
@@ -192,7 +201,8 @@ fórmula que envía la propia centralita.
 | `kw1281.py` | Protocolo KW1281: init 5 baudios por *break*, detección de velocidad, eco, complementos, bloques, keep-alive en hilo, averías, borrado, grupos. |
 | `informe.py` | Informe de diagnóstico HTML (escapa todo el texto; CSS de impresión). |
 | `vin_datos.py` | Decodificación del VIN: tabla WMI de fabricantes, país, año modelo (posición 10, ciclo de 30 años), código de modelo VAG (posiciones 7-8). |
-| `vag_datos.py` | Fórmulas de valores medidos VAG (≈60), tipos de fallo, averías VAG de 5 cifras (≈90 clásicos 00xxx-01xxx, 21 P1 de VAG y traducción de 16xxx-18xxx a P0/P1), grupos EDC15, 21 módulos. |
+| `vag_datos.py` | Fórmulas de valores medidos VAG (≈60), tipos de fallo, averías VAG de 5 cifras (≈90 clásicos 00xxx-01xxx, los P1 de `vag_p1.py` y traducción de 16xxx-18xxx a P0/P1), grupos por motor (`GRUPOS_EDC15`, `GRUPOS_PD`, `GRUPOS_GASOLINA`, `MOTORES`, `detectar_motor`), 21 módulos. |
+| `vag_p1.py` | 538 averías P1 de VAG (17xxx-18xxx) en español e inglés: `P1[código] = (es, en)`. Fuente: tabla de Bentley Publishers (pics.tdiclub.com/data/500/7938dtc.pdf), solo filas con número VAG. No pasan por `textos_en.py`. En OBD2 se usan si el VIN es de VAG (`obd_datos.marca_vag`). |
 | `elm327.py` | OBD2 por ELM327: inicialización, protocolo automático, parseo con cabeceras (CAN 11/29 bits y línea K), reensamblado ISO-TP, multi-PID, averías (03/07/0A/04), datos congelados (02), monitores (01 01), VIN y CALID/CVN/nombre (09 02/04/06/0A), MIL, tensión. |
 | `obd_datos.py` | PIDs del modo 01 (≈50) con decodificadores, estándares OBD, descripciones de averías P0xxx (≈110), monitores de preparación (gasolina y diésel). |
 | `ia.py` | Proveedores, configuración y claves (y migración desde `ToledoDiagnosis`), `Conversacion` (bucle de herramientas para Anthropic y OpenAI/DeepSeek), prompt de sistema en español e inglés, definición de herramientas (`herramientas()` las da traducidas). |
@@ -363,7 +373,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 - ~~Más herramientas para la IA~~ **hecho el 2026-11-27**: `grabar_valores`, `consultar_historial`, `generar_informe` (sin publicar; probadas con simuladores llamándolas como el modelo y **con la API real de DeepSeek** (`deepseek-chat`, 2026-11-27, ~1 min): usó `consultar_historial`, `grabar_valores` (3 grabaciones de 10 s porque esperaba el motor caliente) y `generar_informe`; informe con su diagnóstico y la comparación, bien. Con Anthropic no se ha probado: el usuario solo tiene clave de DeepSeek guardada).
 
 **3. Más adelante**
-- Seguir ampliando averías VAG (más P1 y módulos de confort/clima); más grupos documentados (ME7 gasolina, TDI inyector-bomba).
+- ~~Más P1 de VAG y grupos de TDI inyector-bomba y gasolina~~ **hecho el 2026-11-28** (538 P1, también en OBD2 si el VIN es VAG; grupos PD del manual de taller y de gasolina estándar de Ross-Tech; sin publicar, probado con simuladores). Falta: averías de confort/clima (no se encontró una tabla pública fiable) y adaptar el **Panel** KKL a gasolina (hoy muestra los grupos 1, 3 y 11 del TDI).
 - Firma del ejecutable de Windows (evitar SmartScreen).
 - Test de actuadores / ajustes básicos KW1281 (con mucho cuidado).
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.

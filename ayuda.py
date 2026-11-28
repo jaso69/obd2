@@ -48,9 +48,11 @@ def secciones():
         ]),
         (tr("Valores medidos"), [
             tr("Lectura de los valores que tú elijas, en una tabla en vivo."),
-            tr("• Con KKL marcas los grupos de valores medidos (los típicos del TDI ya vienen en la lista) o "
-               "escribes otros números de grupo. Con ELM327 eliges en la lista los valores (PIDs) que da tu "
-               "coche; Ctrl+clic o Mayús+clic para elegir varios."),
+            tr("• Con KKL marcas los grupos de valores medidos o escribes otros números de grupo. Arriba, en "
+               "Motor, eliges el tipo de motor (TDI de bomba rotativa, TDI inyector-bomba o gasolina) para ver "
+               "sus grupos habituales con el nombre de cada valor; al conectar a la centralita del motor se "
+               "elige solo. Con ELM327 eliges en la lista los valores (PIDs) que da tu coche; Ctrl+clic o "
+               "Mayús+clic para elegir varios."),
             tr("• Haz clic en una fila de la tabla para ver su gráfica (Ctrl+clic, hasta 4 a la vez). El "
                "programa guarda el último minuto de todos los valores, así que la gráfica sale con su historia."),
             tr("• «Grabar CSV» guarda los valores en un archivo que se abre en Excel o LibreOffice; «Abrir CSV...» "

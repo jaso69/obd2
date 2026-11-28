@@ -80,9 +80,10 @@ def borrar_averias(ecu):
         print("Averías borradas.")
 
 
-def leer_grupo_formateado(ecu, g):
+def leer_grupo_formateado(ecu, g, grupos=None):
+    """Filas (nombre, valor, unidad, ok) del grupo g; los nombres salen de la tabla del motor."""
     campos = ecu.read_group(g)
-    nombres = GRUPOS_EDC15.get(g, (None, []))[1]
+    nombres = (GRUPOS_EDC15 if grupos is None else grupos).get(g, (None, []))[1]
     if g == 0:
         return [(tr("Byte {n}", n=i + 1), str(v), "", True) for i, v in enumerate(campos)]
     filas = []

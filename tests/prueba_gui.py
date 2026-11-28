@@ -271,6 +271,18 @@ for modo in (gui.KKL, gui.ELM):
 
     if modo == gui.ELM:
         app.pid_list.selection_set(0, 3)
+    else:
+        # el simulador es una EDC15 (038906018FQ, «1,9l R4 EDC»): bomba rotativa
+        ok(app.motor == "edc15" and app.worker.grupos is gui.MOTORES["edc15"][1], "motor detectado: TDI bomba rotativa")
+        app._poner_motor("gasolina")
+        root.update()
+        marcados = sorted(g for g, v in app.group_vars.items() if v.get())
+        ok(marcados == [2, 3] and 115 in app.group_vars and app.worker.grupos is gui.MOTORES["gasolina"][1],
+           f"al elegir gasolina cambian los grupos (marcados {marcados})")
+        g1 = gui.leer_grupo_formateado(app.worker.ecu, 1, app.worker.grupos)
+        ok(g1[1][0] == tr("Temp. refrigerante"), f"los campos llevan el nombre del motor elegido ({g1[1][0]})")
+        app._poner_motor("edc15")
+        root.update()
     app.toggle_rec()
     ok(esperar(lambda: app.csv_n >= 3, 20), f"lectura de valores y grabación CSV ({app.csv_n} muestras)")
     filas = app.tree.get_children()
