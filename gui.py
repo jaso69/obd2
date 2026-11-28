@@ -20,6 +20,7 @@ from collections import deque
 from tkinter import filedialog, messagebox, ttk
 
 import ayuda
+import cambios
 import consumo
 import csv_datos
 import historial
@@ -778,6 +779,8 @@ class Worker(threading.Thread):
             except Exception as e:
                 self.post("act", {"stopped": True, "error": str(e)})
                 self._lost(tr("no se pudo reconectar tras el test de actuadores: {e}", e=e))
+        elif kind == "adapt":
+            self._adaptar(*args)
         elif kind == "live":
             self.live_items = args[0] or None
             self.live_gen = args[1]
@@ -794,6 +797,33 @@ class Worker(threading.Thread):
                 reply.put((tr("Error de comunicación: {e}", e=e), True))
                 if self.mode == ELM and self.online and self._is_port_error(e):
                     self._lost(str(e))
+
+    def _adaptar(self, accion, *datos):
+        """Canales de adaptación, código de acceso y codificación (VentanaAdaptacion)."""
+        r = {"accion": accion}
+        try:
+            if accion == "leer":
+                r.update(canal=datos[0], valor=self.ecu.adaptation_read(datos[0]))
+            elif accion in ("probar", "deshacer_prueba"):
+                r.update(canal=datos[0], valor=self.ecu.adaptation_test(datos[0], datos[1]))
+            elif accion == "guardar":
+                r.update(canal=datos[0], valor=self.ecu.adaptation_save(*datos))
+                self.log(tr("Canal de adaptación {c} guardado: {v}.", c=f"{datos[0]:02d}", v=r["valor"]))
+            elif accion == "login":
+                self.ecu.login(*datos)
+                r.update(codigo=datos[0])
+                self.log(tr("Código de acceso aceptado."))
+            elif accion == "codificar":
+                try:
+                    r.update(codificacion=self.ecu.set_coding(*datos))
+                    self.log(tr("Codificación cambiada a {v}.", v=f"{datos[0]:05d}"))
+                finally:
+                    if self.ecu.connected:
+                        r["info"] = self._info_kkl()
+        except (KW1281Error, ValueError) as e:
+            self.log(tr("Error: {e}", e=e))
+            r["error"] = str(e)
+        self.post("adapt", r)
 
     # ---------------- herramientas del asistente IA ----------------
     @staticmethod
@@ -1087,8 +1117,15 @@ class Worker(threading.Thread):
         self.log(tr("Init a 5 baudios al módulo {dir}...", dir=f"{addr:02X}"))
         self.ecu.connect()
         e = self.ecu
-        ident = [texto_id(d) for d in e.ident] + ["", "", ""]
         self.log(tr("Conectado a {baud} baudios, keywords {kw}", baud=e.baud, kw=f"{e.keywords[0]:02X} {e.keywords[1]:02X}"))
+        return self._info_kkl()
+
+    def _info_kkl(self):
+        """Identificación de la centralita conectada por KKL (al conectar y tras cambiar la codificación)."""
+        e = self.ecu
+        addr = e.address
+        cod = KW1281.codificacion(e.ident)
+        ident = [texto_id(d) for d in e.ident if not (cod and len(d) >= 5 and d[0] == 0)] + ["", "", ""]
         kw = f"{e.keywords[0]:02X} {e.keywords[1]:02X}" + ("  (KW1281)" if e.keywords == (0x01, 0x8A) else "")
         return {
             "mode": KKL,
@@ -1098,10 +1135,13 @@ class Worker(threading.Thread):
             "addr": addr,
             "motor": detectar_motor(ident) if addr == 0x01 else None,
             "ident": [x.strip() for x in ident if x.strip()],
+            "codificacion": cod,
             "fields": [(tr("Módulo"), f"{addr:02X} · {MODULOS.get(addr, '?')}"),
                        (tr("Referencia"), ident[0].strip() or "—"),
                        (tr("Componente"), ident[1].strip() or "—"),
                        (tr("Software / taller"), ident[2].strip() or "—"),
+                       (tr("Codificación"), tr("{c} · código de taller {t}", c=f"{cod[0]:05d}", t=f"{cod[1]:05d}")
+                        if cod else "—"),
                        (tr("Datos adicionales"), "  ".join(x for x in ident[3:] if x) or "—"),
                        (tr("Velocidad"), tr("{baud} baudios", baud=e.baud)),
                        ("Keywords", kw),
@@ -1645,6 +1685,343 @@ class VentanaAjustes:
                 self._destruir()
 
 
+class VentanaAdaptacion:
+    """Canales de adaptación y codificación KW1281: escriben en la centralita, con confirmación y
+    un registro de cada cambio con su valor anterior (cambios.py)."""
+
+    def __init__(self, app):
+        self.app = app
+        s = app.s
+        self.addr = int(app.mod_var.get().split(" · ")[0], 16)
+        self.referencia = (app.kkl_ident or [""])[0]
+        self.cod = app.kkl_codificacion
+        self.registro = cambios.Cambios(ia.carpeta_config())
+        self.ocupado = None          # acción enviada a la centralita y aún sin respuesta
+        self.leido = None            # (canal, valor guardado)
+        self.probado = None          # (canal, valor) probado y aún sin guardar
+        self.cerrando = False
+        self.win = win = tk.Toplevel(app.root)
+        win.title(tr("Adaptación y codificación"))
+        win.configure(bg=PANEL)
+        _poner_icono(win)
+        win.geometry(f"{int(860 * s)}x{int(820 * s)}")
+        win.minsize(int(700 * s), int(700 * s))
+        win.transient(app.root)
+        win.protocol("WM_DELETE_WINDOW", self.cerrar)
+
+        p = ttk.Frame(win, style="Panel.TFrame", padding=18)
+        p.pack(fill="both", expand=True)
+        ttk.Label(p, text=tr("Adaptación y codificación · {modulo}", modulo=app.mod_var.get()), style="Panel.TLabel",
+                  font=(FONT, 12, "bold")).pack(anchor="w")
+        aviso = app._card(p, padding=(14, 10))
+        aviso.pack(fill="x", pady=(10, 10))
+        for i, txt in enumerate((
+                tr("Esto escribe en la centralita. Un valor equivocado puede dejar el coche funcionando mal (o sin "
+                   "arrancar, si es del inmovilizador) hasta volver a poner el valor de antes."),
+                tr("• Cambia solo los canales y la codificación que indica el manual de taller de tu coche, con los "
+                   "valores que da. Si no lo tienes claro, no lo hagas."),
+                tr("• Motor parado y contacto puesto, salvo que el manual diga otra cosa, y la batería en buen estado."),
+                tr("• Un valor nuevo primero se prueba (la centralita lo usa sin guardarlo) y después se guarda. "
+                   "Cada cambio guardado queda apuntado abajo con el valor de antes para poder volver a él."))):
+            ttk.Label(aviso, text=txt, style="Card.TLabel", wraplength=int(780 * s), justify="left",
+                      foreground=WARN if i == 0 else None).pack(anchor="w", pady=(0, 4))
+        self.ok_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(p, text=tr("He leído los avisos y tengo los valores del manual de taller"),
+                        variable=self.ok_var, command=self._botones).pack(anchor="w")
+
+        def numero(padre, ancho):
+            v = tk.StringVar()
+            e = ttk.Entry(padre, textvariable=v, width=ancho)
+            v.trace_add("write", lambda *a: self._botones())
+            return v, e
+
+        # canal de adaptación
+        ad = app._card(p, padding=(14, 10))
+        ad.pack(fill="x", pady=(12, 0))
+        ttk.Label(ad, text=tr("Canal de adaptación"), style="Card.TLabel", font=(FONT, 11, "bold")).grid(
+            row=0, column=0, columnspan=5, sticky="w", pady=(0, 6))
+        ttk.Label(ad, text=tr("Canal"), style="Card.TLabel").grid(row=1, column=0, sticky="w", padx=(0, 8))
+        self.canal_var, e = numero(ad, 6)
+        e.grid(row=1, column=1, sticky="w")
+        self.leer_btn = ttk.Button(ad, text=tr("Leer"), width=12, command=self.leer)
+        self.leer_btn.grid(row=1, column=2, sticky="w", padx=(8, 0))
+        self.guardado_lbl = ttk.Label(ad, text="", style="Card.TLabel", font=(FONT, 11, "bold"))
+        self.guardado_lbl.grid(row=1, column=3, columnspan=2, sticky="w", padx=(14, 0))
+        ttk.Label(ad, text=tr("Valor nuevo"), style="Card.TLabel").grid(row=2, column=0, sticky="w", padx=(0, 8),
+                                                                        pady=(8, 0))
+        self.valor_var, e = numero(ad, 8)
+        e.grid(row=2, column=1, sticky="w", pady=(8, 0))
+        self.probar_btn = ttk.Button(ad, text=tr("Probar"), width=12, command=self.probar)
+        self.probar_btn.grid(row=2, column=2, sticky="w", padx=(8, 0), pady=(8, 0))
+        self.guardar_btn = ttk.Button(ad, text=tr("Guardar"), style="Danger.TButton", width=12, command=self.guardar)
+        self.guardar_btn.grid(row=2, column=3, sticky="w", padx=(8, 0), pady=(8, 0))
+
+        # código de acceso y codificación
+        cd = app._card(p, padding=(14, 10))
+        cd.pack(fill="x", pady=(10, 0))
+        ttk.Label(cd, text=tr("Código de acceso (login)"), style="Card.TLabel").grid(row=0, column=0, sticky="w",
+                                                                                     padx=(0, 8))
+        self.login_var, e = numero(cd, 8)
+        e.grid(row=0, column=1, sticky="w")
+        self.login_btn = ttk.Button(cd, text=tr("Enviar código"), width=16, command=self.login)
+        self.login_btn.grid(row=0, column=2, sticky="w", padx=(8, 0))
+        ttk.Label(cd, text=tr("Solo si el manual lo pide para un canal o para codificar."),
+                  style="Muted.TLabel").grid(row=0, column=3, sticky="w", padx=(12, 0))
+        ttk.Label(cd, text=tr("Codificación"), style="Card.TLabel").grid(row=1, column=0, sticky="w", padx=(0, 8),
+                                                                         pady=(10, 0))
+        self.cod_var, e = numero(cd, 8)
+        e.grid(row=1, column=1, sticky="w", pady=(10, 0))
+        self.cod_btn = ttk.Button(cd, text=tr("Guardar codificación"), style="Danger.TButton", width=20,
+                                  command=self.codificar)
+        self.cod_btn.grid(row=1, column=2, columnspan=2, sticky="w", padx=(8, 0), pady=(10, 0))
+        self.cod_lbl = ttk.Label(cd, text="", style="Muted.TLabel")
+        self.cod_lbl.grid(row=2, column=0, columnspan=4, sticky="w", pady=(4, 0))
+        ttk.Label(cd, text=tr("Código de taller"), style="Card.TLabel").grid(row=3, column=0, sticky="w",
+                                                                             padx=(0, 8), pady=(10, 0))
+        self.taller_var, e = numero(cd, 8)
+        e.grid(row=3, column=1, sticky="w", pady=(10, 0))
+        ttk.Label(cd, text=tr("Se guarda en la centralita con cada cambio (0-99999)."),
+                  style="Muted.TLabel").grid(row=3, column=2, columnspan=2, sticky="w", padx=(8, 0), pady=(10, 0))
+        self.taller_var.set(f"{self.cod[1]:05d}" if self.cod else "00000")
+
+        self.info = ttk.Label(p, text=tr("Escribe el número de canal y pulsa «Leer»."), style="PanelMuted.TLabel",
+                              wraplength=int(800 * s))
+        self.info.pack(anchor="w", pady=(10, 6))
+
+        btns = ttk.Frame(p, style="Panel.TFrame")
+        btns.pack(fill="x", side="bottom", pady=(12, 0))
+        self.volver_btn = ttk.Button(btns, text=tr("Volver al valor anterior"), width=24, command=self.volver)
+        self.volver_btn.pack(side="left")
+        self.fin_btn = ttk.Button(btns, text=tr("Cerrar"), width=14, command=self.cerrar)
+        self.fin_btn.pack(side="right")
+
+        ttk.Label(p, text=tr("Cambios guardados en esta centralita"), style="Panel.TLabel").pack(anchor="w")
+        card = app._card(p, padding=0)
+        card.pack(fill="both", expand=True, pady=(4, 0))
+        self.lista = ttk.Treeview(card, columns=("fecha", "que", "antes", "despues"), show="headings", height=4)
+        for c, txt, w, st in (("fecha", tr("FECHA"), 170, False), ("que", tr("CAMBIO"), 300, True),
+                              ("antes", tr("ANTES"), 110, False), ("despues", tr("DESPUÉS"), 110, False)):
+            self.lista.heading(c, text=txt, anchor="w")
+            self.lista.column(c, width=int(w * s), stretch=st)
+        self.lista.pack(fill="both", expand=True)
+        self.lista.bind("<<TreeviewSelect>>", lambda e: self._botones())
+        self._pintar_cod()
+        self._pintar_lista()
+        self._botones()
+        app.act_en_curso = True
+        win.after(150, self._modal)
+
+    def _modal(self):
+        try:
+            self.win.grab_set()
+        except tk.TclError:
+            pass
+
+    def _destruir(self):
+        self.app.act_en_curso = False
+        self.win.destroy()
+
+    @staticmethod
+    def _num(var, minimo, maximo):
+        try:
+            v = int(var.get().strip())
+        except ValueError:
+            return None
+        return v if minimo <= v <= maximo else None
+
+    def _canal(self):
+        return self._num(self.canal_var, 1, 255)
+
+    def _valor(self):
+        return self._num(self.valor_var, 0, 65535)
+
+    def _taller(self):
+        return self._num(self.taller_var, 0, 99999)
+
+    def _pintar_cod(self):
+        if self.cod:
+            self.cod_lbl.configure(text=tr("Codificación actual: {c} · código de taller {t}", c=f"{self.cod[0]:05d}",
+                                           t=f"{self.cod[1]:05d}"))
+        else:
+            self.cod_lbl.configure(text=tr("Esta centralita no informa de su codificación: no se puede cambiar desde aquí."))
+
+    def _pintar_lista(self):
+        self.lista.delete(*self.lista.get_children())
+        self.filas = {}
+        for r in self.registro.de(self.addr, self.referencia):
+            que = (tr("Canal {c}", c=f"{r['canal']:02d}") if r["tipo"] == "adaptacion" else tr("Codificación"))
+            fmt = (lambda v: f"{v:05d}") if r["tipo"] == "codificacion" else str
+            i = self.lista.insert("", "end", values=(r["fecha"].replace("T", " "), que, fmt(r["antes"]),
+                                                     fmt(r["despues"])))
+            self.filas[i] = r
+
+    def _botones(self):
+        if not hasattr(self, "filas"):               # aún construyendo la ventana
+            return
+        libre = self.ocupado is None and not self.cerrando and self.app.connected
+        ok = libre and self.ok_var.get() and self._taller() is not None
+        canal, valor = self._canal(), self._valor()
+        leido = self.leido is not None and self.leido[0] == canal
+        self.leer_btn.configure(state="normal" if libre and canal else "disabled")
+        self.probar_btn.configure(state="normal" if ok and leido and valor is not None else "disabled")
+        self.guardar_btn.configure(state="normal" if ok and leido and self.probado == (canal, valor) else "disabled")
+        self.login_btn.configure(state="normal" if ok and self._num(self.login_var, 0, 65535) is not None
+                                 else "disabled")
+        self.cod_btn.configure(state="normal" if ok and self.cod and self._num(self.cod_var, 0, 32767) is not None
+                               else "disabled")
+        self.volver_btn.configure(state="normal" if libre and self.lista.selection() else "disabled")
+        self.fin_btn.configure(state="normal" if not self.cerrando else "disabled")
+
+    def _enviar(self, accion, *datos, texto=None):
+        self.ocupado = accion
+        self.info.configure(text=texto or tr("Esperando a la centralita..."), foreground=MUTED)
+        self._botones()
+        self.app.worker.submit("adapt", accion, *datos)
+
+    def leer(self):
+        c = self._canal()
+        if c is None:
+            return
+        self._deshacer_prueba()
+        self.leido = self.probado = None
+        self.guardado_lbl.configure(text="")
+        self._enviar("leer", c)
+
+    def probar(self):
+        c, v = self._canal(), self._valor()
+        if c is None or v is None:
+            return
+        self._enviar("probar", c, v, texto=tr("Probando el valor {v} en el canal {c}...", v=v, c=f"{c:02d}"))
+
+    def guardar(self):
+        c, v, t = self._canal(), self._valor(), self._taller()
+        if self.probado != (c, v) or t is None or not self.leido:
+            return
+        if not messagebox.askyesno(tr("Guardar adaptación"),
+                                   tr("¿Guardar en la centralita el canal {c}?", c=f"{c:02d}") + "\n\n"
+                                   + tr("Antes: {a}\nAhora: {v}", a=self.leido[1], v=v) + "\n\n"
+                                   + tr("El valor de antes queda apuntado para poder volver a él."), parent=self.win):
+            return
+        self._enviar("guardar", c, v, t, texto=tr("Guardando el canal {c}...", c=f"{c:02d}"))
+
+    def login(self):
+        v, t = self._num(self.login_var, 0, 65535), self._taller()
+        if v is None or t is None:
+            return
+        self._enviar("login", v, t)
+
+    def codificar(self):
+        v, t = self._num(self.cod_var, 0, 32767), self._taller()
+        if v is None or t is None or not self.cod:
+            return
+        if not messagebox.askyesno(tr("Guardar codificación"),
+                                   tr("¿Cambiar la codificación de la centralita?") + "\n\n"
+                                   + tr("Antes: {a}\nAhora: {v}", a=f"{self.cod[0]:05d}", v=f"{v:05d}") + "\n\n"
+                                   + tr("Una codificación equivocada puede encender testigos o hacer que el coche "
+                                        "funcione mal. La de antes queda apuntada para poder volver a ella."),
+                                   parent=self.win):
+            return
+        self.cod_antes = self.cod[0]
+        self._enviar("codificar", v, t, texto=tr("Guardando la codificación {v}...", v=f"{v:05d}"))
+
+    def volver(self):
+        sel = self.lista.selection()
+        if not sel:
+            return
+        r = self.filas[sel[0]]
+        if r["tipo"] == "codificacion":
+            self.cod_var.set(f"{r['antes']:05d}")
+            self.info.configure(text=tr("Codificación de antes puesta: {v}. Pulsa «Guardar codificación» para "
+                                        "escribirla.", v=f"{r['antes']:05d}"), foreground=MUTED)
+        else:
+            self.canal_var.set(str(r["canal"]))
+            self.valor_var.set(str(r["antes"]))
+            self.leer()
+            self.valor_var.set(str(r["antes"]))
+            self.info.configure(text=tr("Valor de antes puesto: {v}. Pruébalo y guárdalo para volver a él.",
+                                        v=r["antes"]), foreground=MUTED)
+
+    def _deshacer_prueba(self):
+        """Un valor probado y no guardado: se vuelve a probar el guardado para que la centralita lo use."""
+        if self.probado and self.leido and self.probado[0] == self.leido[0] and self.probado[1] != self.leido[1]:
+            self.app.worker.submit("adapt", "deshacer_prueba", self.leido[0], self.leido[1])
+        self.probado = None
+
+    def cerrar(self):
+        if self.ocupado:
+            self.cerrando = True
+            self._botones()
+            return
+        self._deshacer_prueba()
+        self._destruir()
+
+    def respuesta(self, r):
+        if not self.win.winfo_exists():
+            return
+        accion = r["accion"]
+        if accion == "deshacer_prueba":
+            return
+        self.ocupado = None
+        if r.get("info"):
+            self.app._kkl_identificado(r["info"])
+            self.cod = r["info"].get("codificacion")
+            self._pintar_cod()
+        if r.get("error"):
+            self.info.configure(text=r["error"], foreground=ERR)
+            if accion == "probar":
+                self.probado = None
+        elif accion == "leer":
+            self.leido = (r["canal"], r["valor"])
+            self.guardado_lbl.configure(text=tr("Valor guardado: {v}", v=r["valor"]))
+            if not self.valor_var.get().strip():
+                self.valor_var.set(str(r["valor"]))
+            self.info.configure(text=tr("Canal {c} leído. Escribe el valor nuevo y pulsa «Probar».",
+                                        c=f"{r['canal']:02d}"), foreground=OK)
+        elif accion == "probar":
+            self.probado = (r["canal"], r["valor"])
+            if str(r["valor"]) != self.valor_var.get().strip():
+                self.valor_var.set(str(r["valor"]))
+            self.info.configure(text=tr("La centralita usa ahora {v} sin guardarlo. Comprueba el resultado y pulsa "
+                                        "«Guardar», o cierra para dejar el valor de antes.", v=r["valor"]),
+                                foreground=OK)
+        elif accion == "guardar":
+            antes = self.leido[1]
+            self.registro.registrar(self.addr, self.referencia, "adaptacion", r["canal"], antes, r["valor"],
+                                    self._taller() or 0)
+            self.app.log(tr("Adaptación del módulo {m}, canal {c}: {a} → {v}.", m=f"{self.addr:02X}",
+                            c=f"{r['canal']:02d}", a=antes, v=r["valor"]))
+            self.leido = (r["canal"], r["valor"])
+            self.probado = None
+            self.guardado_lbl.configure(text=tr("Valor guardado: {v}", v=r["valor"]))
+            self.info.configure(text=tr("Guardado: el canal {c} vale ahora {v} (antes {a}).", c=f"{r['canal']:02d}",
+                                        v=r["valor"], a=antes), foreground=OK)
+            self._pintar_lista()
+        elif accion == "login":
+            self.info.configure(text=tr("Código de acceso aceptado."), foreground=OK)
+        elif accion == "codificar":
+            nueva = r["codificacion"][0]
+            self.registro.registrar(self.addr, self.referencia, "codificacion", None, self.cod_antes, nueva,
+                                    r["codificacion"][1])
+            self.app.log(tr("Codificación del módulo {m}: {a} → {v}.", m=f"{self.addr:02X}",
+                            a=f"{self.cod_antes:05d}", v=f"{nueva:05d}"))
+            self.info.configure(text=tr("Codificación guardada: {v} (antes {a}).", v=f"{nueva:05d}",
+                                        a=f"{self.cod_antes:05d}"), foreground=OK)
+            self._pintar_lista()
+        if self.cerrando:
+            self.cerrar()
+            return
+        self._botones()
+
+    def perdida(self):
+        if self.win.winfo_exists():
+            self.ocupado = None
+            self.probado = None
+            self.info.configure(text=tr("Conexión perdida con la centralita."), foreground=ERR)
+            self._botones()
+            if self.cerrando:
+                self._destruir()
+
+
 class VentanaHistorial:
     """Diagnósticos guardados de cada coche y comparación de cada uno con el anterior."""
 
@@ -1827,6 +2204,9 @@ class App:
         self.ventana_historial = None
         self.ventana_act = None                  # VentanaActuadores abierta
         self.ventana_ajustes = None              # VentanaAjustes abierta
+        self.ventana_adapt = None                # VentanaAdaptacion abierta
+        self.kkl_ident = []                      # identificación y codificación de la centralita KKL conectada
+        self.kkl_codificacion = None
         self.act_en_curso = False                # la IA no lee nada durante un test de actuadores o ajuste básico
         self.informe_ia = None                   # informe pedido por la IA: {"texto", "reply"}
         # Consumo y 0-100
@@ -1864,6 +2244,17 @@ class App:
             self.status_lbl.configure(text=texto)
             root.update_idletasks()
             ancho = max(ancho, root.winfo_reqwidth())
+        # y la barra de Averías con los botones de KKL y el resultado más largo de un escaneo
+        ocultos = [b for b in (self.scan_btn, self.act_btn, self.ajustes_btn, self.adapt_btn) if not b.winfo_manager()]
+        for b in ocultos:
+            b.pack(side="left", padx=(10, 0), before=self.dtc_lbl)
+        self.dtc_lbl.configure(text=tr("Responden {n} de {total} módulos · {averias} avería(s)", n=len(MODULOS),
+                                       total=len(MODULOS), averias=99))
+        root.update_idletasks()
+        ancho = max(ancho, root.winfo_reqwidth())
+        for b in ocultos:
+            b.pack_forget()
+        self.dtc_lbl.configure(text="")
         self._set_connected(False)
         root.geometry(f"{max(int(1240 * self.s), ancho)}x{int(800 * self.s)}")
         root.minsize(max(int(1080 * self.s), ancho), int(680 * self.s))
@@ -2457,6 +2848,8 @@ class App:
         self.act_btn.pack(side="left", padx=(10, 0))
         self.ajustes_btn = ttk.Button(top, text=tr("Ajustes básicos..."), command=self.ajustes_basicos)
         self.ajustes_btn.pack(side="left", padx=(10, 0))
+        self.adapt_btn = ttk.Button(top, text=tr("Adaptación..."), command=self.adaptacion)
+        self.adapt_btn.pack(side="left", padx=(10, 0))
         self.report_btn = ttk.Button(top, text=tr("Generar informe"), command=self.make_report)
         self.report_btn.pack(side="right")
         ttk.Button(top, text=tr("Historial..."), command=self.ver_historial).pack(side="right", padx=(0, 10))
@@ -3088,11 +3481,13 @@ class App:
             self.scan_btn.pack(side="left", after=self.dtc_clear_btn)
             self.act_btn.pack(side="left", padx=(10, 0), after=self.scan_btn)
             self.ajustes_btn.pack(side="left", padx=(10, 0), after=self.act_btn)
+            self.adapt_btn.pack(side="left", padx=(10, 0), after=self.ajustes_btn)
             self.ff_frame.pack_forget()
         else:
             self.scan_btn.pack_forget()
             self.act_btn.pack_forget()
             self.ajustes_btn.pack_forget()
+            self.adapt_btn.pack_forget()
             self.ff_frame.pack(side="right", fill="y", padx=(14, 0))
         self._fill_ff(None)
         self.hist_lbl.configure(text="")
@@ -3149,7 +3544,7 @@ class App:
         self.connected = on
         state = "normal" if on else "disabled"
         for b in (self.panel_btn, self.cons_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
-                  self.scan_btn, self.act_btn, self.ajustes_btn, self.report_btn):
+                  self.scan_btn, self.act_btn, self.ajustes_btn, self.adapt_btn, self.report_btn):
             b.configure(state=state)
         self.port_cb.configure(state="disabled" if on else self._port_state())
         self.mode_cb.configure(state="disabled" if on else "readonly")
@@ -3166,7 +3561,7 @@ class App:
             self.status(tr("Desconectado"), MUTED)
             self._stop_live()
             self._stop_rec()
-            for v in (self.ventana_act, self.ventana_ajustes):
+            for v in (self.ventana_act, self.ventana_ajustes, self.ventana_adapt):
                 if v:
                     v.perdida()
         self._cons_texto()
@@ -3363,6 +3758,20 @@ class App:
         self._stop_live()
         self.ventana_ajustes = VentanaAjustes(self)
 
+    def adaptacion(self):
+        if self.ventana_adapt and self.ventana_adapt.win.winfo_exists():
+            self.ventana_adapt.win.lift()
+            return
+        self._stop_live()
+        self.ventana_adapt = VentanaAdaptacion(self)
+
+    def _kkl_identificado(self, info):
+        """Identificación de la centralita KKL: al conectar y tras cambiar la codificación."""
+        self.kkl_ident = info.get("ident") or []
+        self.kkl_codificacion = info.get("codificacion")
+        self._fill_ecu(info["fields"])
+        self.vehicle_fields = info["fields"]
+
     def scan_modules(self, direcciones=None, confirmar=True):
         if self.scanning:
             self.worker.scan_stop.set()
@@ -3378,7 +3787,7 @@ class App:
         self._stop_live()
         self.scanning = True
         for b in (self.panel_btn, self.cons_btn, self.vals_btn, self.rec_btn, self.dtc_read_btn, self.dtc_clear_btn,
-                  self.act_btn, self.ajustes_btn, self.report_btn, self.conn_btn):
+                  self.act_btn, self.ajustes_btn, self.adapt_btn, self.report_btn, self.conn_btn):
             b.configure(state="disabled")
         self.scan_btn.configure(text=tr("■  Detener escaneo"), style="Danger.TButton")
         self.dtc_tree.delete(*self.dtc_tree.get_children())
@@ -3884,6 +4293,8 @@ class App:
             elif payload.get("motor"):
                 self._poner_motor(payload["motor"])
             self._set_connected(True, payload)
+            if payload["mode"] == KKL:
+                self._kkl_identificado(payload)
             self._fill_ecu(payload["fields"])
             self._fill_readiness(payload.get("readiness"))
             self.vehicle_fields = payload["fields"]
@@ -3894,6 +4305,9 @@ class App:
         elif kind == "basic":
             if self.ventana_ajustes:
                 self.ventana_ajustes.respuesta(payload)
+        elif kind == "adapt":
+            if self.ventana_adapt:
+                self.ventana_adapt.respuesta(payload)
         elif kind == "disconnected":
             self._set_connected(False)
             self.bar.configure(text=tr("Desconectado."))

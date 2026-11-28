@@ -25,6 +25,11 @@ from idioma import tr
 # Titulos de bloque
 ACK = 0x09
 ACTUATOR_TEST = 0x04
+ADAPT_READ = 0x21
+ADAPT_TEST = 0x22
+ADAPT_SAVE = 0x2A
+CODING = 0x10
+LOGIN = 0x2B
 NAK = 0x0A
 END_COMM = 0x06
 CLEAR_DTC = 0x05
@@ -33,6 +38,7 @@ GROUP_READ = 0x29
 BASIC_SETTING = 0x28
 R_BASIC = 0xF4
 R_ACTUATOR = 0xF5
+R_ADAPT = 0xE6
 R_ASCII = 0xF6
 R_DTC = 0xFC
 R_GROUP = 0xE7
@@ -188,7 +194,7 @@ class KW1281:
         result = []
         while blk.title != ACK:
             result.append(blk)
-            if blk.title in (NAK, R_GROUP, R_ACTUATOR, R_BASIC):
+            if blk.title in (NAK, R_GROUP, R_ACTUATOR, R_BASIC, R_ADAPT):
                 break
             self._send_block(ACK)
             blk = self._recv_block()
@@ -390,3 +396,88 @@ class KW1281:
             return list(d)
         raise KW1281Error(tr("La centralita no acepta el ajuste básico del grupo {g}: no lo tiene o no se "
                              "cumplen las condiciones.", g=f"{group:03d}"))
+
+    # ------------------------------------------------------------------
+    # Adaptación y codificación (escriben en la centralita)
+    # ------------------------------------------------------------------
+    @staticmethod
+    def codificacion(ident):
+        """(codificación, código de taller) del bloque de identificación que empieza por 0x00
+        (como kw1281test), o None si la centralita no lo manda."""
+        for d in ident:
+            if len(d) >= 5 and d[0] == 0x00:
+                taller = (d[3] << 8 | d[4]) + (0x10000 if d[2] & 1 else 0)
+                return (d[1] << 8 | d[2]) >> 1, taller
+        return None
+
+    def _adaptacion(self, title, data, canal, que):
+        blocks = self._call(title, data)
+        if blocks and blocks[0].title == R_ADAPT and len(blocks[0].data) >= 3:
+            d = blocks[0].data
+            return d[1] << 8 | d[2]
+        if blocks and blocks[0].title == NAK:
+            if que == "leer":
+                raise KW1281Error(tr("La centralita no tiene el canal de adaptación {c} o pide antes el código "
+                                     "de acceso (login).", c=f"{canal:02d}"))
+            raise KW1281Error(tr("La centralita no acepta ese valor en el canal {c}: está fuera de rango, el "
+                                 "canal pide el código de acceso (login) o no se cumplen las condiciones.",
+                                 c=f"{canal:02d}"))
+        raise KW1281Error(tr("Respuesta inesperada de la centralita: {blk}", blk=blocks[0] if blocks else "ACK"))
+
+    @staticmethod
+    def _comprobar_canal(canal, valor=0, taller=0):
+        if not 1 <= canal <= 255:
+            raise ValueError(tr("Canal de adaptación no válido: {c} (1-255; el 00 borra todas las "
+                                "adaptaciones y no se permite)", c=canal))
+        if not 0 <= valor <= 0xFFFF:
+            raise ValueError(tr("Valor no válido: {v} (0-65535)", v=valor))
+        if not 0 <= taller <= 99999:
+            raise ValueError(tr("Código de taller no válido: {v} (0-99999)", v=taller))
+
+    def adaptation_read(self, canal):
+        """Valor guardado en un canal de adaptación (servicio 0x21, respuesta 0xE6)."""
+        self._comprobar_canal(canal)
+        return self._adaptacion(ADAPT_READ, bytes([canal]), canal, "leer")
+
+    def adaptation_test(self, canal, valor):
+        """Prueba un valor (0x22): la centralita lo usa sin guardarlo, hasta guardarlo o cerrar la
+        sesión. Devuelve el valor que ha aceptado."""
+        self._comprobar_canal(canal, valor)
+        return self._adaptacion(ADAPT_TEST, bytes([canal, valor >> 8, valor & 0xFF]), canal, "probar")
+
+    def adaptation_save(self, canal, valor, taller=0):
+        """Guarda un valor en el canal (0x2A, con el código de taller en 3 bytes). Devuelve el
+        valor que ha quedado guardado."""
+        self._comprobar_canal(canal, valor, taller)
+        return self._adaptacion(ADAPT_SAVE, bytes([canal, valor >> 8, valor & 0xFF, taller >> 16,
+                                                   (taller >> 8) & 0xFF, taller & 0xFF]), canal, "guardar")
+
+    def login(self, codigo, taller=0):
+        """Código de acceso (0x2B) que algunas centralitas piden antes de adaptar o codificar."""
+        if not 0 <= codigo <= 0xFFFF:
+            raise ValueError(tr("Código de acceso no válido: {v} (0-65535)", v=codigo))
+        self._comprobar_canal(1, 0, taller)
+        blocks = self._call(LOGIN, bytes([codigo >> 8, codigo & 0xFF, taller >> 16, (taller >> 8) & 0xFF,
+                                          taller & 0xFF]))
+        if blocks and blocks[0].title == NAK:
+            raise KW1281Error(tr("La centralita no acepta el código de acceso {v}.", v=f"{codigo:05d}"))
+
+    def set_coding(self, codigo, taller=0):
+        """Cambia la codificación (0x10): 15 bits por 2, y el código de taller en 2 bytes más el bit 0
+        del segundo byte (como kw1281test). La centralita contesta con su identificación, que debe
+        traer la codificación nueva; si no, se lanza KW1281Error. Devuelve (codificación, taller)."""
+        if not 0 <= codigo <= 32767:
+            raise ValueError(tr("Codificación no válida: {v} (0-32767)", v=codigo))
+        self._comprobar_canal(1, 0, taller)
+        c2 = codigo * 2 + (1 if taller > 0xFFFF else 0)
+        blocks = self._call(CODING, bytes([c2 >> 8, c2 & 0xFF, (taller >> 8) & 0xFF, taller & 0xFF]))
+        if blocks and blocks[0].title == NAK:
+            raise KW1281Error(tr("La centralita no acepta la codificación {v}.", v=f"{codigo:05d}"))
+        ident = [b.data for b in blocks if b.title == R_ASCII]
+        nueva = self.codificacion(ident)
+        if ident:
+            self.ident = ident
+        if nueva is None or nueva[0] != codigo:
+            raise KW1281Error(tr("La centralita no ha confirmado la codificación {v} (contesta {r}).",
+                                 v=f"{codigo:05d}", r=f"{nueva[0]:05d}" if nueva else tr("sin codificación")))
+        return nueva

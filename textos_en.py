@@ -1355,4 +1355,135 @@ EN = {
         '• "Leave basic setting" returns the control unit to normal mode. Switching the ignition off does too.',
     '• «Ajustes básicos...» (KKL) pone la centralita en el modo de ajuste básico de un grupo: adaptar la mariposa de un gasolina, comprobar el calado de la bomba de un TDI o el caudalímetro con la EGR cerrada. Se elige entre los habituales del motor o se escribe el número de grupo del manual de taller, y se ven sus valores en vivo hasta pulsar «Salir del ajuste básico».':
         '• "Basic settings..." (KKL) puts the control unit into the basic setting mode of a block: adapting the throttle body of a petrol engine, checking the pump timing of a TDI or the air flow meter with the EGR closed. Choose one of the usual ones for the engine or type the block number from the workshop manual, and see its values live until you press "Leave basic setting".',
+    # Adaptación y codificación (v0.8.0)
+    'ANTES':
+        'BEFORE',
+    'DESPUÉS':
+        'AFTER',
+    'CAMBIO':
+        'CHANGE',
+    'Adaptación del módulo {m}, canal {c}: {a} → {v}.':
+        'Adaptation of module {m}, channel {c}: {a} → {v}.',
+    'Adaptación y codificación':
+        'Adaptation and coding',
+    'Adaptación y codificación · {modulo}':
+        'Adaptation and coding · {modulo}',
+    'Adaptación...':
+        'Adaptation...',
+    'Antes: {a}\nAhora: {v}':
+        'Before: {a}\nNow: {v}',
+    'Cambios guardados en esta centralita':
+        'Changes saved in this control unit',
+    'Canal':
+        'Channel',
+    'Canal de adaptación':
+        'Adaptation channel',
+    'Canal de adaptación no válido: {c} (1-255; el 00 borra todas las adaptaciones y no se permite)':
+        'Invalid adaptation channel: {c} (1-255; channel 00 erases all adaptations and is not allowed)',
+    'Canal de adaptación {c} guardado: {v}.':
+        'Adaptation channel {c} saved: {v}.',
+    'Canal {c}':
+        'Channel {c}',
+    'Canal {c} leído. Escribe el valor nuevo y pulsa «Probar».':
+        'Channel {c} read. Type the new value and press "Test".',
+    'Codificación':
+        'Coding',
+    'Codificación actual: {c} · código de taller {t}':
+        'Current coding: {c} · workshop code {t}',
+    'Codificación cambiada a {v}.':
+        'Coding changed to {v}.',
+    'Codificación de antes puesta: {v}. Pulsa «Guardar codificación» para escribirla.':
+        'Previous coding filled in: {v}. Press "Save coding" to write it.',
+    'Codificación del módulo {m}: {a} → {v}.':
+        'Coding of module {m}: {a} → {v}.',
+    'Codificación guardada: {v} (antes {a}).':
+        'Coding saved: {v} (before {a}).',
+    'Codificación no válida: {v} (0-32767)':
+        'Invalid coding: {v} (0-32767)',
+    'Conexión perdida con la centralita.':
+        'Connection to the control unit lost.',
+    'Código de acceso (login)':
+        'Login code',
+    'Código de acceso aceptado.':
+        'Login code accepted.',
+    'Código de acceso no válido: {v} (0-65535)':
+        'Invalid login code: {v} (0-65535)',
+    'Código de taller':
+        'Workshop code',
+    'Código de taller no válido: {v} (0-99999)':
+        'Invalid workshop code: {v} (0-99999)',
+    'El valor de antes queda apuntado para poder volver a él.':
+        'The previous value is recorded so you can go back to it.',
+    'Enviar código':
+        'Send code',
+    'Escribe el número de canal y pulsa «Leer».':
+        'Type the channel number and press "Read".',
+    'Esta centralita no informa de su codificación: no se puede cambiar desde aquí.':
+        "This control unit doesn't report its coding: it can't be changed from here.",
+    'Esto escribe en la centralita. Un valor equivocado puede dejar el coche funcionando mal (o sin arrancar, si es del inmovilizador) hasta volver a poner el valor de antes.':
+        'This writes to the control unit. A wrong value can leave the car running badly (or not starting, if it belongs to the immobilizer) until the previous value is put back.',
+    'Guardado: el canal {c} vale ahora {v} (antes {a}).':
+        'Saved: channel {c} is now {v} (before {a}).',
+    'Guardando el canal {c}...':
+        'Saving channel {c}...',
+    'Guardando la codificación {v}...':
+        'Saving coding {v}...',
+    'Guardar adaptación':
+        'Save adaptation',
+    'Guardar codificación':
+        'Save coding',
+    'He leído los avisos y tengo los valores del manual de taller':
+        'I have read the warnings and have the values from the workshop manual',
+    'La centralita no acepta el código de acceso {v}.':
+        "The control unit doesn't accept login code {v}.",
+    'La centralita no acepta ese valor en el canal {c}: está fuera de rango, el canal pide el código de acceso (login) o no se cumplen las condiciones.':
+        "The control unit doesn't accept that value on channel {c}: it is out of range, the channel needs the login code or the conditions aren't met.",
+    'La centralita no acepta la codificación {v}.':
+        "The control unit doesn't accept coding {v}.",
+    'La centralita no ha confirmado la codificación {v} (contesta {r}).':
+        "The control unit hasn't confirmed coding {v} (it answers {r}).",
+    'La centralita no tiene el canal de adaptación {c} o pide antes el código de acceso (login).':
+        "The control unit doesn't have adaptation channel {c} or needs the login code first.",
+    'La centralita usa ahora {v} sin guardarlo. Comprueba el resultado y pulsa «Guardar», o cierra para dejar el valor de antes.':
+        'The control unit is now using {v} without saving it. Check the result and press "Save", or close to keep the previous value.',
+    'Leer':
+        'Read',
+    'Probando el valor {v} en el canal {c}...':
+        'Testing value {v} on channel {c}...',
+    'Probar':
+        'Test',
+    'Respuesta inesperada de la centralita: {blk}':
+        'Unexpected answer from the control unit: {blk}',
+    'Se guarda en la centralita con cada cambio (0-99999).':
+        'Saved in the control unit with each change (0-99999).',
+    'Solo si el manual lo pide para un canal o para codificar.':
+        'Only if the manual asks for it for a channel or for coding.',
+    'Una codificación equivocada puede encender testigos o hacer que el coche funcione mal. La de antes queda apuntada para poder volver a ella.':
+        'A wrong coding can switch on warning lamps or make the car run badly. The previous one is recorded so you can go back to it.',
+    'Valor de antes puesto: {v}. Pruébalo y guárdalo para volver a él.':
+        'Previous value filled in: {v}. Test it and save it to go back to it.',
+    'Valor guardado: {v}':
+        'Saved value: {v}',
+    'Valor no válido: {v} (0-65535)':
+        'Invalid value: {v} (0-65535)',
+    'Valor nuevo':
+        'New value',
+    'Volver al valor anterior':
+        'Go back to the previous value',
+    'sin codificación':
+        'no coding',
+    '{c} · código de taller {t}':
+        '{c} · workshop code {t}',
+    '¿Cambiar la codificación de la centralita?':
+        'Change the coding of the control unit?',
+    '¿Guardar en la centralita el canal {c}?':
+        'Save channel {c} in the control unit?',
+    '• Cambia solo los canales y la codificación que indica el manual de taller de tu coche, con los valores que da. Si no lo tienes claro, no lo hagas.':
+        "• Only change the channels and coding given in your car's workshop manual, with the values it gives. If you're not sure, don't do it.",
+    '• Motor parado y contacto puesto, salvo que el manual diga otra cosa, y la batería en buen estado.':
+        '• Engine off and ignition on, unless the manual says otherwise, and the battery in good condition.',
+    '• Un valor nuevo primero se prueba (la centralita lo usa sin guardarlo) y después se guarda. Cada cambio guardado queda apuntado abajo con el valor de antes para poder volver a él.':
+        '• A new value is tested first (the control unit uses it without saving it) and then saved. Each saved change is recorded below with the previous value so you can go back to it.',
+    '• «Adaptación...» (KKL) lee y cambia los canales de adaptación y la codificación de la centralita, con los valores del manual de taller. Escribe en la centralita: un valor nuevo primero se prueba y después se guarda, pide confirmación y cada cambio queda apuntado con el valor de antes para poder volver a él («Volver al valor anterior»). Algunos canales piden antes un código de acceso (login).':
+        '• "Adaptation..." (KKL) reads and changes the adaptation channels and the coding of the control unit, with the values from the workshop manual. It writes to the control unit: a new value is tested first and then saved, it asks for confirmation and each change is recorded with the previous value so you can go back to it ("Go back to the previous value"). Some channels need a login code first.',
 }

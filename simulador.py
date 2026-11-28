@@ -23,6 +23,12 @@ ACTUADORES_TDI = [626, 1265, 1262, 1237]          # K29, EGR N18, N75, corte de 
 ACTUADORES_GASOLINA = [1259, 1249, 1250, 1251, 1252, 1247, 1265]
 ACTUADORES = {0x03: [1276], 0x17: [1039]}
 
+# Canales de adaptación simulados: canal -> [valor, mínimo, máximo, pide login]. Solo para las
+# pruebas: no son los canales ni los rangos de ninguna centralita real.
+ADAPTACION = {0x01: {1: [128, 118, 138, False], 2: [32768, 32000, 33500, True]},
+              0x17: {2: [0, 0, 255, False], 9: [100, 0, 9999, True]}}
+LOGIN_SIM = 11111          # código de acceso que acepta el simulador
+
 
 class FakeECU:
     def __init__(self, address=0x01, ident=None, dtcs=None):
@@ -31,6 +37,7 @@ class FakeECU:
         self.ident = ident or [b"038906018FQ ", b"1,9l R4 EDC  ", b"   SG  1234",
                                bytes([0x00, 0x00, 0x04, 0x22, 0x00, 0x00])]
         self.t0 = time.monotonic()
+        self.adapt = {c: list(v) for c, v in ADAPTACION.get(address, {}).items()}   # sobrevive a la sesión
         self.reset()
 
     def reset(self):
@@ -43,6 +50,8 @@ class FakeECU:
         self.actuador = -1     # componente que se está activando en el test de actuadores
         self.basico = None     # grupo en ajuste básico
         self.basico_t0 = 0.0
+        self.login_ok = False  # el código de acceso dura lo que la sesión
+        self.prueba = {}       # valores probados (0x22) sin guardar
 
     def _actuadores(self):
         if self.address == 0x01:
@@ -157,6 +166,35 @@ class FakeECU:
                 return self._start_block(0x09)          # fin de la secuencia
             c = lista[self.actuador]
             return self._start_block(0xF5, bytes([c >> 8, c & 0xFF]))
+        if title in (0x21, 0x22, 0x2A):
+            ch = self.adapt.get(data[0]) if data else None
+            if ch is None or (ch[3] and not self.login_ok):
+                return self._start_block(0x0A, bytes([cnt]))
+            if title == 0x21:
+                v = ch[0]
+            else:
+                v = data[1] << 8 | data[2]
+                if not ch[1] <= v <= ch[2]:
+                    return self._start_block(0x0A, bytes([cnt]))
+                if title == 0x22:
+                    self.prueba[data[0]] = v
+                else:
+                    ch[0] = v
+                    self.prueba.pop(data[0], None)
+            return self._start_block(0xE6, bytes([data[0], v >> 8, v & 0xFF]))
+        if title == 0x2B:
+            if len(data) >= 2 and (data[0] << 8 | data[1]) == LOGIN_SIM:
+                self.login_ok = True
+                return self._start_block(0x09)
+            return self._start_block(0x0A, bytes([cnt]))
+        if title == 0x10:
+            i = next((i for i, b in enumerate(self.ident) if len(b) >= 5 and b[0] == 0), None)
+            if i is None or len(data) < 4 or (data[0] << 8 | data[1]) >> 1 > 0x3FFF:
+                return self._start_block(0x0A, bytes([cnt]))    # sin codificación o fuera de lo que acepta
+            self.ident[i] = bytes([0x00, *data[:4]]) + self.ident[i][5:]
+            for blk in self.ident[1:]:
+                self.queue.append((0xF6, blk))
+            return self._start_block(0xF6, self.ident[0])
         if title == 0x06:
             self.reset()
             return []
@@ -219,7 +257,8 @@ def coche_simulado():
     return [FakeECU(ident=IDENT_GASOLINA if GASOLINA else None),
             FakeECU(0x03, [b"1J0907379G  ", b"ABS ITT AE 20 GI", b"   0001"], [(287, 0x03 | 0x80)]),
             FakeECU(0x15, [b"1C0909601   ", b"AIRBAG VW61 ", b"   0003"], []),
-            FakeECU(0x17, [b"1M0920821C  ", b"KOMBI+WEGFAHRSP", b"   0002"], [(779, 0x05)])]
+            FakeECU(0x17, [b"1M0920821C  ", b"KOMBI+WEGFAHRSP", b"   0002", bytes([0x00, 0x01, 0x1C, 0x30, 0x39])],
+                    [(779, 0x05)])]
 
 
 class FakeSerial:

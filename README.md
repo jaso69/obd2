@@ -45,7 +45,8 @@ el programa consulta en GitHub si hay una versión nueva y lo avisa junto al tí
 | `web/` | Web del proyecto (https://obd2desk.com, en español e inglés); `web/publicar.sh` la sube |
 | `gui.py` | Interfaz gráfica (panel con relojes y gráficas, valores, averías, CSV) |
 | `toledo.py` | Versión de consola (menú de texto) |
-| `kw1281.py` | Protocolo KW1281: init 5 baudios, bloques, complementos, keep-alive |
+| `kw1281.py` | Protocolo KW1281: init 5 baudios, bloques, complementos, keep-alive, test de actuadores, ajustes básicos, adaptación y codificación |
+| `cambios.py` | Registro de los cambios de adaptación y codificación, con el valor de antes |
 | `elm327.py` | OBD2 por ELM327: protocolo automático (y prueba de línea K si falla), CAN multi-trama, multi-PID, averías (también permanentes), datos congelados, monitores, VIN, CALID/CVN |
 | `obd_datos.py` | PIDs OBD2 estándar, descripciones de averías P0xxx y monitores de preparación |
 | `vin_datos.py` | Decodificación del VIN (fabricante, país, año modelo, modelo VAG) |

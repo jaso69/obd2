@@ -242,6 +242,78 @@ for modo in (gui.KKL, gui.ELM):
         vb.cerrar()
         ok(esperar(lambda: not vb.win.winfo_exists(), 10) and app.worker.ser.ecus[0x01].basico is None
            and not app.act_en_curso, "ajustes: cerrar la ventana sale del ajuste básico")
+        # adaptación y codificación
+        import simulador
+        ecu = app.worker.ser.ecus[0x01]
+        app.adaptacion()
+        vd = app.ventana_adapt
+        root.update()
+
+        def listo(seg=10):
+            return esperar(lambda: vd.ocupado is None, seg)
+
+        def estado(b):
+            return str(b.cget("state"))
+
+        ok(vd.cod == (2, 8704) and vd.taller_var.get() == "08704" and estado(vd.cod_btn) == "disabled"
+           and estado(vd.probar_btn) == "disabled", "adaptación: codificación y taller leídos; sin confirmar no se escribe")
+        vd.canal_var.set("1")
+        vd.leer()
+        ok(listo() and vd.leido == (1, 128) and vd.valor_var.get() == "128", "adaptación: leer el canal 01")
+        vd.ok_var.set(True)
+        vd.valor_var.set("130")
+        ok(estado(vd.probar_btn) == "normal" and estado(vd.guardar_btn) == "disabled",
+           "adaptación: hay que probar antes de guardar")
+        vd.probar()
+        ok(listo() and vd.probado == (1, 130) and ecu.prueba.get(1) == 130 and ecu.adapt[1][0] == 128
+           and estado(vd.guardar_btn) == "normal", "adaptación: probar 130 no lo guarda")
+        ok(herramienta("leer_averias", {})[1], "adaptación: la IA no puede leer con la ventana abierta")
+        revisar_idioma("adaptación")
+        vd.guardar()
+        ok(listo() and ecu.adapt[1][0] == 130 and vd.leido == (1, 130) and len(vd.lista.get_children()) == 1,
+           "adaptación: guardar 130 y apuntar el cambio")
+        vd.valor_var.set("300")
+        vd.probar()
+        ok(listo() and vd.probado is None and app.connected and str(vd.info.cget("foreground")) == gui.ERR,
+           f"adaptación: valor fuera de rango ({vd.info.cget('text')})")
+        vd.canal_var.set("2")
+        vd.leer()
+        ok(listo() and vd.leido is None and app.connected, "adaptación: el canal 02 pide código de acceso")
+        vd.login_var.set(str(simulador.LOGIN_SIM))
+        vd.login()
+        listo()
+        vd.leer()
+        ok(listo() and vd.leido == (2, 32768), "adaptación: con el código de acceso se lee el canal 02")
+        vd.cod_var.set("4")
+        vd.codificar()
+        ok(listo() and vd.cod == (4, 8704) and app.kkl_codificacion == (4, 8704)
+           and any(v.startswith("00004") for _, v in app.vehicle_fields) and len(vd.lista.get_children()) == 2,
+           "codificación: cambiada a 00004, en Vehículo y apuntada")
+        vd.cod_var.set("20000")
+        vd.codificar()
+        ok(listo() and vd.cod == (4, 8704) and app.connected and len(vd.lista.get_children()) == 2,
+           "codificación: la que no acepta la centralita da aviso y no se apunta")
+        filas = vd.lista.get_children()
+        vd.lista.selection_set(filas[1])                 # el cambio del canal 01 (128 → 130)
+        root.update()
+        vd.volver()
+        ok(listo() and vd.leido == (1, 130) and vd.valor_var.get() == "128", "volver al valor anterior: canal 01 a 128")
+        vd.probar()
+        listo()
+        vd.guardar()
+        ok(listo() and ecu.adapt[1][0] == 128, "volver al valor anterior: guardado 128")
+        vd.lista.selection_set([i for i in vd.lista.get_children() if vd.filas[i]["tipo"] == "codificacion"][0])
+        root.update()
+        vd.volver()
+        vd.codificar()
+        ok(listo() and vd.cod == (2, 8704), "volver a la codificación anterior (00002)")
+        vd.valor_var.set("125")
+        vd.probar()
+        listo()
+        ok(ecu.prueba.get(1) == 125, "adaptación: probar 125")
+        vd.cerrar()
+        ok(esperar(lambda: not vd.win.winfo_exists() and ecu.prueba.get(1) == 128, 10) and not app.act_en_curso
+           and ecu.adapt[1][0] == 128, "adaptación: al cerrar sin guardar la centralita vuelve al valor guardado")
     revisar_idioma(f"averías {modo}")
     app.nb.select(app.tab_ecu)
     revisar_idioma(f"vehículo {modo}")

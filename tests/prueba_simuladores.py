@@ -203,6 +203,47 @@ comprobar(v1[3][2] == 0 and v2[3][2] == 1 and v1[0][0] == 0x06, "gasolina, grupo
 comprobar(formatear_grupo([1, 2, 3], 5)[2] == ("Byte 3", "3", "", True), "datos en bruto como bytes")
 m.disconnect()
 
+print("Adaptación y codificación KW1281")
+s = FakeSerial()
+m = KW1281(s, retry_wait=0.5)
+m.connect()
+comprobar(KW1281.codificacion(m.ident) == (2, 8704), f"codificación y taller en la identificación ({KW1281.codificacion(m.ident)})")
+comprobar(m.adaptation_read(1) == 128, "leer el canal 01")
+comprobar(m.adaptation_test(1, 131) == 131 and s.ecu.adapt[1][0] == 128, "probar un valor no lo guarda")
+comprobar(m.adaptation_save(1, 131, 8704) == 131 and m.adaptation_read(1) == 131, "guardar el canal 01")
+
+
+def rechaza(f, texto):
+    try:
+        f()
+        comprobar(False, texto)
+    except (KW1281Error, ValueError) as err:
+        comprobar(m.connected, f"{texto} ({err})")
+
+
+rechaza(lambda: m.adaptation_test(1, 300), "valor fuera de rango rechazado y la sesión sigue")
+rechaza(lambda: m.adaptation_read(7), "canal que no existe")
+rechaza(lambda: m.adaptation_read(2), "canal con login: sin código no se lee")
+rechaza(lambda: m.adaptation_read(0), "el canal 00 (borra todas las adaptaciones) no se permite")
+rechaza(lambda: m.login(12345), "código de acceso equivocado")
+m.login(simulador.LOGIN_SIM)
+comprobar(m.adaptation_read(2) == 32768, "con el código de acceso se lee el canal 02")
+comprobar(m.set_coding(4, 70000) == (4, 70000) and KW1281.codificacion(m.ident) == (4, 70000),
+          "codificar con un código de taller mayor de 65535")
+rechaza(lambda: m.set_coding(20000), "codificación que la centralita no acepta")
+comprobar(KW1281.codificacion(m.ident) == (4, 70000), "tras el rechazo sigue la codificación de antes")
+m.set_coding(2, 8704)
+m.disconnect()
+m.connect()
+comprobar(m.adaptation_read(1) == 131 and not s.ecu.login_ok and KW1281.codificacion(m.ident) == (2, 8704),
+          "al reconectar: lo guardado sigue y el código de acceso hay que repetirlo")
+m.disconnect()
+m = KW1281(s, address=0x03, retry_wait=0.5)
+m.connect()
+comprobar(KW1281.codificacion(m.ident) is None, "el ABS simulado no informa de codificación")
+rechaza(lambda: m.set_coding(1), "codificar una centralita sin codificación")
+m.disconnect()
+
 print("Informe HTML")
 import informe  # noqa: E402
 e = ELM327(FakeELMSerial("6"), logger=lambda m: None)

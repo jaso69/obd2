@@ -75,6 +75,27 @@ ok(h.buscar_vin(["038906018FQ", "  VSSZZZ1MZYR123456 IMMO-1234"]) == "VSSZZZ1MZY
 ok(h.buscar_vin(["038906018FQ 1,9l R4 EDC", "SG 1234", "AAAAAAAAAAAAAAAAA", "12345678901234567"]) is None,
    "sin falsos VIN (todo letras o todo números)")
 
+print("Registro de cambios en las centralitas")
+import cambios  # noqa: E402
+cb = cambios.Cambios(os.path.join(tempfile.mkdtemp(), "sub"))
+ok(cb.todos() == [] and cb.de(1, "038906018FQ") == [], "sin archivo: lista vacía")
+cb.registrar(1, "038906018FQ ", "adaptacion", 1, 128, 131, 8704, fecha=datetime.datetime(2026, 11, 28, 18, 0))
+cb.registrar(1, "038906018FQ", "codificacion", None, 2, 4, 8704, fecha=datetime.datetime(2026, 11, 28, 18, 5))
+cb.registrar(0x17, "1M0920821C", "adaptacion", 2, 0, 10)
+with open(cb.ruta, "a", encoding="utf-8") as f:
+    f.write('{"fecha": "2026-11-28T18:10:00", "modulo": 1, "refer')          # línea cortada a medias
+d = cb.de(1, "038906018FQ")
+ok([r["tipo"] for r in d] == ["codificacion", "adaptacion"] and d[1]["antes"] == 128 and d[1]["canal"] == 1,
+   "cambios de una centralita, el más reciente primero")
+ok(len(cb.todos()) == 3 and cb.de(0x17, "1M0920821C")[0]["despues"] == 10, "una línea cortada no rompe el registro")
+cb.registrar(1, "038906018FQ", "adaptacion", 1, 131, 128)
+ok(len(cb.de(1, "038906018FQ")) == 3, "se añade sin reescribir lo anterior")
+try:
+    cb.registrar(1, "x", "otra", 1, 0, 0)
+    ok(False, "tipo no válido rechazado")
+except ValueError:
+    ok(True, "tipo no válido rechazado")
+
 print()
 if fallos:
     print(f"HAY {len(fallos)} FALLOS")

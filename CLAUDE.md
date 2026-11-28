@@ -50,4 +50,6 @@ Se llamaba *Toledo Diagnosis* hasta la v0.3.0; desde el 2026-11-27 es **OBD2Desk
 
 **v0.7.0 publicada y cerrada (2026-11-28, «Latest», etiqueta `v0.7.0` → `58d47ee`)**: test de actuadores y ajustes básicos KW1281 (Averías, solo KKL). Probada en coche por el usuario: funciona bien. Release con el paquete Linux y el `OBD2Desk.exe` de Windows (probado por el usuario: funciona bien); web publicada (§8.2g).
 
+**Sin publicar (2026-11-28)**: canales de adaptación, código de acceso y codificación KW1281 (botón «Adaptación...» en Averías, solo KKL), con registro de cambios para volver al valor anterior (`cambios.py`). Probado solo con simuladores (falta coche). Ver `docs/PROYECTO.md` §8.2h.
+
 **Próximos pasos**: `docs/PROYECTO.md` §10 (Bloque 2 hecho en la v0.5.0; quedan los pendientes y lo de «más adelante»). Pasos para sacar una versión: §8.3. La versión para Mac está aparcada.

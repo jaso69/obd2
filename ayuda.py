@@ -78,6 +78,10 @@ def secciones():
                "mariposa de un gasolina, comprobar el calado de la bomba de un TDI o el caudalímetro con la EGR "
                "cerrada. Se elige entre los habituales del motor o se escribe el número de grupo del manual de taller, "
                "y se ven sus valores en vivo hasta pulsar «Salir del ajuste básico»."),
+            tr("• «Adaptación...» (KKL) lee y cambia los canales de adaptación y la codificación de la centralita, "
+               "con los valores del manual de taller. Escribe en la centralita: un valor nuevo primero se prueba y "
+               "después se guarda, pide confirmación y cada cambio queda apuntado con el valor de antes para poder "
+               "volver a él («Volver al valor anterior»). Algunos canales piden antes un código de acceso (login)."),
             tr("• «Generar informe» crea una página con los datos del coche y las averías que se abre en el "
                "navegador y se puede imprimir o guardar como PDF."),
             tr("• Historial: cada lectura se guarda sola por coche. Debajo de los botones verás qué averías son "
