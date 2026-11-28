@@ -34,7 +34,7 @@ document.querySelectorAll(".selector").forEach((sel) => {
   const enlace = document.querySelector(`.ampliar[data-grupo="${sel.dataset.grupo}"]`);
   sel.querySelectorAll("button").forEach((b) => {
     b.addEventListener("click", () => {
-      sel.querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", x === b));
+      sel.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
       enlace.href = b.dataset.img;
       enlace.querySelector("img").src = b.dataset.img;
       enlace.querySelector("img").alt = b.dataset.alt;
