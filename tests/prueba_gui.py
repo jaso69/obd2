@@ -96,6 +96,22 @@ def herramienta(nombre, entrada, seg=60):
     return res[0] if res else ("(sin respuesta)", True)
 
 
+def botones_cortados(w):
+    """Botones cuyo texto no cabe en el ancho que ocupan."""
+    import tkinter.font as tkfont
+    out = []
+    if isinstance(w, ttk.Button) and w.winfo_ismapped():
+        estilo = w.cget("style") or w.winfo_class()
+        fuente = tkfont.Font(font=ttk.Style().lookup(estilo, "font") or "TkDefaultFont")
+        pad = [int(float(x)) for x in re.findall(r"[\d.]+", str(ttk.Style().lookup(estilo, "padding")))] or [0]
+        izq, der = pad[0], pad[2] if len(pad) > 2 else pad[0]
+        if fuente.measure(str(w.cget("text"))) + izq + der > w.winfo_width():
+            out.append(str(w.cget("text")))
+    for h in w.winfo_children():
+        out += botones_cortados(h)
+    return out
+
+
 def textos_ventana(w):
     """Todos los textos visibles de la ventana (etiquetas, botones, pestañas, tablas, cuadros de texto)."""
     out = []
@@ -269,6 +285,8 @@ for modo in (gui.KKL, gui.ELM):
            and estado(vd.guardar_btn) == "normal", "adaptación: probar 130 no lo guarda")
         ok(herramienta("leer_averias", {})[1], "adaptación: la IA no puede leer con la ventana abierta")
         revisar_idioma("adaptación")
+        cortados = botones_cortados(vd.win)
+        ok(not cortados, f"adaptación: ningún botón corta su texto {cortados}")
         vd.guardar()
         ok(listo() and ecu.adapt[1][0] == 130 and vd.leido == (1, 130) and len(vd.lista.get_children()) == 1,
            "adaptación: guardar 130 y apuntar el cambio")

@@ -60,7 +60,7 @@ FONT = "Segoe UI" if WINDOWS else "DejaVu Sans"
 MONO = "Consolas" if WINDOWS else "DejaVu Sans Mono"
 NOMBRE = "OBD2Desk"
 WIFI = "WiFi · 192.168.0.10:35000"      # dirección habitual de los ELM327 WiFi
-VERSION = "0.8.0"
+VERSION = "0.8.1"
 URL_RELEASES = "https://github.com/jaso69/obd2/releases"
 
 KKL, ELM = "kkl", "elm"
@@ -1790,7 +1790,7 @@ class VentanaAdaptacion:
 
         btns = ttk.Frame(p, style="Panel.TFrame")
         btns.pack(fill="x", side="bottom", pady=(12, 0))
-        self.volver_btn = ttk.Button(btns, text=tr("Volver al valor anterior"), width=24, command=self.volver)
+        self.volver_btn = ttk.Button(btns, text=tr("Volver al valor anterior"), command=self.volver)
         self.volver_btn.pack(side="left")
         self.fin_btn = ttk.Button(btns, text=tr("Cerrar"), width=14, command=self.cerrar)
         self.fin_btn.pack(side="right")
