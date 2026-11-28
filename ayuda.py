@@ -66,6 +66,10 @@ def secciones():
                "pendientes y las permanentes (estas no se pueden borrar: desaparecen solas cuando el coche "
                "comprueba que el fallo se ha arreglado), y a la derecha los datos congelados del momento en que "
                "se encendió el testigo."),
+            tr("• Las descripciones: los 9533 códigos genéricos OBD2, iguales en todas las marcas (P0, P2, B0, C0, "
+               "U0…), salen con su significado; los propios de cada fabricante (P1, B1…), solo en los VAG (por "
+               "VIN o con cable KKL). Los que no tienen traducción revisada se traducen solos y algunos poco "
+               "comunes aparecen en inglés."),
             tr("• «Borrar averías» las borra de la centralita (con el contacto puesto y el motor parado). Anótalas "
                "antes: si el fallo sigue, volverán."),
             tr("• «Escanear todos los módulos» (KKL) recorre todas las centralitas del coche y lista las averías "
