@@ -340,6 +340,8 @@ Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windo
 ### 8.2d Release v0.6.0 (2026-11-28)
 - Pestaña Ayuda (y «Consumo y 0-100» tras «Vehículo»), 538 averías P1 de VAG (también en OBD2 si el VIN es VAG), grupos de TDI inyector-bomba y de gasolina con selector de Motor, Panel y consumo/0-100 de gasolina por KKL. `VERSION = "0.6.0"`.
 - Pruebas antes de etiquetar: simuladores, idioma, consumo, csv, historial y GUI en español e inglés → «TODO CORRECTO». Probado solo con simuladores: **falta probar en coche un VAG de gasolina y un TDI inyector-bomba por KKL**.
+- Etiqueta `v0.6.0` → `54aa9a8`. Paquete `OBD2Desk-v0.6.0-linux-x86_64.tar.gz` (40 546 757 bytes, SHA-256 `6967a7685845941c068fbcce7e9b9d8f4bfccd02ef60588b3c4317d10abf29e5`): autoprueba IA bien; extraído, abre la ventana con la pestaña Ayuda. Descargado de GitHub con el mismo SHA-256.
+- Release «OBD2Desk v0.6.0» publicada como «Latest» con notas en español e inglés; dicen que el `.exe` llega en breve (enlazan el de la v0.5.0). **Falta**: compilar `OBD2Desk.exe` en Windows desde `v0.6.0`, subirlo y quitar «en breve» de las notas (§8.3, pasos 5-6).
 - Web: textos de la v0.6.0 y capturas rehechas (barra de pestañas con «Ayuda»).
 
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
