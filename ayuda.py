@@ -43,6 +43,8 @@ def secciones():
             tr("• Con KKL (diésel TDI): régimen, caudal inyectado, presión del turbo (con la marca de la presión "
                "teórica), temperatura, ciclo de la N75 y de la EGR, y gráficas del turbo y de la masa de aire "
                "teóricos frente a reales."),
+            tr("• Con KKL en un gasolina (selector Motor de Valores medidos): régimen, carga, temperaturas, "
+               "tiempo de inyección, masa de aire, mariposa, avance de encendido y tensión."),
             tr("• Con ELM327: régimen, velocidad, temperatura, carga, temperatura de admisión, masa de aire, "
                "mariposa y tensión, con gráficas del régimen y de la carga."),
         ]),
@@ -90,7 +92,8 @@ def secciones():
             tr("• Cronómetro 0-100: con el coche parado se arma solo y empieza a contar al salir. Da también el "
                "tiempo hasta 50 km/h y guarda las últimas medidas. Se anula si frenas o paras antes de llegar. "
                "Hazlo solo en un sitio seguro y sin tráfico."),
-            tr("• Con KKL la centralita no da la velocidad, así que solo hay consumo en litros por hora."),
+            tr("• Con KKL, un TDI no da la velocidad: solo hay consumo en litros por hora. En un gasolina con los "
+               "grupos estándar (002 y 005) hay consumo en L/100 km, distancia y cronómetro 0-100."),
         ]),
         (tr("Asistente IA"), [
             tr("El asistente analiza las averías y los valores del coche y te guía en el diagnóstico: puede leer "

@@ -150,7 +150,6 @@ EN = {
     # Panel
     "▶  Iniciar lectura": "▶  Start reading",
     "■  Detener": "■  Stop",
-    "Lectura en vivo de los grupos 001 · 003 · 011": "Live reading of blocks 001 · 003 · 011",
     "Lectura en vivo de PIDs OBD2 estándar": "Live reading of standard OBD2 PIDs",
     "Régimen": "RPM",
     "Caudal inyectado": "Injected quantity",
@@ -1118,9 +1117,7 @@ EN = {
         '• On diesels over OBD2 it is only calculated if the car reports the wide-band lambda sensor.',
     '• Cronómetro 0-100: con el coche parado se arma solo y empieza a contar al salir. Da también el tiempo hasta 50 km/h y guarda las últimas medidas. Se anula si frenas o paras antes de llegar. Hazlo solo en un sitio seguro y sin tráfico.':
         '• 0-100 timer: with the car stopped it arms itself and starts counting when you pull away. It also gives the time to 50 km/h and keeps the last runs. It is cancelled if you brake or stop before reaching 100. Only do it somewhere safe with no traffic.',
-    '• Con KKL la centralita no da la velocidad, así que solo hay consumo en litros por hora.':
-        '• With KKL the control unit does not report speed, so there is only consumption in litres per hour.',
-    'Lectura de los valores que tú elijas, en una tabla en vivo.':
+        'Lectura de los valores que tú elijas, en una tabla en vivo.':
         'Reading of the values you choose, in a live table.',
     '• Con KKL marcas los grupos de valores medidos o escribes otros números de grupo. Arriba, en Motor, eliges el tipo de motor (TDI de bomba rotativa, TDI inyector-bomba o gasolina) para ver sus grupos habituales con el nombre de cada valor; al conectar a la centralita del motor se elige solo. Con ELM327 eliges en la lista los valores (PIDs) que da tu coche; Ctrl+clic o Mayús+clic para elegir varios.':
         '• With KKL you tick the measuring value blocks or type other block numbers. At the top, under Engine, choose the engine type (TDI distributor pump, TDI unit injector or petrol) to see its usual blocks with the name of each value; it is chosen automatically when you connect to the engine control unit. With an ELM327 you pick from the list the values (PIDs) your car supports; Ctrl+click or Shift+click to choose several.',
@@ -1220,4 +1217,16 @@ EN = {
     'Turbo: válvula y temperatura': 'Boost: valve and temperature',
     'Ángulo de la mariposa': 'Throttle angle',
     'Ángulo de sincronización': 'Synchronisation angle',
+    'Carga y mariposa · G002 / G003':
+        'Load and throttle · G002 / G003',
+    'Gasolina por KKL: consumo con la masa de aire (grupo 002; si el motor tiene sensor de presión en vez de caudalímetro, con la cilindrada) y velocidad del grupo 005. Son los grupos estándar de VAG: si tu centralita no los tiene, no sale.':
+        "Petrol over KKL: consumption from the air mass (block 002; if the engine has a pressure sensor instead of an air flow meter, from the displacement) and speed from block 005. These are VAG's standard blocks: if your control unit doesn't have them, it won't work.",
+    'Lectura en vivo de los grupos {lista}':
+        'Live reading of blocks {lista}',
+    'Régimen · G002':
+        'Engine speed · G002',
+    '• Con KKL en un gasolina (selector Motor de Valores medidos): régimen, carga, temperaturas, tiempo de inyección, masa de aire, mariposa, avance de encendido y tensión.':
+        '• With KKL on a petrol engine (Engine selector in Measured values): engine speed, load, temperatures, injection time, air mass, throttle, ignition timing and voltage.',
+    '• Con KKL, un TDI no da la velocidad: solo hay consumo en litros por hora. En un gasolina con los grupos estándar (002 y 005) hay consumo en L/100 km, distancia y cronómetro 0-100.':
+        '• With KKL, a TDI does not report speed: there is only consumption in litres per hour. On a petrol engine with the standard blocks (002 and 005) you get consumption in L/100 km, distance and the 0-100 timer.',
 }

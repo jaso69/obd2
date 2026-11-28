@@ -12,6 +12,11 @@ from collections import deque
 
 ECU_BAUD = 9600
 
+# Las pruebas lo ponen a True para simular un motor de gasolina (grupos estándar de VAG)
+# en vez de la EDC15 del TDI.
+GASOLINA = False
+IDENT_GASOLINA = [b"06A906032HN ", b"1.8L R4/5VT   G   0002", b"   SG  0002"]
+
 
 class FakeECU:
     def __init__(self, address=0x01, ident=None, dtcs=None):
@@ -41,6 +46,8 @@ class FakeECU:
         rpm = self._rpm()
         coolant = min(90.0, 20 + (time.monotonic() - self.t0) * 2)
         load = (rpm - 880) / 600
+        if b"EDC" not in b"".join(self.ident[1:2]):
+            return self._group_gasolina(g, rpm, coolant, load)
         if g == 1:
             return [(0x01, 200, int(rpm / 40)),          # rpm = a*b/5
                     (0x27, 100, int((4 + 20 * load) * 2.56)),  # mg/H
@@ -63,6 +70,28 @@ class FakeECU:
                     (0x12, 250, int(spec / 10)),
                     (0x12, 250, int((spec + random.uniform(-40, 40)) / 10)),
                     (0x17, 100, int(255 * (0.4 + 0.4 * load)))]
+        return None
+
+    def _group_gasolina(self, g, rpm, coolant, load):
+        """Grupos estándar de un gasolina con caudalímetro; acelera de 0 a 130 km/h como el ELM327."""
+        t = time.monotonic() - self.t0
+        kmh = max(0.0, 130 * math.sin(t / 4))
+        maf = 3.5 + 30 * load                                     # g/s
+        rpm_b = int(rpm / 40)
+        if g == 1:
+            return [(0x01, 200, rpm_b), (0x05, 10, int(coolant + 100)),
+                    (0x14, 25, int(128 + random.uniform(-10, 10))), (0x10, 255, 0b11101111)]
+        if g == 2:
+            return [(0x01, 200, rpm_b), (0x21, 100, int(15 + 60 * load)),
+                    (0x0F, 10, int(25 + 60 * load)), (0x19, 0, int(maf / 1.421))]
+        if g == 3:
+            return [(0x01, 200, rpm_b), (0x19, 0, int(maf / 1.421)),
+                    (0x17, 100, int(255 * (0.03 + 0.5 * load))), (0x09, 50, int(127 + 12 + 20 * load))]
+        if g == 4:
+            return [(0x01, 200, rpm_b), (0x06, 100, 141), (0x05, 10, int(coolant + 100)), (0x05, 10, 128)]
+        if g == 5:
+            return [(0x01, 200, rpm_b), (0x21, 100, int(15 + 60 * load)), (0x07, 100, int(kmh)),
+                    (0x10, 255, 0)]
         return None
 
     # --- bloques -------------------------------------------------------------
@@ -140,7 +169,7 @@ class FakeECU:
 
 def coche_simulado():
     """Centralitas del coche simulado en la línea K: motor, ABS, airbag y cuadro."""
-    return [FakeECU(),
+    return [FakeECU(ident=IDENT_GASOLINA if GASOLINA else None),
             FakeECU(0x03, [b"1J0907379G  ", b"ABS ITT AE 20 GI", b"   0001"], [(287, 0x03 | 0x80)]),
             FakeECU(0x15, [b"1C0909601   ", b"AIRBAG VW61 ", b"   0003"], []),
             FakeECU(0x17, [b"1M0920821C  ", b"KOMBI+WEGFAHRSP", b"   0002"], [(779, 0x05)])]

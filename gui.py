@@ -74,7 +74,8 @@ def _textos_fijos():
 
 _textos_fijos()
 
-PANEL_GROUPS = [1, 3, 11]
+PANEL_GROUPS = [1, 3, 11]               # TDI (EDC15 e inyector-bomba)
+PANEL_GROUPS_GASOLINA = [2, 3, 4]       # gasolina (grupos estándar de VAG)
 PANEL_PIDS = [0x0C, 0x0D, 0x05, 0x04, 0x0F, 0x10, 0x11, 0x42]
 
 
@@ -1574,7 +1575,8 @@ class App:
     def _card(self, parent, **kw):
         return ttk.Frame(parent, style="Card.TFrame", padding=kw.pop("padding", 12), **kw)
 
-    def _stats_row(self, parent, items):
+    def _stats_row(self, parent, items, etiquetas=None):
+        """Fila de tarjetas con un valor grande; en etiquetas (dict) deja los títulos para cambiarlos."""
         frame = ttk.Frame(parent, style="Panel.TFrame")
         frame.pack(fill="x", pady=12)
         out = {}
@@ -1582,7 +1584,10 @@ class App:
             frame.columnconfigure(i, weight=1, uniform="stats")
             c = self._card(frame)
             c.grid(row=0, column=i, padx=6, sticky="ew")
-            ttk.Label(c, text=title, style="Muted.TLabel").pack(anchor="w")
+            lbl = ttk.Label(c, text=title, style="Muted.TLabel")
+            lbl.pack(anchor="w")
+            if etiquetas is not None:
+                etiquetas[key] = lbl
             v = tk.StringVar(value="--")
             ttk.Label(c, textvariable=v, style="Big.TLabel").pack(anchor="w")
             out[key] = v
@@ -1628,12 +1633,27 @@ class App:
             (tr("Caudal inyectado"), "mg/H", 0, 60, 10, None, 1),
             (tr("Presión turbo"), "mbar", 0, 2500, 500, 2300),
             (tr("Refrigerante"), "°C", 0, 120, 20, 105)])
+        self.vag_stats_lbl = {}
         self.vag_stats = self._stats_row(self.panel_vag, [
             ("n75", tr("Ciclo N75 (turbo)")), ("egr", tr("Ciclo válvula EGR")),
-            ("volt", tr("Tensión dosificador")), ("maf", tr("Masa de aire real"))])
+            ("volt", tr("Tensión dosificador")), ("maf", tr("Masa de aire real"))], self.vag_stats_lbl)
         self.ch_boost, self.ch_maf = self._charts_row(self.panel_vag, [
             (tr("Presión de turbo · G011"), "mbar", [(tr("Teórica"), BLUE), (tr("Real"), ACCENT)], 2000),
             (tr("Masa de aire · G003"), "mg/H", [(tr("Teórica"), BLUE), (tr("Real"), ACCENT)], 500)])
+
+        # Panel VAG gasolina (grupos estándar 002, 003 y 004)
+        self.panel_gas = ttk.Frame(p, style="Panel.TFrame")
+        self.gg_rpm, self.gg_load, self.gg_temp, self.gg_iat = self._gauges_row(self.panel_gas, [
+            (tr("Régimen"), "rpm", 0, 7000, 1000, 6200),
+            (tr("Carga"), "%", 0, 100, 20, None),
+            (tr("Refrigerante"), "°C", 0, 120, 20, 105),
+            (tr("Temp. aire de admisión"), "°C", 0, 80, 20, None)])
+        self.gas_stats = self._stats_row(self.panel_gas, [
+            ("iny", tr("Tiempo de inyección medio")), ("aire", tr("Masa de aire (o presión colector)")),
+            ("mar", tr("Ángulo de la mariposa")), ("avance", tr("Avance de encendido")), ("volt", tr("Tensión"))])
+        self.ch_grpm, self.ch_gload = self._charts_row(self.panel_gas, [
+            (tr("Régimen · G002"), "rpm", [("RPM", ACCENT)], 3000),
+            (tr("Carga y mariposa · G002 / G003"), "%", [(tr("Carga"), ACCENT), (tr("Mariposa"), BLUE)], 100)])
 
         # Panel OBD2 (ELM327)
         self.panel_obd = ttk.Frame(p, style="Panel.TFrame")
@@ -1746,6 +1766,10 @@ class App:
         comb, cil, _ = self._cons_valores()
         if not self.connected:
             t = tr("Conecta y pulsa Iniciar lectura. El consumo es una estimación (±10 %), como en cualquier programa OBD.")
+        elif self._kkl_gasolina():
+            t = tr("Gasolina por KKL: consumo con la masa de aire (grupo 002; si el motor tiene sensor de presión "
+                   "en vez de caudalímetro, con la cilindrada) y velocidad del grupo 005. Son los grupos estándar de "
+                   "VAG: si tu centralita no los tiene, no sale.")
         elif self.mode == KKL:
             t = tr("Calculado con el caudal inyectado y el régimen (grupo 001). La centralita no da la velocidad: "
                    "consumo en L/h y litros gastados.")
@@ -1770,6 +1794,8 @@ class App:
         self.cons_lbl.configure(text=t)
 
     def _cons_items(self):
+        if self._kkl_gasolina():
+            return [2, 5]                                   # aire (o presión) y velocidad
         if self.mode == KKL:
             return [1]
         comb, cil, _ = self._cons_valores()
@@ -1789,7 +1815,21 @@ class App:
             self.cons_muestras.popleft()
         comb, cil, ncil = self._cons_valores()
         kmh = None
-        if self.mode == KKL:
+        if self._kkl_gasolina():
+            g2, g5 = rows_of(data, 2), rows_of(data, 5)
+            v = {}
+            if len(g2) > 3 and g2[3][2] == "g/s":
+                v[consumo.P_MAF] = num(g2, 3)
+            elif len(g2) > 3 and g2[3][2] == "mbar" and num(g2, 3) is not None:
+                v[consumo.P_MAP], v[consumo.P_RPM] = num(g2, 3) / 10, num(g2, 0)     # mbar -> kPa
+            lh = consumo.litros_hora_obd(v, consumo.GASOLINA, cil) if v else None
+            kmh = num(g5, 2) if len(g5) > 2 and g5[2][2] == "km/h" else None
+            res = self.crono.muestra(t, kmh)
+            if res is not None:
+                parcial = self.crono.tiempos[0][1]
+                self.log(tr("0-100 km/h: {s} s", s=f"{res:.2f}")
+                         + (f" (0-50: {parcial:.2f} s)" if parcial else ""))
+        elif self.mode == KKL:
             g1 = rows_of(data, 1)
             lh = (consumo.litros_hora_vag(num(g1, 1), num(g1, 0), ncil)
                   if len(g1) > 1 and g1[1][2] == "mg/H" else None)
@@ -1808,7 +1848,7 @@ class App:
 
     def _cons_pintar(self):
         st, tray = self.cons_stats, self.trayecto
-        kkl = self.mode == KKL
+        kkl = self.mode == KKL and not self._kkl_gasolina()     # KKL sin velocidad (TDI)
         lh, _ = tray.instantaneo()
         l100 = tray.l100_instantaneo()
         st["inst"].set(f"{l100:.1f} L/100 km" if l100 is not None else f"{lh:.1f} L/h" if lh is not None else "--")
@@ -1832,7 +1872,7 @@ class App:
         nota = ""
         if kkl:
             grande, est = "--", tr("La centralita EDC15 no da la velocidad: el 0-100 necesita un ELM327 · OBD2.")
-        elif self.connected and 0x0D not in self.supported:
+        elif self.mode == ELM and self.connected and 0x0D not in self.supported:
             grande, est = "--", tr("El coche no da la velocidad (PID 0D): no se puede medir el 0-100.")
         elif cr.estado == cr.MIDIENDO:
             grande = f"{cr.transcurrido():.1f} s"
@@ -2551,11 +2591,7 @@ class App:
         self.mode = next(k for k, v in MODOS.items() if v == self.mode_var.get())
         kkl = self.mode == KKL
         self.mod_cb.configure(state="readonly" if kkl else "disabled")
-        self.panel_vag.pack_forget()
-        self.panel_obd.pack_forget()
-        (self.panel_vag if kkl else self.panel_obd).pack(fill="both", expand=True)
-        self.panel_lbl.configure(text=tr("Lectura en vivo de los grupos 001 · 003 · 011") if kkl
-                                 else tr("Lectura en vivo de PIDs OBD2 estándar"))
+        self._panel_segun_motor()
         self.side_vag.pack_forget()
         self.side_obd.pack_forget()
         (self.side_vag if kkl else self.side_obd).pack(fill="both", expand=True, before=self.side_btns)
@@ -2569,11 +2605,6 @@ class App:
                     "y se reinician los monitores de emisiones (la ITV puede rechazarlo hasta completar ciclos)."))
         self.dtc_tree.delete(*self.dtc_tree.get_children())
         self.dtc_lbl.configure(text="")
-        for w in (self.comb_lbl, self.comb_cb, self.cil_lbl, self.cil_entry, self.ncil_lbl, self.ncil_entry):
-            w.pack_forget()
-        for w in ((self.ncil_lbl, self.ncil_entry) if kkl else
-                  (self.comb_lbl, self.comb_cb, self.cil_lbl, self.cil_entry)):
-            w.pack(side="left", padx=(0, 6) if isinstance(w, ttk.Label) else (0, 14))
         self.trayecto.reiniciar()
         self.crono = consumo.Cronometro()
         self.combustible_coche = None
@@ -2686,6 +2717,34 @@ class App:
             self.bar.configure(text=tr("Conectando: la búsqueda del protocolo OBD2 puede tardar hasta 25 s."))
         self.worker.submit("connect", self.mode, port, addr)
 
+    def _kkl_gasolina(self):
+        return self.mode == KKL and self.motor == "gasolina"
+
+    def _panel_groups(self):
+        return PANEL_GROUPS_GASOLINA if self.motor == "gasolina" else PANEL_GROUPS
+
+    def _panel_segun_motor(self):
+        """Panel y ajustes de consumo según el modo y, en KKL, el tipo de motor."""
+        kkl = self.mode == KKL
+        for f in (self.panel_vag, self.panel_gas, self.panel_obd):
+            f.pack_forget()
+        (self.panel_obd if not kkl else self.panel_gas if self.motor == "gasolina" else self.panel_vag).pack(
+            fill="both", expand=True)
+        self.panel_lbl.configure(
+            text=tr("Lectura en vivo de los grupos {lista}", lista=" · ".join(f"{g:03d}" for g in self._panel_groups()))
+            if kkl else tr("Lectura en vivo de PIDs OBD2 estándar"))
+        g1 = MOTORES[self.motor][1].get(1, (None, []))[1]
+        self.vag_stats_lbl["volt"].configure(text=tr(g1[2]) if self.motor == "pd" and len(g1) > 2
+                                             else tr("Tensión dosificador"))
+        for w in (self.comb_lbl, self.comb_cb, self.cil_lbl, self.cil_entry, self.ncil_lbl, self.ncil_entry):
+            w.pack_forget()
+        visibles = ((self.cil_lbl, self.cil_entry) if self._kkl_gasolina() else
+                    (self.ncil_lbl, self.ncil_entry) if kkl else
+                    (self.comb_lbl, self.comb_cb, self.cil_lbl, self.cil_entry))
+        for w in visibles:
+            w.pack(side="left", padx=(0, 6) if isinstance(w, ttk.Label) else (0, 14))
+        self._cons_texto()
+
     def _poner_motor(self, motor):
         """Elige el tipo de motor VAG: casillas de sus grupos y nombres de los campos."""
         nombre, grupos, defecto = MOTORES[motor]
@@ -2695,6 +2754,10 @@ class App:
         self.worker.grupos = grupos
         if not cambia:
             return
+        if self.live_source in ("panel", "cons"):           # los grupos que se leen cambian
+            self._stop_live()
+        if hasattr(self, "mode"):                          # (al construir la ventana lo hace _apply_mode)
+            self._panel_segun_motor()
         self._motor_casillas = motor
         for w in self.grupos_frame.winfo_children():
             w.destroy()
@@ -2719,7 +2782,7 @@ class App:
             self._stop_live()
             return
         if source == "panel":
-            items = PANEL_GROUPS if self.mode == KKL else [p for p in PANEL_PIDS if p in self.supported]
+            items = self._panel_groups() if self.mode == KKL else [p for p in PANEL_PIDS if p in self.supported]
         elif source == "cons":
             self._cons_guardar()
             items = self._cons_items()
@@ -3115,7 +3178,13 @@ class App:
 
     # ---------------- datos en vivo ----------------
     def _chart_add(self, t, data):
-        if self.mode == KKL:
+        if self._kkl_gasolina():
+            g2, g3 = rows_of(data, 2), rows_of(data, 3)
+            if g2:
+                self.ch_grpm.add(t, {"RPM": num(g2, 0)})
+            if g2 or g3:
+                self.ch_gload.add(t, {tr("Carga"): num(g2, 1), tr("Mariposa"): num(g3, 2)})
+        elif self.mode == KKL:
             g3, g11 = rows_of(data, 3), rows_of(data, 11)
             if g11:
                 self.ch_boost.add(t, {tr("Teórica"): num(g11, 1), tr("Real"): num(g11, 2)})
@@ -3131,7 +3200,20 @@ class App:
                 return f"{rows[i][1]} {rows[i][2]}"
             except IndexError:
                 return "--"
-        if self.mode == KKL:
+        if self._kkl_gasolina():
+            g2, g3, g4 = rows_of(data, 2), rows_of(data, 3), rows_of(data, 4)
+            self.gg_rpm.set(num(g2, 0) if g2 else num(g3, 0))
+            self.gg_load.set(num(g2, 1))
+            self.gg_temp.set(num(g4, 2))
+            self.gg_iat.set(num(g4, 3))
+            self.gas_stats["iny"].set(fmt(g2, 2))
+            self.gas_stats["aire"].set(fmt(g2, 3))
+            self.gas_stats["mar"].set(fmt(g3, 2))
+            self.gas_stats["avance"].set(fmt(g3, 3))
+            self.gas_stats["volt"].set(fmt(g4, 1))
+            self.ch_grpm.redraw()
+            self.ch_gload.redraw()
+        elif self.mode == KKL:
             g1, g3, g11 = rows_of(data, 1), rows_of(data, 3), rows_of(data, 11)
             self.g_rpm.set(num(g1, 0) if g1 else num(g11, 0))
             self.g_iq.set(num(g1, 1))

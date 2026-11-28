@@ -328,6 +328,39 @@ for modo in (gui.KKL, gui.ELM):
     app.toggle_connect()
     ok(esperar(lambda: not app.connected, 10), "desconecta")
 
+print("KKL con un motor de gasolina (grupos estándar de VAG)")
+import simulador  # noqa: E402
+simulador.GASOLINA = True
+app.mode_var.set(gui.MODOS[gui.KKL])
+app._apply_mode()
+app.port_var.set(gui.SIM)
+app.toggle_connect()
+ok(esperar(lambda: app.connected, 40), "conecta")
+if app.connected:
+    ok(app.motor == "gasolina" and app._panel_groups() == [2, 3, 4], "motor detectado: gasolina (1.8L R4/5VT)")
+    app.nb.select(app.tab_panel)
+    app.toggle_live("panel")
+    ok(esperar(lambda: app.gas_stats["aire"].get().endswith("g/s") and app.gas_stats["volt"].get().endswith("V")
+               and sum(len(d) for d in app.ch_grpm.data.values()) >= 3
+               and sum(len(d) for d in app.ch_gload.data.values()) >= 3, 20),
+       f"panel de gasolina (aire {app.gas_stats['aire'].get()}, avance {app.gas_stats['avance'].get()}, "
+       f"tensión {app.gas_stats['volt'].get()})")
+    revisar_idioma("panel gasolina")
+    app._stop_live()
+    # el simulador acelera de 0 a 130 km/h (130·sen(t/4)): se le adelanta el reloj para salir de 0 enseguida
+    app.worker.ser.ecu.t0 = time.monotonic() - (8 * math.pi - 1.5)
+    app.nb.select(app.tab_cons)
+    app.toggle_live("cons")
+    ok(esperar(lambda: app.crono.tiempos, 25), "el cronómetro mide un 0-100 con el grupo 005")
+    ok(esperar(lambda: app.trayecto.km > 0.05 and "L/100" in app.cons_stats["medio"].get(), 15),
+       f"consumo por KKL en gasolina ({app.cons_stats['inst'].get()}, medio {app.cons_stats['medio'].get()}, "
+       f"{app.trayecto.km:.2f} km)")
+    revisar_idioma("consumo gasolina")
+    app._stop_live()
+    app.toggle_connect()
+    ok(esperar(lambda: not app.connected, 10), "desconecta")
+simulador.GASOLINA = False
+
 print("ELM327 WiFi (adaptador simulado en 127.0.0.1)")
 from simulador import FakeELMSerial  # noqa: E402
 srv = socket.socket()
