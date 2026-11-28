@@ -585,16 +585,12 @@ sudo usermod -aG dialout $USER</code></pre>
 <section id="estado" class="seccion seccion-alterna">
   <div class="contenedor contenedor-estrecho">
     <h2>Project status</h2>
-    <p>OBD2Desk is under active development. Here is what has been verified and what remains to be covered in the current version:</p>
+    <p>OBD2Desk is under active development. Here is what has been verified in the current version:</p>
     <ul class="lista-ok">
-      <li>Verified on real cars, including the new features in v0.3.0 (module scan, freeze frame data, monitors and report), v0.5.0 (fuel consumption and 0-100, graphs, CSV viewer and history), v0.7.0 (output tests and basic settings) and v0.8.0 (adaptation and coding).</li>
+      <li>Verified on real cars, including the new features in v0.3.0 (module scan, freeze frame data, monitors and report), v0.5.0 (fuel consumption and 0-100, graphs, CSV viewer and history), v0.6.0 (P1 fault codes, TDI unit-injector and petrol measuring blocks, petrol panel and consumption over KKL), v0.7.0 (output tests and basic settings) and v0.8.0 (adaptation and coding), and the WiFi connection with a real WiFi ELM327.</li>
       <li>Automated test suite with the built-in simulators: KKL cable with several VAG control units (EDC15 engine, ABS, airbag and instrument cluster), and ELM327 with a simulated OBD2 car.</li>
       <li>AI assistant validated with the real Claude and DeepSeek APIs; its new v0.5.0 features (recording values, checking the history and generating the report), with the DeepSeek API.</li>
-      <li>New in v0.6.0 and v0.6.1 (P1 fault codes, TDI unit-injector and petrol measuring blocks, petrol panel and consumption over KKL) verified with the simulators; yet to be tested on a car.</li>
       <li>Compatible with Windows 10/11 and Linux (Ubuntu, Debian, Fedora, Arch and openSUSE).</li>
-    </ul>
-    <ul class="lista-no">
-      <li>WiFi connection validated with the simulator; yet to be verified with a real WiFi ELM327 adapter.</li>
     </ul>
     <p>Output tests, basic settings, adaptation and coding are KKL cable features (VAG cars with KW1281); with an ELM327 the diagnostics are generic OBD2.</p>
     <p>If you use it on your car, your feedback helps improve it: share it on <a href="https://github.com/jaso69/obd2/issues">GitHub Issues</a>.</p>
