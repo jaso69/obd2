@@ -19,6 +19,7 @@ import webbrowser
 from collections import deque
 from tkinter import filedialog, messagebox, ttk
 
+import ayuda
 import consumo
 import csv_datos
 import historial
@@ -1546,10 +1547,12 @@ class App:
         self.tab_ecu = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_log = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
         self.tab_ia = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
-        for t, n in ((self.tab_panel, tr("Panel")), (self.tab_cons, tr("Consumo y 0-100")),
-                     (self.tab_vals, tr("Valores medidos")),
+        self.tab_ayuda = ttk.Frame(self.nb, style="Panel.TFrame", padding=16)
+        for t, n in ((self.tab_panel, tr("Panel")), (self.tab_vals, tr("Valores medidos")),
                      (self.tab_dtc, tr("Averías")), (self.tab_ecu, tr("Vehículo")),
-                     (self.tab_ia, tr("✦ Asistente IA")), (self.tab_log, tr("Registro"))):
+                     (self.tab_cons, tr("Consumo y 0-100")),
+                     (self.tab_ia, tr("✦ Asistente IA")), (self.tab_log, tr("Registro")),
+                     (self.tab_ayuda, tr("Ayuda"))):
             self.nb.add(t, text=f"  {n}  ")
         self._build_panel()
         self._build_cons()
@@ -1558,6 +1561,7 @@ class App:
         self._build_ecu()
         self._build_ia()
         self._build_log()
+        self._build_ayuda()
 
         self.bar = ttk.Label(self.root, text=tr("Listo. Elige conexión y puerto, y pulsa Conectar."),
                              style="PanelMuted.TLabel", padding=(18, 6))
@@ -2044,6 +2048,49 @@ class App:
         sb.pack(side="right", fill="y")
         self.log_txt.tag_configure("err", foreground=ERR)
         self.log_txt.tag_configure("dbg", foreground=MUTED)
+
+    # ---------------- ayuda ----------------
+    def _build_ayuda(self):
+        p, s = self.tab_ayuda, self.s
+        side = self._card(p, padding=12)
+        side.pack(side="left", fill="y", padx=(0, 14))
+        ttk.Label(side, text=tr("Contenido"), style="Card.TLabel",
+                  font=(FONT, 11, "bold")).pack(anchor="w", pady=(0, 8))
+        self.ayuda_lista = tk.Listbox(side, bg=CARD, fg=FG, bd=0, highlightthickness=0,
+                                      selectbackground=ACCENT, selectforeground="#111", activestyle="none",
+                                      font=(FONT, 10), width=24, exportselection=False)
+        self.ayuda_lista.pack(fill="y", expand=True)
+        ttk.Label(side, text=f"{NOMBRE} v{VERSION}", style="Muted.TLabel", font=(FONT, 8)).pack(anchor="w", pady=(8, 0))
+
+        card = self._card(p, padding=0)
+        card.pack(side="left", fill="both", expand=True)
+        t = self.ayuda_txt = tk.Text(card, bg=CARD, fg=FG, insertbackground=FG, font=(FONT, 10), bd=0,
+                                     highlightthickness=0, padx=20, pady=14, wrap="word", spacing1=2, spacing3=4)
+        sb = ttk.Scrollbar(card, orient="vertical", command=t.yview)
+        t.configure(yscrollcommand=sb.set)
+        t.pack(side="left", fill="both", expand=True)
+        sb.pack(side="right", fill="y")
+        t.tag_configure("h", font=(FONT, 13, "bold"), foreground=ACCENT, spacing1=16, spacing3=6)
+        t.tag_configure("li", lmargin1=int(12 * s), lmargin2=int(26 * s))
+        t.tag_configure("b", font=(FONT, 10, "bold"))
+        for n, (titulo, parrafos) in enumerate(ayuda.secciones()):
+            self.ayuda_lista.insert("end", titulo)
+            t.mark_set(f"sec{n}", "end-1c")
+            t.mark_gravity(f"sec{n}", "left")
+            t.insert("end", titulo + "\n", "h")
+            for par in parrafos:
+                if par.startswith("• "):
+                    t.insert("end", "•  ", ("li", "b"))
+                    t.insert("end", par[2:] + "\n", "li")
+                else:
+                    t.insert("end", par + "\n")
+        t.configure(state="disabled")
+
+        def ir(_e=None):
+            sel = self.ayuda_lista.curselection()
+            if sel:
+                t.yview(f"sec{sel[0]}")
+        self.ayuda_lista.bind("<<ListboxSelect>>", ir)
 
     # ---------------- asistente IA ----------------
     def _build_ia(self):

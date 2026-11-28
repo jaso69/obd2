@@ -380,6 +380,23 @@ if not gui.WINDOWS:
     ok(oct(os.stat(ruta).st_mode & 0o777) == "0o600", "config con permisos 600")
 ok(ia.leer_clave(ia.cargar_config(), "anthropic") == "sk-prueba-123", "la API key se guarda y se recupera")
 
+print("Pestañas y ayuda")
+nombres = [app.nb.tab(t, "text").strip() for t in app.nb.tabs()]
+orden = [tr(n) for n in ("Panel", "Valores medidos", "Averías", "Vehículo", "Consumo y 0-100",
+                         "✦ Asistente IA", "Registro", "Ayuda")]
+ok(nombres == orden, f"orden de las pestañas: {nombres}")
+app.nb.select(app.tab_ayuda)
+root.update()
+n_sec = app.ayuda_lista.size()
+texto = app.ayuda_txt.get("1.0", "end")
+ok(n_sec >= 8 and all(app.ayuda_lista.get(i) in texto for i in range(n_sec)),
+   f"la ayuda tiene {n_sec} apartados y su texto ({len(texto)} caracteres)")
+app.ayuda_lista.selection_set(n_sec - 1)
+app.ayuda_lista.event_generate("<<ListboxSelect>>")
+root.update()
+ok(app.ayuda_txt.yview()[0] > 0.5, "el índice de la ayuda lleva al apartado elegido")
+revisar_idioma("ayuda")
+
 print("Cambio de idioma con el selector")
 app.nb.select(app.tab_ia)
 revisar_idioma("asistente IA y registro")

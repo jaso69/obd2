@@ -1098,4 +1098,91 @@ EN = {
     "módulos {lista}": "modules {lista}",
     "sin averías": "no fault codes",
     "último: {fecha}": "last: {fecha}",
+    # ---------------------------------------------------------------- pestaña Ayuda
+    'Primeros pasos':
+        'Getting started',
+    'OBD2Desk lee averías y valores en vivo del coche con un cable conectado al conector de diagnóstico (bajo el volante) y te ayuda a interpretarlos con un asistente de IA.':
+        'OBD2Desk reads fault codes and live values from the car through a cable plugged into the diagnostic socket (under the steering wheel) and helps you understand them with an AI assistant.',
+    '• Sin coche: elige el puerto «Simulador (sin coche)», pulsa Conectar y prueba todas las pestañas.':
+        '• Without a car: choose the port «Simulator (no car)», press Connect and try every tab.',
+    '• En el coche: conecta el cable al conector OBD y al ordenador, pon el contacto (para leer averías no hace falta arrancar), elige Conexión y Puerto y pulsa Conectar.':
+        '• In the car: plug the cable into the OBD socket and the computer, switch the ignition on (the engine does not need to run to read fault codes), choose Connection and Port and press Connect.',
+    '• La conexión tarda unos segundos: con KKL de 2 a 6 s y con ELM327 hasta 25 s mientras busca el protocolo.':
+        '• Connecting takes a few seconds: 2 to 6 s with KKL and up to 25 s with an ELM327 while it searches for the protocol.',
+    '• Lo habitual: leer las averías (pestaña Averías), mirar los valores en vivo (Panel o Valores medidos) y, si quieres, pedir ayuda al Asistente IA.':
+        '• The usual routine: read the fault codes (Fault codes tab), watch the live values (Dashboard or Measured values) and, if you like, ask the AI assistant for help.',
+    'Conexión y cables':
+        'Connection and cables',
+    'En la parte de arriba eliges el tipo de conexión, el puerto y, con KKL, el módulo del coche.':
+        'At the top you choose the connection type, the port and, with KKL, the car module.',
+    '• KKL · VAG KW1281: para coches del grupo VAG (SEAT, VW, Audi, Skoda) hasta 2004 aproximadamente, que no tienen OBD2 genérico. Necesita un cable «KKL 409.1» con chip FTDI (no sirven los CH340 ni PL2303). El selector Módulo elige la centralita: 01 motor, 03 ABS, 15 airbag, 17 cuadro, etc.':
+        '• KKL · VAG KW1281: for VAG group cars (SEAT, VW, Audi, Skoda) up to about 2004, which have no generic OBD2. It needs a «KKL 409.1» cable with an FTDI chip (CH340 and PL2303 do not work). The Module selector picks the control unit: 01 engine, 03 ABS, 15 airbag, 17 instruments, etc.',
+    '• ELM327 · OBD2 genérico: para cualquier coche con OBD2 (gasolina desde 2001 y diésel desde 2004 en Europa, aproximadamente). Sirven los ELM327 USB, Bluetooth clásico y WiFi. Los que solo son Bluetooth LE (algunos para iPhone) no funcionan.':
+        '• ELM327 · generic OBD2: for any car with OBD2 (in Europe, roughly petrol cars from 2001 and diesels from 2004). USB, classic Bluetooth and WiFi ELM327 adapters work. Bluetooth LE-only ones (some made for iPhone) do not.',
+    '• Puerto: el botón ↻ vuelve a buscar los puertos. Un ELM327 Bluetooth hay que emparejarlo antes en el sistema (en Windows aparece como puerto COM; en Linux, como /dev/rfcomm0). Para WiFi, conecta el ordenador a la red del adaptador y elige «WiFi · 192.168.0.10:35000» o escribe otra dirección ip:puerto.':
+        "• Port: the ↻ button searches for ports again. A Bluetooth ELM327 must be paired in the system first (on Windows it shows up as a COM port; on Linux, as /dev/rfcomm0). For WiFi, connect the computer to the adapter's network and choose «WiFi · 192.168.0.10:35000» or type another ip:port address.",
+    '• Si no conecta: comprueba el contacto, el puerto y el cable. En Windows conviene poner la latencia del cable FTDI a 1 ms; en Linux tu usuario debe estar en el grupo dialout (el programa te dice el comando). Una radio no original puede bloquear la línea K en coches antiguos.':
+        '• If it does not connect: check the ignition, the port and the cable. On Windows, set the FTDI cable latency to 1 ms; on Linux your user must be in the dialout group (the program tells you the command). On older cars a non-original radio can block the K-line.',
+    'Relojes y gráficas de los valores principales del motor. Pulsa «Iniciar lectura» para empezar y «Detener» para parar.':
+        'Gauges and charts of the main engine values. Press «Start reading» to begin and «Stop» to stop.',
+    '• Con KKL (diésel TDI): régimen, caudal inyectado, presión del turbo (con la marca de la presión teórica), temperatura, ciclo de la N75 y de la EGR, y gráficas del turbo y de la masa de aire teóricos frente a reales.':
+        '• With KKL (TDI diesel): engine speed, injected quantity, boost pressure (with a mark for the specified pressure), temperature, N75 and EGR duty cycles, and charts of specified versus actual boost and air mass.',
+    '• Con ELM327: régimen, velocidad, temperatura, carga, temperatura de admisión, masa de aire, mariposa y tensión, con gráficas del régimen y de la carga.':
+        '• With ELM327: engine speed, speed, temperature, load, intake temperature, air flow, throttle and voltage, with charts of engine speed and load.',
+    'Datos de identificación del coche y de la centralita, que se leen al conectar.':
+        'Identification data of the car and the control unit, read when you connect.',
+    '• Con KKL: referencia de la centralita, componente, versión de software y codificación.':
+        '• With KKL: control unit part number, component, software version and coding.',
+    '• Con ELM327: protocolo, VIN decodificado (marca, país y año), tensión de batería, calibración de la centralita y, a la derecha, los monitores de preparación. Antes de la ITV conviene que estén todos completos: después de borrar averías tardan unos días de uso en completarse.':
+        '• With ELM327: protocol, decoded VIN (make, country and year), battery voltage, control unit calibration and, on the right, the readiness monitors. Before a roadworthiness test they should all be complete: after clearing fault codes they take a few days of driving to complete.',
+    'Consumo instantáneo y medio del trayecto y, con ELM327, cronómetro de 0 a 100 km/h. Pulsa «Iniciar lectura»; «Reiniciar trayecto» pone a cero el consumo medio, los litros y la distancia.':
+        'Instant and trip-average fuel consumption and, with an ELM327, a 0 to 100 km/h timer. Press «Start reading»; «Reset trip» sets the average consumption, litres and distance back to zero.',
+    '• El consumo es una estimación (±10 %) calculada con el aire que entra al motor o el combustible inyectado. Ajusta el Combustible y la Cilindrada (o los Cilindros con KKL) para que salga bien.':
+        '• Consumption is an estimate (±10 %) calculated from the air entering the engine or the fuel injected. Set the Fuel and the Displacement (or the Cylinders with KKL) so it comes out right.',
+    '• En diésel por OBD2 solo se calcula si el coche da la sonda lambda de banda ancha.':
+        '• On diesels over OBD2 it is only calculated if the car reports the wide-band lambda sensor.',
+    '• Cronómetro 0-100: con el coche parado se arma solo y empieza a contar al salir. Da también el tiempo hasta 50 km/h y guarda las últimas medidas. Se anula si frenas o paras antes de llegar. Hazlo solo en un sitio seguro y sin tráfico.':
+        '• 0-100 timer: with the car stopped it arms itself and starts counting when you pull away. It also gives the time to 50 km/h and keeps the last runs. It is cancelled if you brake or stop before reaching 100. Only do it somewhere safe with no traffic.',
+    '• Con KKL la centralita no da la velocidad, así que solo hay consumo en litros por hora.':
+        '• With KKL the control unit does not report speed, so there is only consumption in litres per hour.',
+    'Lectura de los valores que tú elijas, en una tabla en vivo.':
+        'Reading of the values you choose, in a live table.',
+    '• Con KKL marcas los grupos de valores medidos (los típicos del TDI ya vienen en la lista) o escribes otros números de grupo. Con ELM327 eliges en la lista los valores (PIDs) que da tu coche; Ctrl+clic o Mayús+clic para elegir varios.':
+        '• With KKL you tick the measuring value blocks (the usual TDI ones are already in the list) or type other block numbers. With an ELM327 you pick from the list the values (PIDs) your car supports; Ctrl+click or Shift+click to choose several.',
+    '• Haz clic en una fila de la tabla para ver su gráfica (Ctrl+clic, hasta 4 a la vez). El programa guarda el último minuto de todos los valores, así que la gráfica sale con su historia.':
+        '• Click a row of the table to see its chart (Ctrl+click, up to 4 at a time). The program keeps the last minute of every value, so the chart comes with its history.',
+    '• «Grabar CSV» guarda los valores en un archivo que se abre en Excel o LibreOffice; «Abrir CSV...» abre una grabación en el visor, donde puedes elegir columnas, hacer zoom arrastrando con el ratón y ver el mínimo, la media y el máximo.':
+        '• «Record CSV» saves the values to a file that opens in Excel or LibreOffice; «Open CSV...» opens a recording in the viewer, where you can choose columns, zoom by dragging with the mouse and see the minimum, average and maximum.',
+    '• «Leer averías» muestra los códigos con su descripción. Con ELM327 salen las memorizadas, las pendientes y las permanentes (estas no se pueden borrar: desaparecen solas cuando el coche comprueba que el fallo se ha arreglado), y a la derecha los datos congelados del momento en que se encendió el testigo.':
+        '• «Read fault codes» shows the codes with their description. With an ELM327 you get the stored, pending and permanent ones (these cannot be cleared: they go away on their own once the car checks that the fault is fixed), and on the right the freeze frame data from when the warning light came on.',
+    '• «Borrar averías» las borra de la centralita (con el contacto puesto y el motor parado). Anótalas antes: si el fallo sigue, volverán.':
+        '• «Clear fault codes» clears them from the control unit (ignition on, engine off). Write them down first: if the fault is still there, they will come back.',
+    '• «Escanear todos los módulos» (KKL) recorre todas las centralitas del coche y lista las averías de cada una. Tarda unos minutos y se puede detener.':
+        '• «Scan all modules» (KKL) goes through every control unit in the car and lists the fault codes of each one. It takes a few minutes and can be stopped.',
+    '• «Generar informe» crea una página con los datos del coche y las averías que se abre en el navegador y se puede imprimir o guardar como PDF.':
+        '• «Generate report» makes a page with the car data and fault codes that opens in the browser and can be printed or saved as PDF.',
+    '• Historial: cada lectura se guarda sola por coche. Debajo de los botones verás qué averías son nuevas, cuáles ya no aparecen y cuáles se repiten respecto al diagnóstico anterior; «Historial...» abre todos los diagnósticos guardados.':
+        '• History: every reading is saved automatically per car. Below the buttons you will see which fault codes are new, which are gone and which repeat compared with the previous diagnosis; «History...» opens all saved diagnoses.',
+    'El asistente analiza las averías y los valores del coche y te guía en el diagnóstico: puede leer averías y valores, grabar unos segundos de datos, consultar el historial o pedirte que hagas algo (arrancar, acelerar, etc.).':
+        "The assistant analyses the car's fault codes and values and guides you through the diagnosis: it can read fault codes and values, record a few seconds of data, check the history or ask you to do something (start the engine, rev it, etc.).",
+    '• Necesita una API key de un proveedor (Anthropic, OpenAI o DeepSeek): elige el proveedor, pulsa «Conseguir una API key», pégala y pulsa Guardar. Cada consulta la cobra el proveedor a tu cuenta.':
+        '• It needs an API key from a provider (Anthropic, OpenAI or DeepSeek): choose the provider, press «Get an API key», paste it and press Save. The provider charges each query to your account.',
+    '• Conecta con el coche, pulsa «Analizar averías del vehículo» o escribe tu problema (por ejemplo, «tira poco por encima de 3000 rpm») y sigue sus indicaciones.':
+        '• Connect to the car, press «Analyse vehicle faults» or describe your problem (for example, «it lacks power above 3000 rpm») and follow its instructions.',
+    '• Al analizar se envían al proveedor los datos del vehículo (incluido el VIN), las averías y los valores. La IA puede equivocarse: confirma el diagnóstico antes de cambiar piezas.':
+        '• When analysing, the vehicle data (including the VIN), fault codes and values are sent to the provider. The AI can be wrong: confirm the diagnosis before replacing parts.',
+    'Muestra lo que va haciendo el programa y los errores de comunicación. Si algo falla, marca «Mostrar comunicación detallada» para ver cada mensaje con el coche; en el Asistente IA, «Analizar errores del programa» envía este registro a la IA para que te ayude.':
+        'Shows what the program is doing and any communication errors. If something fails, tick «Show detailed communication» to see every message exchanged with the car; in the AI assistant, «Analyse program errors» sends this log to the AI so it can help you.',
+    'Archivos y configuración':
+        'Files and settings',
+    '• Las grabaciones CSV y los informes se guardan junto al programa (en Linux, en Documentos/OBD2Desk).':
+        '• CSV recordings and reports are saved next to the program (on Linux, in Documents/OBD2Desk).',
+    '• La configuración, la API key y el historial de cada coche se guardan en la carpeta de configuración de tu usuario (Windows: %APPDATA%\\OBD2Desk; Linux: ~/.config/OBD2Desk).':
+        "• The settings, the API key and each car's history are kept in your user's settings folder (Windows: %APPDATA%\\OBD2Desk; Linux: ~/.config/OBD2Desk).",
+    '• El idioma se cambia con el selector junto al nombre del programa. Cuando hay una versión nueva aparece un aviso arriba; haz clic para descargarla.':
+        '• Change the language with the selector next to the program name. When there is a new version a notice appears at the top; click it to download it.',
+    'Ayuda':
+        'Help',
+    'Contenido':
+        'Contents',
 }
