@@ -84,7 +84,7 @@
     <div class="fila-funcion">
       <div class="texto-funcion">
         <h3>Live dashboard</h3>
-        <p>Gauges and charts of the last 60 seconds. With the KKL cable you see RPM, injected quantity, actual vs. specified boost pressure, air mass, and N75 and EGR duty cycle. With an ELM327: RPM, speed, temperatures, load, MAF, throttle and voltage.</p>
+        <p>Gauges and charts of the last 60 seconds. With the KKL cable you see RPM, injected quantity, actual vs. specified boost pressure, air mass, and N75 and EGR duty cycle; on a petrol VAG, load, throttle, ignition timing and injection time. With an ELM327: RPM, speed, temperatures, load, MAF, throttle and voltage.</p>
         <div class="selector" role="tablist" data-grupo="panel">
           <button role="tab" aria-selected="true" data-img="../img/en/panel-kkl.webp" data-alt="Dashboard in KKL mode with boost and air mass">KKL · VAG</button>
           <button role="tab" aria-selected="false" data-img="../img/en/panel-obd.webp" data-alt="Dashboard in OBD2 mode with RPM, speed, coolant and load">ELM327 · OBD2</button>
@@ -98,7 +98,7 @@
         <h3>Fuel consumption and 0-100 timer</h3>
         <p>Instant and average consumption in L/100 km, litres used, distance and trip time, with a chart. It uses the fuel rate reported by the control unit if available; otherwise it calculates it from the mass air flow sensor or, on cars without one, from manifold pressure and engine displacement. It detects by itself whether the car runs on petrol or diesel.</p>
         <p><strong>0-100 km/h timer</strong>, which also gives you your 0-50 time. No need to press anything as you pull away: with the car stopped it waits, starts counting as soon as the car moves and stops by itself at 100. It keeps your latest runs and your best time. Only measure on a track or a place closed to traffic.</p>
-        <p>With the KKL cable (EDC15) it calculates consumption in L/h from the injected quantity; that control unit does not report road speed, so there is no 0-100 there.</p>
+        <p>With the KKL cable, on a TDI it calculates consumption in L/h from the injected quantity (that control unit does not report road speed, so there is no 0-100 there); on a petrol VAG, consumption in L/100 km, distance and 0-100 from the control unit's air mass and speed.</p>
       </div>
       <figure class="captura"><a href="../img/en/consumo-obd.webp" class="ampliar"><img src="../img/en/consumo-obd.webp" width="2015" height="1200" loading="lazy" alt="Fuel tab with instant and average consumption and a measured 0-100 run"></a></figure>
     </div>
@@ -106,7 +106,7 @@
     <div class="fila-funcion">
       <div class="texto-funcion">
         <h3>Measuring blocks, graphs and logging</h3>
-        <p>Pick VAG measuring blocks (001 injection, 003 MAF and EGR, 011 boost…) or the OBD2 PIDs your car supports, and watch them in a live table. Click a row (Ctrl+click, up to four) to see it in a <strong>live graph</strong> with the last minute.</p>
+        <p>Pick VAG measuring blocks (001 injection, 003 MAF and EGR, 011 boost…), with each value named for the engine: TDI distributor pump, TDI unit injector (PD) or petrol. Or the OBD2 PIDs your car supports, and watch them in a live table. Click a row (Ctrl+click, up to four) to see it in a <strong>live graph</strong> with the last minute.</p>
         <p><strong>CSV logging</strong> saves every reading with a timestamp. Open it later in the program's own <strong>CSV viewer</strong>: hover to see the values, drag to zoom into a section and check the minimum, average and maximum. It also opens in Excel or LibreOffice.</p>
         <div class="selector" role="tablist" data-grupo="valores">
           <button role="tab" aria-selected="true" data-img="../img/en/valores-kkl.webp" data-alt="Measuring blocks 001, 003 and 011 with a graph of specified and actual boost pressure">Live graph</button>
@@ -119,7 +119,7 @@
     <div class="fila-funcion invertida">
       <div class="texto-funcion">
         <h3>Fault codes</h3>
-        <p>5-digit VAG codes with the component, the fault type and whether it is intermittent; also the 16xxx-18xxx codes of OBD-era VAG cars, translated to their P code. <strong>Scan all modules</strong> goes through engine, gearbox, ABS, airbag, instrument cluster, comfort… and lists the faults in each one.</p>
+        <p>5-digit VAG codes with the component, the fault type and whether it is intermittent; also the 16xxx-18xxx codes of OBD-era VAG cars, translated to their P code, with <strong>over 500 VAG-specific P1 codes</strong> described (also when read over OBD2). <strong>Scan all modules</strong> goes through engine, gearbox, ABS, airbag, instrument cluster, comfort… and lists the faults in each one.</p>
         <p>On OBD2: stored, pending and <strong>permanent</strong> codes, the MIL status and <strong>freeze frame data</strong>: RPM, temperature, load and other engine values at the exact moment the fault was set.</p>
         <p>You can clear them (it always asks for confirmation) and <strong>generate a report</strong> to print or save as PDF, handy for the workshop or when selling the car. Remember: clearing a code does not fix the fault.</p>
         <div class="selector" role="tablist" data-grupo="averias">
@@ -153,6 +153,7 @@
     </div>
 
     <ul class="extras">
+      <li><span class="nuevo">New</span> <strong>Built-in help</strong>: a tab with the manual for every part of the program.</li>
       <li><strong>Built-in simulator</strong>: try everything without a car by choosing the port “Simulator (no car)”.</li>
       <li><strong>A single file</strong>: no need to install Python or anything else.</li>
       <li><strong>Full communication log</strong>, with a debug mode, in case something goes wrong.</li>
@@ -390,6 +391,7 @@ sudo usermod -aG dialout $USER</code></pre>
       <li>Verified on real cars, including the new features in v0.3.0 (module scan, freeze frame data, monitors and report) and v0.5.0 (fuel consumption and 0-100, graphs, CSV viewer and history).</li>
       <li>Automated test suite with the built-in simulators: KKL cable with several VAG control units (EDC15 engine, ABS, airbag and instrument cluster), and ELM327 with a simulated OBD2 car.</li>
       <li>AI assistant validated with the real Claude and DeepSeek APIs; its new v0.5.0 features (recording values, checking the history and generating the report), with the DeepSeek API.</li>
+      <li>New in v0.6.0 (P1 fault codes, TDI unit-injector and petrol measuring blocks, petrol panel and consumption over KKL) verified with the simulators; yet to be tested on a car.</li>
       <li>Compatible with Windows 10/11 and Linux (Ubuntu, Debian, Fedora, Arch and openSUSE).</li>
     </ul>
     <ul class="lista-no">

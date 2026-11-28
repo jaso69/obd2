@@ -337,6 +337,11 @@ Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windo
 - `tests/prueba_csv.py` se caía en la consola de Windows (cp1252) al imprimir «→»; cambiado por «->».
 - Web publicada el 2026-11-27 (`./web/publicar.sh "Web v0.5.0"`); los botones descargan la v0.5.0.
 
+### 8.2d Release v0.6.0 (2026-11-28)
+- Pestaña Ayuda (y «Consumo y 0-100» tras «Vehículo»), 538 averías P1 de VAG (también en OBD2 si el VIN es VAG), grupos de TDI inyector-bomba y de gasolina con selector de Motor, Panel y consumo/0-100 de gasolina por KKL. `VERSION = "0.6.0"`.
+- Pruebas antes de etiquetar: simuladores, idioma, consumo, csv, historial y GUI en español e inglés → «TODO CORRECTO». Probado solo con simuladores: **falta probar en coche un VAG de gasolina y un TDI inyector-bomba por KKL**.
+- Web: textos de la v0.6.0 y capturas rehechas (barra de pestañas con «Ayuda»).
+
 ### 8.3 Cómo sacar la próxima versión (lista de pasos)
 Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 1. Fedora: cambiar `VERSION` en `gui.py`; `.venv/bin/python tests/prueba_simuladores.py`, `.venv/bin/python tests/prueba_idioma.py`, `xvfb-run -a .venv/bin/python tests/prueba_gui.py` y `OBD2DESK_IDIOMA=en xvfb-run -a .venv/bin/python tests/prueba_gui.py` → «TODO CORRECTO» (las dos de GUI una detrás de otra: a la vez chocan en el nombre del CSV).
@@ -354,7 +359,7 @@ Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 - **Probado por el usuario (anotado el 2026-11-28)**: en Linux, los adaptadores físicos (cable FTDI con `dialout`, ELM327 Bluetooth con `rfcomm`) y el lanzador en un escritorio real.
 - Ajustes probables al probar con coche: tiempos entre bytes (`--retardo` en consola), alguna fórmula VAG, textos de averías.
 - **v0.3.0 probada en coche** (2026-11-22, el usuario: «funciona bien»); la web lo dice. Falta probar con un ELM327 WiFi real (la web lo indica como pendiente).
-- Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 21 en la tabla). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 en la v0.3.0 (publicada, web actualizada).
+- Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 538 en la tabla `vag_p1.py` desde la v0.6.0). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 en la v0.3.0 (publicada, web actualizada).
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
 - No hay funciones de adaptación, ajustes básicos, codificación ni test de actuadores (solo lectura y borrado de averías).
 

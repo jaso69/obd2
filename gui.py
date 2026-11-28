@@ -59,7 +59,7 @@ FONT = "Segoe UI" if WINDOWS else "DejaVu Sans"
 MONO = "Consolas" if WINDOWS else "DejaVu Sans Mono"
 NOMBRE = "OBD2Desk"
 WIFI = "WiFi · 192.168.0.10:35000"      # dirección habitual de los ELM327 WiFi
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 URL_RELEASES = "https://github.com/jaso69/obd2/releases"
 
 KKL, ELM = "kkl", "elm"

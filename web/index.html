@@ -85,7 +85,7 @@
     <div class="fila-funcion">
       <div class="texto-funcion">
         <h3>Panel en directo</h3>
-        <p>Relojes y gráficas de los últimos 60 segundos. Con el cable KKL ves régimen, caudal inyectado, presión de turbo frente a la teórica, masa de aire, ciclo de la N75 y de la EGR. Con un ELM327, régimen, velocidad, temperaturas, carga, caudalímetro, mariposa y tensión.</p>
+        <p>Relojes y gráficas de los últimos 60 segundos. Con el cable KKL ves régimen, caudal inyectado, presión de turbo frente a la teórica, masa de aire, ciclo de la N75 y de la EGR; en un VAG de gasolina, carga, mariposa, avance de encendido y tiempo de inyección. Con un ELM327, régimen, velocidad, temperaturas, carga, caudalímetro, mariposa y tensión.</p>
         <div class="selector" role="tablist" data-grupo="panel">
           <button role="tab" aria-selected="true" data-img="img/panel-kkl.webp" data-alt="Panel en modo KKL con turbo y masa de aire">KKL · VAG</button>
           <button role="tab" aria-selected="false" data-img="img/panel-obd.webp" data-alt="Panel en modo OBD2 con régimen, velocidad, refrigerante y carga">ELM327 · OBD2</button>
@@ -99,7 +99,7 @@
         <h3>Consumo y cronómetro 0-100</h3>
         <p>Consumo instantáneo y medio en L/100 km, litros gastados, distancia y tiempo del trayecto, con su gráfica. Usa el dato de consumo de la centralita si lo da; si no, lo calcula con el caudalímetro o, en coches sin él, con la presión del colector y la cilindrada. Reconoce solo si es gasolina o diésel.</p>
         <p><strong>Cronómetro 0-100 km/h</strong>, que también te da el tiempo de 0 a 50. No hay que pulsar nada al salir: con el coche parado se pone en espera, empieza a contar en cuanto el coche se mueve y se para solo al llegar a 100. Guarda tus últimas medidas y la mejor. Mídelo solo en un circuito o en un lugar cerrado al tráfico.</p>
-        <p>Con el cable KKL (EDC15) calcula el consumo en L/h con el caudal inyectado; esa centralita no da la velocidad, así que ahí no hay 0-100.</p>
+        <p>Con el cable KKL, en un TDI calcula el consumo en L/h con el caudal inyectado (esa centralita no da la velocidad, así que ahí no hay 0-100); en un VAG de gasolina, consumo en L/100 km, distancia y 0-100 con la masa de aire y la velocidad de la centralita.</p>
       </div>
       <figure class="captura"><a href="img/consumo-obd.webp" class="ampliar"><img src="img/consumo-obd.webp" width="2025" height="1200" loading="lazy" alt="Pestaña de consumo con el consumo instantáneo y medio, y un 0-100 medido"></a></figure>
     </div>
@@ -107,7 +107,7 @@
     <div class="fila-funcion">
       <div class="texto-funcion">
         <h3>Valores medidos, gráficas y grabación</h3>
-        <p>Elige los grupos de valores medidos VAG (001 inyección, 003 caudalímetro y EGR, 011 turbo…) o los PIDs OBD2 que tu coche soporta, y míralos en una tabla en directo. Haz clic en una fila (Ctrl+clic, hasta cuatro) y la verás en una <strong>gráfica en vivo</strong> con el último minuto.</p>
+        <p>Elige los grupos de valores medidos VAG (001 inyección, 003 caudalímetro y EGR, 011 turbo…), con el nombre de cada valor según el motor: TDI de bomba rotativa, TDI inyector-bomba o gasolina. O los PIDs OBD2 que tu coche soporta, y míralos en una tabla en directo. Haz clic en una fila (Ctrl+clic, hasta cuatro) y la verás en una <strong>gráfica en vivo</strong> con el último minuto.</p>
         <p><strong>Grabar CSV</strong> guarda cada lectura con su tiempo. Ábrela luego en el <strong>visor de CSV</strong> del propio programa: pasa el ratón para ver los valores, arrastra para ampliar un tramo y mira el mínimo, la media y el máximo. También se abre en Excel o LibreOffice.</p>
         <div class="selector" role="tablist" data-grupo="valores">
           <button role="tab" aria-selected="true" data-img="img/valores-kkl.webp" data-alt="Valores medidos de los grupos 001, 003 y 011 con la gráfica de la presión de turbo teórica y real">Gráfica en vivo</button>
@@ -120,7 +120,7 @@
     <div class="fila-funcion invertida">
       <div class="texto-funcion">
         <h3>Averías</h3>
-        <p>Códigos VAG de 5 cifras con el componente, el tipo de fallo y si es intermitente; también los 16xxx-18xxx de los VAG con OBD, traducidos a su código P. Con <strong>Escanear todos los módulos</strong> recorre motor, cambio, ABS, airbag, cuadro, confort… y te lista las averías de cada uno.</p>
+        <p>Códigos VAG de 5 cifras con el componente, el tipo de fallo y si es intermitente; también los 16xxx-18xxx de los VAG con OBD, traducidos a su código P, con <strong>más de 500 códigos P1</strong> propios de VAG descritos (también al leerlos por OBD2). Con <strong>Escanear todos los módulos</strong> recorre motor, cambio, ABS, airbag, cuadro, confort… y te lista las averías de cada uno.</p>
         <p>En OBD2, averías memorizadas, pendientes y <strong>permanentes</strong>, el testigo MIL y los <strong>datos congelados</strong>: régimen, temperatura, carga y demás valores del motor en el momento exacto en que saltó la avería.</p>
         <p>Puedes borrarlas (siempre pide confirmación) y <strong>generar un informe</strong> para imprimir o guardar en PDF, útil para el taller o al vender el coche. Recuerda: borrar un código no repara la avería.</p>
         <div class="selector" role="tablist" data-grupo="averias">
@@ -154,6 +154,7 @@
     </div>
 
     <ul class="extras">
+      <li><span class="nuevo">Nuevo</span> <strong>Ayuda integrada</strong>: una pestaña con el manual de cada parte del programa.</li>
       <li><strong>Simulador incluido</strong>: prueba todo sin coche eligiendo el puerto «Simulador (sin coche)».</li>
       <li><strong>Un solo archivo</strong>: no hay que instalar Python ni nada más.</li>
       <li><strong>Registro</strong> de toda la comunicación, con modo de depuración, por si algo falla.</li>
@@ -391,6 +392,7 @@ sudo usermod -aG dialout $USER</code></pre>
       <li>Verificado en coches reales, incluidas las novedades de la v0.3.0 (escaneo de módulos, datos congelados, monitores e informe) y de la v0.5.0 (consumo y 0-100, gráficas, visor de CSV e historial).</li>
       <li>Batería de pruebas automáticas con los simuladores integrados: cable KKL con varias centralitas VAG (motor EDC15, ABS, airbag y cuadro), y ELM327 con un coche OBD2 simulado.</li>
       <li>Asistente IA validado con la API real de Claude y de DeepSeek; sus funciones nuevas de la v0.5.0 (grabar valores, consultar el historial y generar el informe), con la de DeepSeek.</li>
+      <li>Novedades de la v0.6.0 (averías P1, grupos de TDI inyector-bomba y de gasolina, panel y consumo de gasolina por KKL) verificadas con los simuladores; pendientes de probar en coche.</li>
       <li>Compatible con Windows 10/11 y Linux (Ubuntu, Debian, Fedora, Arch y openSUSE).</li>
     </ul>
     <ul class="lista-no">
