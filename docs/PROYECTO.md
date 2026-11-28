@@ -363,14 +363,14 @@ Hecho en Fedora el 2026-11-27 (cierre): `.exe` copiado de la partición de Windo
 - **Probado en coche por el usuario (2026-11-28): funciona bien.** Dudas que había antes de probarlo: qué título usa la EDC15 al contestar (E7 o F4), que la lectura normal la saque del ajuste básico y los textos de estado de la adaptación de la mariposa (salen como bits o `a=.. b=..` si la fórmula no está en la tabla).
 - Canales de adaptación y codificación: hechos después, ver §8.2h.
 
-### 8.2h Adaptación y codificación (2026-11-28, sin publicar)
+### 8.2h Adaptación y codificación (2026-11-28, v0.8.0)
 - Botón «Adaptación...» en Averías (solo KKL) → ventana `VentanaAdaptacion` (`gui.py`), modal y con la IA bloqueada (`act_en_curso`) como las de actuadores y ajustes. Avisos y casilla «He leído los avisos y tengo los valores del manual de taller» obligatoria para escribir (leer no la pide).
 - **Canal de adaptación**: «Leer» (valor guardado) → escribir el valor nuevo → «Probar» (la centralita lo usa sin guardarlo) → «Guardar» (solo se activa tras probar ese mismo valor; pide confirmación con antes/ahora). Si se prueba un valor y se cierra la ventana o se lee otro canal sin guardar, se vuelve a probar el valor guardado. El canal 00 (borra todas las adaptaciones) no se permite (1-255).
 - **Código de acceso (login)** opcional, para los canales o centralitas que lo piden. **Codificación**: muestra la actual y el código de taller (de la identificación); «Guardar codificación» con confirmación; la centralita contesta con su identificación y se comprueba que trae la codificación nueva (si no, error). Vehículo se actualiza. Si la centralita no informa de su codificación, no se deja cambiar. **Código de taller**: por defecto el que tiene la centralita; se manda con cada cambio.
 - **Registro de cambios** (`cambios.py`): cada canal o codificación guardados se apuntan con el valor de antes en `cambios_centralita.jsonl` de la carpeta de configuración (se añade, nunca se reescribe; aguanta líneas cortadas). La ventana lista los de esa centralita (módulo + referencia) y «Volver al valor anterior» rellena el valor de antes para probarlo y guardarlo con el flujo normal.
 - Protocolo (`kw1281.py`, comprobado con el código de kw1281test, licencia MIT): lectura 0x21 [canal], prueba 0x22 [canal, valor 2 bytes], guardado 0x2A [canal, valor, taller 3 bytes], respuesta 0xE6 [canal, valor]; login 0x2B [código 2 bytes, taller 3 bytes] → ACK o NAK; codificación 0x10 [codificación×2 (+1 si taller > 65535), taller 2 bytes] → bloques 0xF6 de identificación. La codificación se lee del bloque 0xF6 que empieza por 0x00: codificación = (b1·256 + b2) / 2, taller = b3·256 + b4 (+65536 si b2 es impar).
 - Simulador: motor con canales 01 (128, rango 118-138) y 02 (32768, con login), cuadro con 02 y 09 (con login); código de acceso del simulador 11111; el motor y el cuadro tienen codificación (el motor acepta hasta 16383, para probar un rechazo), el ABS no. Lo guardado sobrevive a la reconexión; el login no. **No son canales ni rangos reales.**
-- Pruebas en `prueba_simuladores.py`, `prueba_historial.py` y `prueba_gui.py` (español e inglés) → «TODO CORRECTO». El ancho mínimo de la ventana tiene en cuenta ahora la barra de Averías con el botón nuevo. **Sin probar en coche.** Dudas a comprobar con la EDC15 real: que conteste 0xE6 a la prueba (0x22) y al guardado, y qué hace la centralita tras cambiar la codificación (si reenvía la identificación o reinicia la sesión).
+- Pruebas en `prueba_simuladores.py`, `prueba_historial.py` y `prueba_gui.py` (español e inglés) → «TODO CORRECTO». El ancho mínimo de la ventana tiene en cuenta ahora la barra de Averías con el botón nuevo. **Probado por el usuario en coche (2026-11-28): todo bien.** Dudas que había antes de probarlo: que conteste 0xE6 a la prueba (0x22) y al guardado, y qué hace la centralita tras cambiar la codificación (si reenvía la identificación o reinicia la sesión).
 
 ### 8.2g Release v0.7.0 (2026-11-28)
 - Test de actuadores (§8.2e) y ajustes básicos (§8.2f). `VERSION = "0.7.0"`. Pruebas antes de etiquetar: simuladores, idioma, consumo, csv, historial y GUI en español e inglés → «TODO CORRECTO». Después, probada en coche por el usuario: funciona bien.
@@ -397,7 +397,7 @@ Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 - **v0.3.0 probada en coche** (2026-11-22, el usuario: «funciona bien»); la web lo dice. Falta probar con un ELM327 WiFi real (la web lo indica como pendiente).
 - Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 538 en la tabla `vag_p1.py` desde la v0.6.0). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 en la v0.3.0 (publicada, web actualizada).
 - La lista de fórmulas VAG viene de documentación pública del protocolo; si una fórmula no se conoce se muestra `a=.. b=..`.
-- Desde la v0.7.0: test de actuadores y ajustes básicos (probados en coche). Canales de adaptación y codificación hechos el 2026-11-28 (§8.2h, sin publicar, sin probar en coche).
+- Desde la v0.7.0: test de actuadores y ajustes básicos (probados en coche). Desde la v0.8.0: canales de adaptación y codificación (§8.2h, probados en coche).
 
 ## 10. Próximos pasos (actualizado el 2026-11-22)
 Por orden de prioridad propuesto; el usuario decide por dónde seguir.
@@ -416,7 +416,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 **3. Más adelante**
 - ~~Más P1 de VAG y grupos de TDI inyector-bomba y gasolina~~ **hecho el 2026-11-28** (538 P1, también en OBD2 si el VIN es VAG; grupos PD del manual de taller y de gasolina estándar de Ross-Tech; sin publicar, probado con simuladores). Falta: averías de confort/clima (no se encontró una tabla pública fiable). Panel y consumo KKL para gasolina **hechos el 2026-11-28** (sin publicar; probados con el simulador de gasolina: `simulador.GASOLINA = True`, ident «1.8L R4/5VT», grupos 1-5).
 - Firma del ejecutable de Windows (evitar SmartScreen).
-- ~~Test de actuadores KW1281~~ **hecho el 2026-11-28** (§8.2e). ~~Ajustes básicos~~ **hechos el mismo día** (§8.2f). Publicados en la v0.7.0 y probados en coche. ~~Canales de adaptación y codificación~~ **hechos el 2026-11-28** (§8.2h, sin publicar, sin probar en coche).
+- ~~Test de actuadores KW1281~~ **hecho el 2026-11-28** (§8.2e). ~~Ajustes básicos~~ **hechos el mismo día** (§8.2f). Publicados en la v0.7.0 y probados en coche. ~~Canales de adaptación y codificación~~ **hechos el 2026-11-28** (§8.2h), publicados en la v0.8.0 y probados en coche.
 - Adaptador inalámbrico propio con ESP32 haciendo KW1281.
 
 **Hecho el 2026-11-27 (publicado en la v0.4.0):** renombrado a **OBD2Desk** (dominio obd2desk.com) e interfaz en inglés.
