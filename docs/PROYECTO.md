@@ -341,7 +341,7 @@ Resumen de lo que funcionó con la v0.2.0 y la v0.3.0:
 ## 9. Estado actual y limitaciones (ser honesto en la web)
 - **Probado**: todo contra los simuladores; IA contra la API real (Claude) con el simulador; ejecutable de Windows; en Linux, el código y la GUI en Fedora 44 y el paquete portable en contenedores de Ubuntu 20.04/24.04, Debian 12, Fedora 40/44, Arch y openSUSE Leap 15.6 (instala, autoprueba IA y abre la ventana).
 - **Probado en coches reales** (un par de coches, noviembre 2026, v0.2.0; y la v0.3.0 el 2026-11-22): funciona bien. La web lo dice.
-- **No probado todavía**: en Linux, los adaptadores físicos (FTDI, `rfcomm`) y el lanzador en un escritorio GNOME/KDE real.
+- **Probado por el usuario (anotado el 2026-11-28)**: en Linux, los adaptadores físicos (cable FTDI con `dialout`, ELM327 Bluetooth con `rfcomm`) y el lanzador en un escritorio real.
 - Ajustes probables al probar con coche: tiempos entre bytes (`--retardo` en consola), alguna fórmula VAG, textos de averías.
 - **v0.3.0 probada en coche** (2026-11-22, el usuario: «funciona bien»); la web lo dice. Falta probar con un ELM327 WiFi real (la web lo indica como pendiente).
 - Tabla de averías VAG: unos 90 códigos clásicos (00xxx-01xxx) de motor, cambio, ABS, airbag, cuadro/inmovilizador, confort y radio, más los códigos en formato OBD (16xxx = P0xxx, que se describen con la tabla OBD2; 17xxx-18xxx = P1xxx, 21 en la tabla). Los demás salen con número y «no incluido en la tabla». Ampliada el 2026-11-22 en la v0.3.0 (publicada, web actualizada).
@@ -354,7 +354,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 **1. Pequeños pendientes (para la próxima versión, sea cual sea)**
 - Probar con un **ELM327 WiFi real** (IP/puerto por defecto 192.168.0.10:35000); si va bien, quitar la línea de la web «La conexión WiFi está probada con el simulador…» (sección `#estado` de `web/index.html`).
 - ~~Mover «Consumo y 0-100» tras «Vehículo» y añadir la pestaña «Ayuda»~~ **hecho el 2026-11-28** (sin publicar; probado con `prueba_gui.py` en español e inglés).
-- En Linux, probar los adaptadores físicos (cable FTDI con `dialout`, Bluetooth con `rfcomm`) y el lanzador en un escritorio real.
+- ~~En Linux, probar los adaptadores físicos (cable FTDI con `dialout`, Bluetooth con `rfcomm`) y el lanzador en un escritorio real~~ **probado por el usuario** (anotado el 2026-11-28).
 
 **2. Bloque 2 de funciones (propuesto el 2026-11-22, candidato a v0.5.0)**
 - ~~Consumo instantáneo y medio y cronómetro 0-100 km/h~~ **hecho el 2026-11-27** (pestaña «Consumo y 0-100», sin publicar; probado solo con simuladores: falta probarlo en coche, sobre todo el consumo de un diésel por OBD2 y el 0-100 con un ELM327 real, que da 5-10 lecturas/s).
