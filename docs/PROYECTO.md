@@ -425,7 +425,7 @@ Por orden de prioridad propuesto; el usuario decide por dónde seguir.
 - ~~Más P1 de VAG y grupos de TDI inyector-bomba y gasolina~~ **hecho el 2026-11-28** (538 P1, también en OBD2 si el VIN es VAG; grupos PD del manual de taller y de gasolina estándar de Ross-Tech; sin publicar, probado con simuladores). Falta: averías de confort/clima (no se encontró una tabla pública fiable). Panel y consumo KKL para gasolina **hechos el 2026-11-28** (sin publicar; probados con el simulador de gasolina: `simulador.GASOLINA = True`, ident «1.8L R4/5VT», grupos 1-5).
 - Firma del ejecutable de Windows (evitar SmartScreen).
 - ~~Test de actuadores KW1281~~ **hecho el 2026-11-28** (§8.2e). ~~Ajustes básicos~~ **hechos el mismo día** (§8.2f). Publicados en la v0.7.0 y probados en coche. ~~Canales de adaptación y codificación~~ **hechos el 2026-11-28** (§8.2h), publicados en la v0.8.0 y probados en coche.
-- Adaptador inalámbrico propio con ESP32 haciendo KW1281.
+- Adaptador inalámbrico propio con ESP32 haciendo KW1281. **Al usuario le gusta (tiene muchos ESP32); lo hará aparte, en jasodev.es** (anotado el 2026-11-28). Falta mirar el conector OBD2 (pines: 7 línea K, 16 +12 V, 4/5 masa). Idea: transceptor L9637D/MC33290, el ESP32 hace todo el KW1281 y OBD2Desk le habla por WiFi/BT con órdenes de alto nivel; primer paso, probar el init de 5 baudios con el Toledo.
 
 **Hecho el 2026-11-27 (publicado en la v0.4.0):** renombrado a **OBD2Desk** (dominio obd2desk.com) e interfaz en inglés.
 
